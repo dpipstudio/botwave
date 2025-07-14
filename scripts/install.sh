@@ -8,7 +8,6 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-# Exit on errors
 set -e
 
 RED='\033[0;31m'
@@ -31,7 +30,7 @@ log() {
 
 # validate input
 if [[ "$1" != "client" && "$1" != "server" && "$1" != "both" ]]; then
-    log ERROR "Usage: $0 -s {client|server|both}"
+    log ERROR "Usage: $0 {client|server|both}"
     exit 1
 fi
 MODE="$1"
@@ -80,15 +79,19 @@ install_client() {
     ./venv/bin/pip install --upgrade pip
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
 
-    log INFO "Installing bw-client..."
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/refs/heads/main/client/client.py -o /bin/bw-client
-    chmod +x /bin/bw-client
+    log INFO "Downloading bw-client.py and wrapper..."
+    mkdir -p "$INSTALL_DIR/client"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-client -o /usr/bin/bw-client
+    chmod +x /usr/bin/bw-client
 }
 
 install_server() {
-    log INFO "Installing bw-server..."
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/refs/heads/main/server/server.py -o /bin/bw-server
-    chmod +x /bin/bw-server
+    log INFO "Downloading bw-server.py and wrapper..."
+    mkdir -p "$INSTALL_DIR/server"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-server -o /usr/bin/bw-server
+    chmod +x /usr/bin/bw-server
 }
 
 if [[ "$MODE" == "client" ]]; then
