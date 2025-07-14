@@ -35,7 +35,7 @@ BotWave is a system for broadcasting audio files over FM radio using Raspberry P
 For *nix systems, we recommand using our automatic installation scripts, for other operating systems, you're on your own.
 
 ```bash
-curl -sSL https://botwave.dpip.lol/install | sudo bash <server, client or both>
+curl -sSL https://botwave.dpip.lol/install | sudo bash -s <server, client or both>
 ```
 
 > [!WARNING]
