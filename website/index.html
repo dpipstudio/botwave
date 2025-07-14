@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--=============== FAVICON ===============-->
+    <link rel="shortcut icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
+    <link rel="icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <title>BotWave - Your RPI FM Network</title>
+    <meta property="og:title" content="BotWave - Your RPI FM Network">
+    <meta property="og:description"
+        content="Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.">
+    <meta property="og:image" content="https://botwave.dpip.lol/assets/img/icon.png">
+    <meta property="og:url" content="https://botwave.dpip.lol">
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta property="og:type" content="website" />
+    <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
+    <meta name='description'
+        content='Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.'>
+    <meta name='subject' content='FM Broadcasting'>
+    <meta name='copyright' content='botwave.dpip.lol'>
+    <meta name='language' content='EN'>
+    <meta name='topic' content='BotWave'>
+    <meta name='Classification' content='BotWave'>
+    <meta name='author' content='douxx.tech, douxx@douxx.tech'>
+    <meta name='designer' content='douxx.tech'>
+    <meta name='reply-to' content='admin@dpip.lol'>
+    <meta name='url' content='https://botwave.dpip.lol/'>
+    <meta name='identifier-URL' content='https://botwave.dpip.lol'>
+    <meta name='distribution' content='Global'>
+    <meta name='rating' content='General'>
+    <meta name='target' content='all'>
+    <meta name="news_keywords" content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
+    <meta name='og:site_name' content="Your RPI FM Network">
+    <meta name='og:email' content='admin@dpip.lol'>
+
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">
+                BotWave
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#hardware">Hardware</a></li>
+                <li><a href="https://botwave.dpip.lol">Portal</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>BotWave</h1>
+                    <p>Your Raspberry Pi FM Network. Broadcast audio files over FM radio using a powerful server-client architecture.</p>
+                    <a href="#installation" class="cta-button">Get Started</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title scroll-fade">Features</h2>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <h3>Server-Client Architecture</h3>
+                        <p>Manage multiple Raspberry Pi clients from a central server with seamless communication and control.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Audio Broadcasting</h3>
+                        <p>Broadcast high-quality audio files over FM radio with support for various audio formats.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>File Upload</h3>
+                        <p>Easily upload audio files to clients for broadcasting with simple command-line interface.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Remote Management</h3>
+                        <p>Start, stop, and manage broadcasts remotely from anywhere with full control over your network.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Authentication</h3>
+                        <p>Secure client-server authentication with passkeys to protect your broadcasting network.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Protocol Versioning</h3>
+                        <p>Ensure compatibility between server and clients with built-in protocol version management.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation" class="installation">
+            <div class="container">
+                <h2 class="section-title scroll-fade">Installation</h2>
+                <div class="scroll-fade">
+                    <p style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">
+                        Get started with BotWave using our automatic installation script for *nix systems.
+                    </p>
+                    <div class="code-block">
+                        <pre>curl -sSL https://botwave.dpip.lol/install | sudo bash &lt;server, client or both&gt;</pre>
+                    </div>
+                    <p style="text-align: center; opacity: 0.7; margin-top: 1rem;">
+                        All requirements are automatically installed including Python 3.x, PiFmRds, and PiWave module.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="hardware" class="hardware">
+            <div class="container">
+                <h2 class="section-title scroll-fade">Hardware Setup</h2>
+                <div class="hardware-info scroll-fade">
+                    <p>To broadcast with BotWave Client, connect an antenna or cable to your Raspberry Pi's GPIO 4 (pin 7).</p>
+                    
+                    <div class="gpio-info">
+                        <h3 style="color: #00ff88; margin-bottom: 1rem;">Compatible Devices</h3>
+                        <p>• Raspberry Pi 0, 1, 2, 3, and 4</p>
+                        <p>• Root access required</p>
+                        <p>• GPIO 4 (Pin 7) for antenna connection</p>
+                    </div>
+                    
+                    <p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.6;">
+                        ⚠️ <strong>Legal Notice:</strong> Broadcasting signals may be subject to local regulations. 
+                        Ensure compliance with applicable laws in your area.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="https://botwave.dpip.lol">Portal</a>
+                    <a href="https://github.com/douxxtech/botwave">Github</a>
+                    <a href="https://piwave.xyz">PiWave</a>
+                </div>
+                <div class="credits">
+                    <span>A DPIP Studio Project</span>
+                    <span>•</span>
+                    <span>Made by Douxx</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
