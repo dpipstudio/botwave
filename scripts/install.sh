@@ -103,4 +103,8 @@ elif [[ "$MODE" == "both" ]]; then
     install_server
 fi
 
+log INFO "Retrieving last commit"
+curl -s https://api.github.com/repos/douxxtech/botwave/commits | jq -r '.[0].sha' > last_commit
+
+
 log INFO "Installation complete."
