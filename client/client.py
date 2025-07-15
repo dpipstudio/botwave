@@ -304,21 +304,22 @@ class BotWaveClient:
 
                                 if command.get('type') == 'upload_file':
                                     try:
-                                        response = self._handle_upload_file(command)
-                                        self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
+                                        # Handle file upload - this method manages its own responses
+                                        self._handle_upload_file(command)
                                     except Exception as e:
                                         Log.error(f"File upload error: {e}")
                                         error_response = {"status": "error", "message": f"Upload error: {str(e)}"}
                                         self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
                                     continue
 
+                                # For other commands, use the queue system
                                 command_id += 1
                                 self.command_queue.put({
                                     'id': command_id,
                                     'command': command
                                 })
 
-                                timeout = 300 if command.get('type') in ['upload_file'] else 30
+                                timeout = 30
                                 response = self._wait_for_response(command_id, timeout=timeout)
                                 if response:
                                     self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
@@ -326,8 +327,10 @@ class BotWaveClient:
                                     error_response = {"status": "error", "message": "Command timeout"}
                                     self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
 
-                            except json.JSONDecodeError:
-                                Log.error(f"Invalid JSON received: {message}")
+                            except json.JSONDecodeError as e:
+                                Log.error(f"Invalid JSON received: {message} - Error: {e}")
+                            except Exception as e:
+                                Log.error(f"Error processing message: {e}")
 
                 except socket.timeout:
                     try:
