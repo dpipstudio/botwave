@@ -99,7 +99,7 @@ install_server() {
 install_update() {
     log INFO "Downloading update wrapper..."
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-update -o /usr/bin/bw-update
-    chmod +x /usr/bin/bw-server
+    chmod +x /usr/bin/bw-update
 }
 
 if [[ "$MODE" == "client" ]]; then
