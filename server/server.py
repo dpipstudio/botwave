@@ -228,7 +228,7 @@ class BotWaveServer:
             latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
             if latest_version:
                 Log.update_message(f"Update available! Latest version: {latest_version}")
-                Log.update_message("Consider updating to the latest version for compatibility")
+                Log.update_message("Consider updating to the latest version by running 'sudo bw-update' in your shell.")
             else:
                 Log.success("You are using the latest protocol version")
         except Exception as e:
@@ -394,7 +394,7 @@ class BotWaveServer:
                        loop: bool = False):
         
         target_clients = self._parse_client_targets(client_targets)
-        
+
         if not target_clients:
             return False
 
