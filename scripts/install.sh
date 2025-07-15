@@ -115,7 +115,7 @@ elif [[ "$MODE" == "both" ]]; then
 fi
 
 log INFO "Retrieving last commit"
-curl -s https://api.github.com/repos/douxxtech/botwave/commits | jq -r '.[0].sha' > last_commit
+curl -s https://api.github.com/repos/douxxtech/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4 > last_commit
 
 
 log INFO "Installation complete."

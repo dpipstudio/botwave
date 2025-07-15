@@ -40,7 +40,7 @@ cd "$INSTALL_DIR"
 
 log INFO "Checking if we have to update..."
 
-LATEST_COMMIT=$(curl -s https://api.github.com/repos/douxxtech/botwave/commits | jq -r '.[0].sha')
+LATEST_COMMIT=$(curl -s https://api.github.com/repos/douxxtech/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4)
 CURRENT_COMMIT=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
 
 if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
