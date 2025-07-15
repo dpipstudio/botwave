@@ -55,7 +55,7 @@ To use BotWave Client for broadcasting, you need to set up the hardware correctl
 For *nix systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
 
 ```bash
-curl -sSL https://botwave.dpip.lol/update | sudo bash
+sudo bw-update
 ```
 
 ## Uninstallation

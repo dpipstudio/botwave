@@ -10,6 +10,8 @@
 
 set -e
 
+START_PWD=$(pwd)
+
 RED='\033[0;31m'
 GRN='\033[0;32m'
 YEL='\033[1;33m'
@@ -79,7 +81,7 @@ install_client() {
     ./venv/bin/pip install --upgrade pip
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
 
-    log INFO "Downloading bw-client.py and wrapper..."
+    log INFO "Downloading client.py and wrapper..."
     mkdir -p "$INSTALL_DIR/client"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-client -o /usr/bin/bw-client
@@ -87,20 +89,29 @@ install_client() {
 }
 
 install_server() {
-    log INFO "Downloading bw-server.py and wrapper..."
+    log INFO "Downloading server.py and wrapper..."
     mkdir -p "$INSTALL_DIR/server"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-server -o /usr/bin/bw-server
     chmod +x /usr/bin/bw-server
 }
 
+install_update() {
+    log INFO "Downloading update wrapper..."
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-update -o /usr/bin/bw-update
+    chmod +x /usr/bin/bw-server
+}
+
 if [[ "$MODE" == "client" ]]; then
     install_client
+    install_update
 elif [[ "$MODE" == "server" ]]; then
     install_server
+    install_update
 elif [[ "$MODE" == "both" ]]; then
     install_client
     install_server
+    install_update
 fi
 
 log INFO "Retrieving last commit"
@@ -108,3 +119,5 @@ curl -s https://api.github.com/repos/douxxtech/botwave/commits | jq -r '.[0].sha
 
 
 log INFO "Installation complete."
+
+cd $START_PWD

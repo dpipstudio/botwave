@@ -41,6 +41,7 @@ fi
 log INFO "Removing binaries..."
 rm -f /bin/bw-client
 rm -f /bin/bw-server
+rm -f /bin/bw-update
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave_Deps"

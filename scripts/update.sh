@@ -14,6 +14,9 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
+START_PWD=$(pwd)
+
+
 RED='\033[0;31m'
 GRN='\033[0;32m'
 YEL='\033[1;33m'
@@ -67,3 +70,5 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
 else
     log INFO "BotWave is already up-to-date."
 fi
+
+cd $START_PWD
