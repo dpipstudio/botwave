@@ -19,7 +19,7 @@ import argparse
 import time
 import urllib.request
 import urllib.error
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 PROTOCOL_VERSION = "1.0.0" # if missmatch of 1th or 2th part: error
@@ -191,10 +191,11 @@ class BotWaveClient:
             return False
 
 class BotWaveServer:
-    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None):
+    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None, wait_start: bool = True):
         self.host = host
         self.port = port
         self.passkey = passkey
+        self.wait_start = wait_start
         self.clients: Dict[str, BotWaveClient] = {}
         self.server_socket = None
         self.running = False
@@ -391,9 +392,19 @@ class BotWaveServer:
     def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0,
                        ps: str = "RADIOOOO", rt: str = "Broadcasting since 2025", pi: str = "FFFF",
                        loop: bool = False):
+        
         target_clients = self._parse_client_targets(client_targets)
+        
         if not target_clients:
             return False
+
+        if self.wait_start and len(target_clients) > 1:
+            start_at = datetime.now(timezone.utc).timestamp() + 20 * (len(target_clients) - 1) # 20 seconds per client
+            Log.broadcast_message(f"Starting broadcast at {datetime.fromtimestamp(start_at)}")
+        else:
+            start_at = 0
+            Log.broadcast_message(f"Starting broadcast as soon as possible.")
+
 
         command = {
             "type": "start_broadcast",
@@ -402,7 +413,8 @@ class BotWaveServer:
             "ps": ps,
             "rt": rt,
             "pi": pi,
-            "loop": loop
+            "loop": loop,
+            "start_at": start_at
         }
 
         success_count = 0
@@ -590,11 +602,13 @@ def main():
     parser.add_argument('--pk', help='Optional passkey for authentication')
     parser.add_argument('--skip-update-check', action='store_true',
                        help='Skip checking for protocol updates')
+    parser.add_argument('--start-asap', action='store_false',
+                       help='Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.')
     args = parser.parse_args()
     
     Log.header("BotWave Socket Manager - Server")
     
-    server = BotWaveServer(args.host, args.port, args.pk)
+    server = BotWaveServer(args.host, args.port, args.pk, args.start_asap)
     server.start()
     
     Log.print("Type 'help' for a list of available commands", 'bright_yellow')

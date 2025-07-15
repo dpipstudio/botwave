@@ -29,6 +29,7 @@ sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--skip-update-check]
 * `--port`: The port on which the server will listen (default: 9938).
 * `--pk`: Optional passkey for client authentication.
 * `--skip-update-check`: Skip checking for protocol updates.
+* `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
 
 ### Example
 ```bash

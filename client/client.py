@@ -27,6 +27,7 @@ import signal
 import urllib.request
 import urllib.error
 from typing import Optional, Dict
+from datetime import datetime, timezone
 try:
     from piwave import PiWave
 except ImportError:
@@ -444,7 +445,10 @@ class BotWaveClient:
                     time.sleep(0.1)
                     timeout += 1
 
-            self.broadcast_params = { # the server should alr handle all that, but using placeholders if not
+            # Récupérer le timestamp start_at
+            start_at = command.get('start_at', 0)
+
+            self.broadcast_params = {
                 'filename': filename,
                 'file_path': file_path,
                 'frequency': command.get('frequency', 90.0),
@@ -454,15 +458,43 @@ class BotWaveClient:
                 'loop': command.get('loop', False)
             }
 
-            self.broadcast_requested = True
-            Log.broadcast_message(
-                f"Started broadcasting {filename} on {self.broadcast_params['frequency']} MHz"
-            )
-            return {"status": "success", "message": "Broadcasting started"}
+            if start_at > 0:
+                current_time = datetime.now(timezone.utc).timestamp()
+                if start_at > current_time:
+                    delay = start_at - current_time
+                    Log.broadcast_message(f"Waiting {delay:.2f} seconds before starting broadcast...")
+
+                    broadcast_thread = threading.Thread(target=self._start_broadcast_after_delay, args=(delay,))
+                    broadcast_thread.daemon = True
+                    broadcast_thread.start()
+
+                    return {"status": "success", "message": f"Broadcast scheduled to start in {delay:.2f} seconds"}
+                else:
+                    self._start_broadcast()
+                    return {"status": "success", "message": "Broadcasting started"}
+            else:
+                self._start_broadcast()
+                return {"status": "success", "message": "Broadcasting started"}
 
         except Exception as e:
             Log.error(f"Broadcast error: {str(e)}")
             return {"status": "error", "message": f"Broadcast error: {str(e)}"}
+
+    def _start_broadcast_after_delay(self, delay: float):
+        try:
+            time.sleep(delay)
+            self._start_broadcast()
+        except Exception as e:
+            Log.error(f"Error starting broadcast after delay: {str(e)}")
+
+    def _start_broadcast(self):
+        try:
+            self.broadcast_requested = True
+            Log.broadcast_message(
+                f"Started broadcasting {self.broadcast_params['filename']} on {self.broadcast_params['frequency']} MHz"
+            )
+        except Exception as e:
+            Log.error(f"Broadcast error: {str(e)}")
 
     def _start_broadcast_main_thread(self):
         if not self.broadcast_params:
