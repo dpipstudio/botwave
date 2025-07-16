@@ -93,7 +93,7 @@ install_client() {
 
     cd "$INSTALL_DIR"
 
-    log INFO "Installing piwave..."
+    log INFO "Installing PiWave..."
     ./venv/bin/pip install --upgrade pip
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
     log INFO "Installed PiWave."
