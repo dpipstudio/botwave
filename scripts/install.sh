@@ -127,14 +127,14 @@ install_binaries() {
 
 if [[ "$MODE" == "client" ]]; then
     install_client
-    install_update
+    install_binaries
 elif [[ "$MODE" == "server" ]]; then
     install_server
-    install_update
+    install_binaries
 elif [[ "$MODE" == "both" ]]; then
     install_client
     install_server
-    install_update
+    install_binaries
 fi
 
 log INFO "Retrieving last commit"
