@@ -1,14 +1,11 @@
 #!/opt/BotWave/venv/bin/python3
 # this path HAS to be changed if you are not on a traditional linux distribution
-
 # BotWave - Server
-
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # https://github.com/douxxtech/botwave
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
-
 
 import socket
 import threading
@@ -19,10 +16,12 @@ import argparse
 import time
 import urllib.request
 import urllib.error
+import asyncio
+import websockets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-PROTOCOL_VERSION = "1.0.0" # if missmatch of 1th or 2th part: error
+PROTOCOL_VERSION = "1.0.0" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 class Log:
@@ -59,6 +58,13 @@ class Log:
         'update': 'UPD',
     }
 
+    ws_clients = set()
+    ws_loop = None
+
+    @classmethod
+    def set_ws_clients(cls, clients):
+        cls.ws_clients = clients
+
     @classmethod
     def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
         color = cls.COLORS.get(style, '')
@@ -74,6 +80,19 @@ class Log:
             else:
                 print(f"{message}", end=end)
         sys.stdout.flush()
+
+        for ws in list(cls.ws_clients):
+            try:
+                if cls.ws_loop:
+                    asyncio.run_coroutine_threadsafe(ws.send(message), cls.ws_loop) # i dont understand a shit to this weird asyncio shi
+
+            except Exception as e:
+                print(f"Error sending to WebSocket client: {e}") # no Log, cuz does recursive shit
+                try:
+                    cls.ws_clients.discard(ws)
+                except Exception:
+                    pass
+
 
     @classmethod
     def header(cls, text: str):
@@ -126,7 +145,6 @@ class Log:
     def update_message(cls, message: str):
         cls.print(message, 'bright_yellow', 'update')
 
-
 def parse_version(version_str: str) -> tuple:
     try:
         return tuple(map(int, version_str.split('.')))
@@ -137,10 +155,10 @@ def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
     try:
         with urllib.request.urlopen(check_url, timeout=10) as response:
             remote_version = response.read().decode('utf-8').strip()
-            
+
         current_tuple = parse_version(current_version)
         remote_tuple = parse_version(remote_version)
-        
+
         if remote_tuple > current_tuple:
             return remote_version
         return None
@@ -151,11 +169,10 @@ def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
 def versions_compatible(server_version: str, client_version: str) -> bool:
     server_tuple = parse_version(server_version)
     client_tuple = parse_version(client_version)
-
     return server_tuple[:2] == client_tuple[:2]
 
 class BotWaveClient:
-    def __init__(self, conn: socket.socket, addr: tuple, machine_info: dict, 
+    def __init__(self, conn: socket.socket, addr: tuple, machine_info: dict,
                  protocol_version: str = None, passkey: str = None):
         self.conn = conn
         self.addr = addr
@@ -191,7 +208,7 @@ class BotWaveClient:
             return False
 
 class BotWaveServer:
-    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None, wait_start: bool = True):
+    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None, wait_start: bool = True, ws_port: int = None):
         self.host = host
         self.port = port
         self.passkey = passkey
@@ -201,6 +218,10 @@ class BotWaveServer:
         self.running = False
         self.command_history = []
         self.history_index = 0
+        self.ws_port = ws_port
+        self.ws_server = None
+        self.ws_clients = set()
+        self.ws_loop = None
 
     def start(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -213,10 +234,13 @@ class BotWaveServer:
             Log.version_message(f"Protocol Version: {PROTOCOL_VERSION}")
             if self.passkey:
                 Log.info("Server is using authentication with a passkey")
-            
+
             threading.Thread(target=self._check_updates_background, daemon=True).start()
-            
             threading.Thread(target=self._accept_clients, daemon=True).start()
+
+            if self.ws_port:
+                threading.Thread(target=self._start_websocket_server, daemon=True).start()
+
         except Exception as e:
             Log.error(f"Error starting server: {e}")
             sys.exit(1)
@@ -248,12 +272,10 @@ class BotWaveServer:
         try:
             data = conn.recv(1024).decode('utf-8').strip()
             reg_data = json.loads(data)
-
             if reg_data.get('type') == 'register':
                 machine_info = reg_data.get('machine_info', {})
                 client_passkey = reg_data.get('passkey')
                 client_protocol_version = reg_data.get('protocol_version', 'unknown')
-
                 if not versions_compatible(PROTOCOL_VERSION, client_protocol_version):
                     Log.error(f"Protocol version mismatch for client {addr[0]}:{addr[1]}")
                     Log.error(f"  Server version: {PROTOCOL_VERSION}")
@@ -267,7 +289,6 @@ class BotWaveServer:
                     conn.send((json.dumps(response) + '\n').encode('utf-8'))
                     conn.close()
                     return
-
                 # check auth
                 if self.passkey and client_passkey != self.passkey:
                     Log.error(f"Authentication failed for client {addr[0]}:{addr[1]} - invalid passkey")
@@ -275,23 +296,19 @@ class BotWaveServer:
                     conn.send((json.dumps(response) + '\n').encode('utf-8'))
                     conn.close()
                     return
-
                 client_id = f"{machine_info.get('hostname', 'unknown')}_{addr[0]}"
                 client = BotWaveClient(conn, addr, machine_info, client_protocol_version, self.passkey)
                 client.authenticated = True
                 self.clients[client_id] = client
-
                 response = {
-                    "type": "register_ok", 
+                    "type": "register_ok",
                     "client_id": client_id,
                     "server_protocol_version": PROTOCOL_VERSION
                 }
                 conn.send((json.dumps(response) + '\n').encode('utf-8'))
-
                 Log.success(f"Client registered: {client.get_display_name()}")
                 Log.version_message(f"  Client protocol version: {client_protocol_version}")
                 self._keep_client_alive(client_id)
-
         except Exception as e:
             Log.error(f"Error handling client {addr[0]}:{addr[1]}: {e}")
             conn.close()
@@ -311,11 +328,93 @@ class BotWaveServer:
                     del self.clients[client_id]
                 break
 
+    def _start_websocket_server(self):
+        async def handler(websocket):
+            self.ws_clients.add(websocket)
+            Log.set_ws_clients(self.ws_clients)
+
+            try:
+                auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
+                try:
+                    auth_data = json.loads(auth_message)
+                except json.JSONDecodeError:
+                    await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
+                    await websocket.close()
+                    return
+
+                if auth_data.get("type") != "auth" or (self.passkey and auth_data.get("passkey") != self.passkey):
+                    await websocket.send(json.dumps({"type": "auth_failed", "message": "Invalid passkey"}))
+                    await websocket.close()
+                    return
+
+                await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
+
+                async for message in websocket:
+                    Log.client_message(f"WebSocket CMD: {message}")
+
+                    def inject_cmd():
+                        self.command_history.append(message)
+                        self.history_index = len(self.command_history)
+                        cmd = message.strip().split()
+                        if not cmd:
+                            return
+                        command = cmd[0].lower()
+
+                        if command == 'list':
+                            self.list_clients()
+                        elif command == 'help':
+                            display_help()
+                        elif command == 'upload' and len(cmd) >= 3:
+                            self.upload_file(cmd[1], cmd[2])
+                        elif command == 'start' and len(cmd) >= 3:
+                            frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
+                            ps = cmd[4] if len(cmd) > 4 else "BotWave"
+                            rt = cmd[5] if len(cmd) > 5 else "Broadcasting"
+                            pi = cmd[6] if len(cmd) > 6 else "FFFF"
+                            loop = cmd[7].lower() == 'true' if len(cmd) > 7 else False
+                            self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
+                        elif command == 'stop' and len(cmd) >= 2:
+                            self.stop_broadcast(cmd[1])
+                        elif command == 'kick' and len(cmd) >= 2:
+                            reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
+                            self.kick_client(cmd[1], reason)
+                        elif command == 'restart' and len(cmd) >= 2:
+                            self.restart_client(cmd[1])
+                        elif command == 'exit':
+                            self.kick_client("all", "WebSocket issued shutdown")
+                            self.stop()
+                        else:
+                            Log.error(f"Unknown WebSocket command: {command}")
+
+
+                    asyncio.get_event_loop().call_soon_threadsafe(inject_cmd)
+
+            except asyncio.TimeoutError:
+                await websocket.send(json.dumps({"type": "error", "message": "Authentication timeout"}))
+                await websocket.close()
+            finally:
+                self.ws_clients.discard(websocket)
+                Log.set_ws_clients(self.ws_clients)
+
+
+        async def start_server():
+            async with websockets.serve(handler, self.host, self.ws_port):
+                Log.server_message(f"WebSocket server started on {self.host}:{self.ws_port}")
+                await asyncio.Future()  # run forever
+
+        def run_server():
+                    self.ws_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(self.ws_loop)
+                    Log.ws_loop = self.ws_loop
+                    self.ws_loop.run_until_complete(start_server())
+
+        threading.Thread(target=run_server, daemon=True).start()
+
+
     def list_clients(self):
         if not self.clients:
             Log.warning("No clients connected")
             return
-
         Log.section("Connected Clients")
         for client_id, client in self.clients.items():
             info = client.machine_info
@@ -332,27 +431,22 @@ class BotWaveServer:
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
             return False
-
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
-
         try:
             with open(file_path, 'rb') as f:
                 file_data = f.read()
         except Exception as e:
             Log.error(f"Error reading file: {e}")
             return False
-
         success_count = 0
         total_count = len(target_clients)
         Log.broadcast_message(f"Uploading {os.path.basename(file_path)} to {total_count} client(s)...")
-
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-
             client = self.clients[client_id]
             try:
                 command = {
@@ -360,52 +454,41 @@ class BotWaveServer:
                     "filename": os.path.basename(file_path),
                     "size": len(file_data)
                 }
-
                 response = client.send_command(command)
                 if response and response.get('status') == 'ready':
                     # Send the file data
                     client.conn.sendall(file_data)
-
                     # Receive confirmation
                     try:
                         confirm_data = client.conn.recv(4096).decode('utf-8').strip()
                         confirm_json = json.loads(confirm_data)
-
                         if confirm_json.get('status') == 'uploaded':
                             Log.success(f"  {client.get_display_name()}: Upload successful")
                             success_count += 1
                         else:
                             Log.error(f"  {client.get_display_name()}: {confirm_json.get('message', 'Unknown error')}")
-
                     except Exception as e:
                         Log.error(f"  {client.get_display_name()}: Error receiving confirmation - {e}")
-
                 else:
                     Log.error(f"  {client.get_display_name()}: {response.get('message') if response else 'No response'}")
-
             except Exception as e:
                 Log.error(f"  {client.get_display_name()}: Error - {e}")
-
         Log.broadcast_message(f"Upload completed: {success_count}/{total_count} successful")
         return success_count > 0
 
     def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0,
                        ps: str = "RADIOOOO", rt: str = "Broadcasting since 2025", pi: str = "FFFF",
                        loop: bool = False):
-        
-        target_clients = self._parse_client_targets(client_targets)
 
+        target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
-
         if self.wait_start and len(target_clients) > 1:
             start_at = datetime.now(timezone.utc).timestamp() + 20 * (len(target_clients) - 1) # 20 seconds per client
             Log.broadcast_message(f"Starting broadcast at {datetime.fromtimestamp(start_at)}")
         else:
             start_at = 0
             Log.broadcast_message(f"Starting broadcast as soon as possible.")
-
-
         command = {
             "type": "start_broadcast",
             "filename": filename,
@@ -416,25 +499,20 @@ class BotWaveServer:
             "loop": loop,
             "start_at": start_at
         }
-
         success_count = 0
         total_count = len(target_clients)
         Log.broadcast_message(f"Starting broadcast on {total_count} client(s)...")
-
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-
             client = self.clients[client_id]
             response = client.send_command(command)
-
             if response and response.get('status') == 'success':
                 Log.success(f"  {client.get_display_name()}: Broadcasting started")
                 success_count += 1
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
-
         Log.broadcast_message(f"Broadcast start completed: {success_count}/{total_count} successful")
         return success_count > 0
 
@@ -442,26 +520,21 @@ class BotWaveServer:
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
-
         command = {"type": "stop_broadcast"}
         success_count = 0
         total_count = len(target_clients)
         Log.broadcast_message(f"Stopping broadcast on {total_count} client(s)...")
-
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-
             client = self.clients[client_id]
             response = client.send_command(command)
-
             if response and response.get('status') == 'success':
                 Log.success(f"  {client.get_display_name()}: Broadcasting stopped")
                 success_count += 1
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
-
         Log.broadcast_message(f"Broadcast stop completed: {success_count}/{total_count} successful")
         return success_count > 0
 
@@ -469,16 +542,13 @@ class BotWaveServer:
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
-
         success_count = 0
         total_count = len(target_clients)
         Log.client_message(f"Kicking {total_count} client(s)...")
-
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-
             client = self.clients[client_id]
             try:
                 command = {
@@ -492,7 +562,6 @@ class BotWaveServer:
                 success_count += 1
             except Exception as e:
                 Log.error(f"  {client.get_display_name()}: Error kicking - {e}")
-
         Log.client_message(f"Kick completed: {success_count}/{total_count} successful")
         return success_count > 0
 
@@ -500,26 +569,21 @@ class BotWaveServer:
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
-
         command = {"type": "restart"}
         success_count = 0
         total_count = len(target_clients)
         Log.client_message(f"Requesting restart from {total_count} client(s)...")
-
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-
             client = self.clients[client_id]
             response = client.send_command(command)
-
             if response and response.get('status') == 'success':
                 Log.success(f"  {client.get_display_name()}: Restart requested")
                 success_count += 1
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
-
         Log.client_message(f"Restart request completed: {success_count}/{total_count} successful")
         return success_count > 0
 
@@ -527,13 +591,10 @@ class BotWaveServer:
         if not targets:
             Log.error("No targets specified")
             return []
-
         if targets.lower() == 'all':
             return list(self.clients.keys())
-
         target_list = [t.strip() for t in targets.split(',')]
         valid_targets = []
-
         for target in target_list:
             if target in self.clients:
                 valid_targets.append(target)
@@ -544,10 +605,8 @@ class BotWaveServer:
                         valid_targets.append(client_id)
                         found = True
                         break
-
                 if not found:
                     Log.error(f"Client '{target}' not found")
-
         return valid_targets
 
     def stop(self):
@@ -604,19 +663,20 @@ def main():
                        help='Skip checking for protocol updates')
     parser.add_argument('--start-asap', action='store_false',
                        help='Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.')
+    parser.add_argument('--ws', type=int, help='WebSocket port')
     args = parser.parse_args()
-    
+
     Log.header("BotWave Socket Manager - Server")
-    
-    server = BotWaveServer(args.host, args.port, args.pk, args.start_asap)
+
+    server = BotWaveServer(args.host, args.port, args.pk, args.start_asap, args.ws)
     server.start()
-    
+
     Log.print("Type 'help' for a list of available commands", 'bright_yellow')
     try:
         while True:
             try:
                 print()
-                cmd_input = input("\033[1;32mbotwave>\033[0m ").strip()
+                cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
                 if not cmd_input:
                     continue
                 server.command_history.append(cmd_input)

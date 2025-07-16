@@ -21,13 +21,14 @@ We highly recommand using the official installer (Check the [main README](/READM
 To start the BotWave Server, use the following command:
 
 ```bash
-sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--skip-update-check]
+sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--ws PORT] [--skip-update-check] [--start-asap]
 ```
 
 ### Arguments
 * `--host`: The host address to bind the server to (default: 0.0.0.0).
 * `--port`: The port on which the server will listen (default: 9938).
 * `--pk`: Optional passkey for client authentication.
+* `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/)
 * `--skip-update-check`: Skip checking for protocol updates.
 * `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
 
