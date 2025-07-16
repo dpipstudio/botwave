@@ -6,4 +6,4 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-/opt/BotWave_Deps/venv/bin/python3 /opt/BotWave_Deps/server/server.py "$@"
+/opt/BotWave/venv/bin/python3 /opt/BotWave/server/server.py "$@"

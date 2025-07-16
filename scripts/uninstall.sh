@@ -44,7 +44,7 @@ rm -f /bin/bw-server
 rm -f /bin/bw-update
 
 # remove installation directory
-INSTALL_DIR="/opt/BotWave_Deps"
+INSTALL_DIR="/opt/BotWave"
 if [[ -d "$INSTALL_DIR" ]]; then
     log INFO "Removing install directory at $INSTALL_DIR..."
     rm -rf "$INSTALL_DIR"

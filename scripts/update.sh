@@ -35,7 +35,7 @@ log() {
     printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*"
 }
 
-INSTALL_DIR="/opt/BotWave_Deps"
+INSTALL_DIR="/opt/BotWave"
 cd "$INSTALL_DIR"
 
 log INFO "Checking if we have to update..."

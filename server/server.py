@@ -1,4 +1,4 @@
-#!/opt/BotWave_Deps/venv/bin/python3
+#!/opt/BotWave/venv/bin/python3
 # this path HAS to be changed if you are not on a traditional linux distribution
 
 # BotWave - Server

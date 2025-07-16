@@ -1,4 +1,4 @@
-#!/opt/BotWave_Deps/venv/bin/python3
+#!/opt/BotWave/venv/bin/python3
 # this path HAS to be changed if you are not on a traditional linux distribution
 
 
@@ -163,7 +163,7 @@ def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
         return None
 
 class BotWaveClient:
-    def __init__(self, server_host: str, server_port: int, upload_dir: str = "/opt/BotWave_Deps/uploads", passkey: str = None):
+    def __init__(self, server_host: str, server_port: int, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
         self.server_host = server_host
         self.server_port = server_port
         self.upload_dir = upload_dir
@@ -585,7 +585,7 @@ def find_pi_fm_rds_path() -> Optional[str]:
             Log.error(f"Error reading {path_file}: {e}")
             os.remove(path_file)
 
-    search_paths = ["/opt/BotWave_Deps", "/home", "/bin", "/usr/local/bin", "/usr/bin", "/sbin", "/usr/sbin", "/"]
+    search_paths = ["/opt/BotWave", "/home", "/bin", "/usr/local/bin", "/usr/bin", "/sbin", "/usr/sbin", "/"]
     found = False
     for directory in search_paths:
         if not os.path.isdir(directory):
@@ -656,7 +656,7 @@ def main():
     parser = argparse.ArgumentParser(description='BotWave - Client')
     parser.add_argument('server_host', help='Server hostname or IP address')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
-    parser.add_argument('--upload-dir', default='/opt/BotWave_Deps/uploads',
+    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads',
                        help='Directory to store uploaded files')
     parser.add_argument('--skip-checks', action='store_true',
                        help='Skip system requirements checks')

@@ -7,4 +7,4 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 
-/opt/BotWave_Deps/venv/bin/python3 /opt/BotWave_Deps/client/client.py "$@"
+/opt/BotWave/venv/bin/python3 /opt/BotWave/client/client.py "$@"

@@ -31,7 +31,7 @@ sudo bw-client <server_host> [--port PORT] [--upload-dir UPLOAD_DIR] [--skip-che
 ### Arguments
 * `server_host`: The hostname or IP address of the BotWave Server.
 * `--port`: The port on which the server is listening (default: `9938`).
-* `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave_Deps/uploads`).
+* `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
 * `--skip-checks`: Skip system requirements checks.
 * `--pk`: Optional passkey for authentication.
 * `--skip-update-check`: Skip checking for protocol updates.
