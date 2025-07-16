@@ -1,38 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!--=============== FAVICON ===============-->
-  <link rel="shortcut icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
-  <link rel="icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
-  <title>BotWave - WebSocket terminal</title>
-  <meta property="og:title" content="BotWave - WebSocket terminal">
-  <meta property="og:description"
-    content="Connect to your BotWave Server via websocket !">
-  <meta property="og:image" content="https://botwave.dpip.lol/assets/img/icon.png">
-  <meta property="og:url" content="https://botwave.dpip.lol">
-  <meta name="theme-color" content="#1a1a1a" />
-  <meta property="og:type" content="website" />
-  <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
-  <meta name='description'
-    content='Connect to your BotWave Server via websocket !'>
-  <meta name='subject' content='FM Broadcasting'>
-  <meta name='copyright' content='botwave.dpip.lol'>
-  <meta name='language' content='EN'>
-  <meta name='topic' content='BotWave'>
-  <meta name='Classification' content='BotWave'>
-  <meta name='author' content='douxx.tech, douxx@douxx.tech'>
-  <meta name='designer' content='douxx.tech'>
-  <meta name='reply-to' content='admin@dpip.lol'>
-  <meta name='url' content='https://botwave.dpip.lol/'>
-  <meta name='identifier-URL' content='https://botwave.dpip.lol'>
-  <meta name='distribution' content='Global'>
-  <meta name='rating' content='General'>
-  <meta name='target' content='all'>
-  <meta name="news_keywords" content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
-  <meta name='og:site_name' content="Your RPI FM Network">
-  <meta name='og:email' content='admin@dpip.lol'>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BotWave - WebSocket Terminal</title>
   <style>
     body {
       margin: 0;
@@ -64,15 +35,6 @@
       font-family: monospace;
       font-size: 14px;
     }
-    #terminal::-webkit-scrollbar {
-      width: 8px;
-    }
-    #terminal::-webkit-scrollbar-track {
-      background: #000;
-    }
-    #terminal::-webkit-scrollbar-thumb {
-      background: #0f0;
-    }
   </style>
 </head>
 <body>
@@ -81,132 +43,111 @@
     <span id="prompt">botwave ›</span>&nbsp;
     <input type="text" id="commandInput" autocomplete="off" />
   </div>
+
   <script>
     let ws;
     const terminal = document.getElementById("terminal");
     const input = document.getElementById("commandInput");
-    const promptElement = document.getElementById("prompt");
 
     function appendToTerminal(text) {
       terminal.textContent += "\n" + text;
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    function createInputPrompt() {
-      const promptWrapper = document.createElement("div");
-      promptWrapper.id = "input-wrapper";
-      promptWrapper.style.display = "flex";
-      promptWrapper.style.padding = "0.5em";
-      promptWrapper.style.background = "#000";
-
-      const promptSpan = document.createElement("span");
-      promptSpan.id = "prompt";
-      promptSpan.textContent = "botwave ›";
-      promptSpan.style.color = "#0f0";
-
-      const inputElement = document.createElement("input");
-      inputElement.type = "text";
-      inputElement.id = "commandInput";
-      inputElement.autocomplete = "off";
-      inputElement.style.background = "#000";
-      inputElement.style.color = "#0f0";
-      inputElement.style.border = "none";
-      inputElement.style.outline = "none";
-      inputElement.style.flex = "1";
-      inputElement.style.fontFamily = "monospace";
-      inputElement.style.fontSize = "14px";
-
-      promptWrapper.appendChild(promptSpan);
-      promptWrapper.appendChild(document.createTextNode("\u00A0"));
-      promptWrapper.appendChild(inputElement);
-
-      terminal.appendChild(promptWrapper);
+    function printInputAsLine(value) {
+      const line = document.createElement("div");
+      line.textContent = "botwave › " + value;
+      terminal.appendChild(line);
       terminal.scrollTop = terminal.scrollHeight;
+    }
 
-      inputElement.focus();
-      return inputElement;
+    function waitForInput(promptText) {
+      return new Promise((resolve) => {
+        appendToTerminal(promptText);
+        input.value = "";
+        input.focus();
+
+        function handleInput(e) {
+          if (e.key === "Enter") {
+            const val = input.value.trim();
+            printInputAsLine(val);
+            input.value = "";
+            input.removeEventListener("keydown", handleInput);
+            resolve(val);
+          }
+        }
+
+        input.addEventListener("keydown", handleInput);
+      });
     }
 
     async function promptConnect() {
-      appendToTerminal("Please enter WebSocket URL (e.g., ws://localhost:8080):");
-      const urlInput = createInputPrompt();
+      const url = await waitForInput("Please enter WebSocket URL (e.g., ws://localhost:8080):");
+      const passkey = await waitForInput("Please enter Passkey (leave blank if none):");
 
-      urlInput.addEventListener("keydown", async (e) => {
-        if (e.key === "Enter") {
-          const url = urlInput.value.trim();
-          urlInput.removeEventListener("keydown", this);
-          urlInput.readOnly = true;
+      try {
+        ws = new WebSocket(url);
 
-          appendToTerminal("Please enter Passkey (leave blank if none):");
-          const passkeyInput = createInputPrompt();
+        ws.onopen = () => {
+          appendToTerminal("Connected to " + url);
+          const authPayload = {
+            type: "auth",
+            ...(passkey ? { passkey } : {})
+          };
+          ws.send(JSON.stringify(authPayload));
+        };
 
-          passkeyInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              const passkey = passkeyInput.value.trim();
-              passkeyInput.removeEventListener("keydown", this);
-              passkeyInput.readOnly = true;
-
-              try {
-                ws = new WebSocket(url);
-                ws.onopen = () => {
-                  appendToTerminal("Connected to " + url);
-                  const authPayload = {
-                    type: "auth",
-                    ...(passkey ? { passkey } : {})
-                  };
-                  ws.send(JSON.stringify(authPayload));
-                };
-                ws.onmessage = (event) => {
-                  try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === "auth_ok") {
-                      appendToTerminal("[AUTH] ✅ Authenticated");
-                      setupCommandInput();
-                    } else if (data.type === "auth_failed") {
-                      appendToTerminal("[AUTH] ❌ " + data.message);
-                      ws.close();
-                    } else if (data.type === "error") {
-                      appendToTerminal("[ERROR] " + data.message);
-                    } else {
-                      appendToTerminal(event.data);
-                    }
-                  } catch (e) {
-                    appendToTerminal("[WS] " + event.data);
-                  }
-                };
-                ws.onerror = (e) => {
-                  appendToTerminal("[ERROR] Could not connect or bad server. If you're running directly from botwave.dpip.lol/websocket, make sure your websocket is running on wss (eg. via a reverse proxy). If not, save this website (Ctrl + S) and open it from the file.");
-                };
-                ws.onclose = () => {
-                  appendToTerminal("[DISCONNECTED]");
-                };
-              } catch (err) {
-                appendToTerminal("[ERROR] Connection failed. If you're running directly from botwave.dpip.lol/websocket, make sure your websocket is running on wss (eg. via a reverse proxy). If not, save this website (Ctrl + S) and open it from the file.");
-              }
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "auth_ok") {
+              appendToTerminal("[AUTH] ✅ Authenticated");
+              startCommandLoop(); // enable main terminal
+            } else if (data.type === "auth_failed") {
+              appendToTerminal("[AUTH] ❌ " + data.message);
+              ws.close();
+            } else if (data.type === "error") {
+              appendToTerminal("[ERROR] " + data.message);
+            } else {
+              appendToTerminal(event.data);
             }
-          });
-        }
-      });
-    }
-
-    function setupCommandInput() {
-      const inputElement = createInputPrompt();
-
-      inputElement.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const cmd = inputElement.value.trim();
-          if (cmd && ws?.readyState === WebSocket.OPEN) {
-            ws.send(cmd);
-            appendToTerminal("> " + cmd);
+          } catch {
+            appendToTerminal("[WS] " + event.data);
           }
-          inputElement.value = "";
-          inputElement.remove();
-          setupCommandInput();
-        }
-      });
+        };
+
+        ws.onerror = () => {
+          appendToTerminal("[ERROR] Could not connect or bad server. Check if your websocket is wss://");
+        };
+
+        ws.onclose = () => {
+          appendToTerminal("[DISCONNECTED]");
+        };
+
+      } catch (err) {
+        appendToTerminal("[ERROR] Failed to connect.");
+      }
     }
 
-    window.onload = () => promptConnect();
+    function startCommandLoop() {
+      input.focus();
+      input.addEventListener("keydown", handleCommandInput);
+    }
+
+    function handleCommandInput(e) {
+      if (e.key === "Enter") {
+        const cmd = input.value.trim();
+        if (cmd && ws?.readyState === WebSocket.OPEN) {
+          ws.send(cmd);
+          printInputAsLine(cmd);
+        }
+        input.value = "";
+      }
+    }
+
+    window.onload = () => {
+      promptConnect();
+    };
   </script>
 </body>
 </html>

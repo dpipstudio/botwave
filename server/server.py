@@ -381,8 +381,7 @@ class BotWaveServer:
                         elif command == 'restart' and len(cmd) >= 2:
                             self.restart_client(cmd[1])
                         elif command == 'exit':
-                            self.kick_client("all", "WebSocket issued shutdown")
-                            self.stop()
+                            Log.warning("Hmmm, you can't do that. ;)")
                         else:
                             Log.error(f"Unknown WebSocket command: {command}")
 
