@@ -39,9 +39,9 @@ fi
 
 # remove client and server binaries
 log INFO "Removing binaries..."
-rm -f /bin/bw-client
-rm -f /bin/bw-server
-rm -f /bin/bw-update
+rm -f /usr/local/bin/bw-client
+rm -f /usr/local/bw-server
+rm -f /usr/local/bw-update
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave"
