@@ -161,6 +161,7 @@
                     const data = JSON.parse(event.data);
                     if (data.type === "auth_ok") {
                       appendToTerminal("[AUTH] ✅ Authenticated");
+                      setupCommandInput();
                     } else if (data.type === "auth_failed") {
                       appendToTerminal("[AUTH] ❌ " + data.message);
                       ws.close();
