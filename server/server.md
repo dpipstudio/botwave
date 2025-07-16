@@ -21,7 +21,7 @@ We highly recommand using the official installer (Check the [main README](/READM
 To start the BotWave Server, use the following command:
 
 ```bash
-sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--ws PORT] [--skip-update-check] [--start-asap]
+sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--ws PORT] [--skip-update-check] [--start-asap] [--daemon]
 ```
 
 ### Arguments
@@ -31,6 +31,7 @@ sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--ws PORT] [--skip-up
 * `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/)
 * `--skip-update-check`: Skip checking for protocol updates.
 * `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
+* `--daemon`: Run in daemon mode (non-interactive, requires --ws port).
 
 ### Example
 ```bash
@@ -39,29 +40,29 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 
 ## Commands available
 
-`list`: Lists all connected clients.
-    - Usage: `botwave> list`
+`list`: Lists all connected clients.  
+    - Usage: `botwave> list`  
 
-`upload`: Upload a file to specified client(s).
-    - Usage: `botwave> upload <targets> <path/of/file.wav>`
+`upload`: Upload a file to specified client(s).  
+    - Usage: `botwave> upload <targets> <path/of/file.wav>`  
 
-`start`: Starts broadcasting on specified client(s).
-    - Usage: `botwave> start <targets> <file> [freq] [ps] [rt] [pi] [loop]`
+`start`: Starts broadcasting on specified client(s).  
+    - Usage: `botwave> start <targets> <file> [freq] [ps] [rt] [pi] [loop]`  
 
-`stop`: Stops broadcasting on specified client(s).
-    - Usage: `botwave> stop <targets>`
+`stop`: Stops broadcasting on specified client(s).  
+    - Usage: `botwave> stop <targets>`  
 
-`kick`: Kicks specified client(s) from the server.
-    - Usage: `botwave> kick <targets> [reason]`
+`kick`: Kicks specified client(s) from the server.  
+    - Usage: `botwave> kick <targets> [reason]`  
 
-`restart`: Restarts specified client(s).
-    - Usage: `botwave> restart <targets>`
+`restart`: Restarts specified client(s).  
+    - Usage: `botwave> restart <targets>`  
 
-`exit`: Stops and exit the BotWave server.
-    - Usage: `botwave> exit`
+`exit`: Stops and exit the BotWave server.  
+    - Usage: `botwave> exit`  
 
-`help`: Shows the help.
-    - Usage: `botwave> help`
+`help`: Shows the help.  
+    - Usage: `botwave> help`  
 
 ```
 targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or a comma-separated list of clients (client1,client2,etc).
