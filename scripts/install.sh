@@ -108,7 +108,8 @@ install_client() {
 }
 
 install_server() {
-    log INFO "Downloading server.py and binary..."
+    log INFO "Downloading server.py, requirements and binary..."
+    ./venv/bin/pip install websockets
     mkdir -p "$INSTALL_DIR/server"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
