@@ -6,7 +6,6 @@
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
-
 import socket
 import threading
 import json
@@ -44,7 +43,6 @@ class Log:
         'bright_cyan': '\033[96m',
         'bright_white': '\033[97m',
     }
-
     ICONS = {
         'success': 'OK',
         'error': 'ERR',
@@ -57,7 +55,6 @@ class Log:
         'version': 'VER',
         'update': 'UPD',
     }
-
     ws_clients = set()
     ws_loop = None
 
@@ -80,19 +77,16 @@ class Log:
             else:
                 print(f"{message}", end=end)
         sys.stdout.flush()
-
         for ws in list(cls.ws_clients):
             try:
                 if cls.ws_loop:
                     asyncio.run_coroutine_threadsafe(ws.send(message), cls.ws_loop) # i dont understand a shit to this weird asyncio shi
-
             except Exception as e:
                 print(f"Error sending to WebSocket client: {e}") # no Log, cuz does recursive shit
                 try:
                     cls.ws_clients.discard(ws)
                 except Exception:
                     pass
-
 
     @classmethod
     def header(cls, text: str):
@@ -155,10 +149,8 @@ def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
     try:
         with urllib.request.urlopen(check_url, timeout=10) as response:
             remote_version = response.read().decode('utf-8').strip()
-
         current_tuple = parse_version(current_version)
         remote_tuple = parse_version(remote_version)
-
         if remote_tuple > current_tuple:
             return remote_version
         return None
@@ -208,7 +200,7 @@ class BotWaveClient:
             return False
 
 class BotWaveServer:
-    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None, wait_start: bool = True, ws_port: int = None):
+    def __init__(self, host: str = '0.0.0.0', port: int = 9938, passkey: str = None, wait_start: bool = True, ws_port: int = None, daemon_mode: bool = False):
         self.host = host
         self.port = port
         self.passkey = passkey
@@ -222,6 +214,7 @@ class BotWaveServer:
         self.ws_server = None
         self.ws_clients = set()
         self.ws_loop = None
+        self.daemon_mode = daemon_mode
 
     def start(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -234,13 +227,12 @@ class BotWaveServer:
             Log.version_message(f"Protocol Version: {PROTOCOL_VERSION}")
             if self.passkey:
                 Log.info("Server is using authentication with a passkey")
-
             threading.Thread(target=self._check_updates_background, daemon=True).start()
             threading.Thread(target=self._accept_clients, daemon=True).start()
-
             if self.ws_port:
                 threading.Thread(target=self._start_websocket_server, daemon=True).start()
-
+            if self.daemon_mode:
+                Log.info("Running in daemon mode. Server will continue to run in the background.")
         except Exception as e:
             Log.error(f"Error starting server: {e}")
             sys.exit(1)
@@ -332,7 +324,6 @@ class BotWaveServer:
         async def handler(websocket):
             self.ws_clients.add(websocket)
             Log.set_ws_clients(self.ws_clients)
-
             try:
                 auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
                 try:
@@ -341,17 +332,13 @@ class BotWaveServer:
                     await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
                     await websocket.close()
                     return
-
                 if auth_data.get("type") != "auth" or (self.passkey and auth_data.get("passkey") != self.passkey):
                     await websocket.send(json.dumps({"type": "auth_failed", "message": "Invalid passkey"}))
                     await websocket.close()
                     return
-
                 await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
-
                 async for message in websocket:
                     Log.client_message(f"WebSocket CMD: {message}")
-
                     def inject_cmd():
                         self.command_history.append(message)
                         self.history_index = len(self.command_history)
@@ -359,7 +346,6 @@ class BotWaveServer:
                         if not cmd:
                             return
                         command = cmd[0].lower()
-
                         if command == 'list':
                             self.list_clients()
                         elif command == 'help':
@@ -384,17 +370,13 @@ class BotWaveServer:
                             Log.warning("Hmmm, you can't do that. ;)")
                         else:
                             Log.error(f"Unknown WebSocket command: {command}")
-
-
                     asyncio.get_event_loop().call_soon_threadsafe(inject_cmd)
-
             except asyncio.TimeoutError:
                 await websocket.send(json.dumps({"type": "error", "message": "Authentication timeout"}))
                 await websocket.close()
             finally:
                 self.ws_clients.discard(websocket)
                 Log.set_ws_clients(self.ws_clients)
-
 
         async def start_server():
             async with websockets.serve(handler, self.host, self.ws_port):
@@ -408,7 +390,6 @@ class BotWaveServer:
                     self.ws_loop.run_until_complete(start_server())
 
         threading.Thread(target=run_server, daemon=True).start()
-
 
     def list_clients(self):
         if not self.clients:
@@ -478,7 +459,6 @@ class BotWaveServer:
     def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0,
                        ps: str = "RADIOOOO", rt: str = "Broadcasting since 2025", pi: str = "FFFF",
                        loop: bool = False):
-
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             return False
@@ -663,80 +643,92 @@ def main():
     parser.add_argument('--start-asap', action='store_false',
                        help='Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.')
     parser.add_argument('--ws', type=int, help='WebSocket port')
+    parser.add_argument('--daemon', action='store_true',
+                       help='Run in daemon mode (non-interactive, requires --ws port)')
     args = parser.parse_args()
 
-    Log.header("BotWave Socket Manager - Server")
+    if args.daemon and not args.ws:
+        Log.error("Daemon mode requires a WebSocket port to be specified")
+        sys.exit(1)
 
-    server = BotWaveServer(args.host, args.port, args.pk, args.start_asap, args.ws)
+    Log.header("BotWave Socket Manager - Server")
+    server = BotWaveServer(args.host, args.port, args.pk, args.start_asap, args.ws, args.daemon)
     server.start()
 
-    Log.print("Type 'help' for a list of available commands", 'bright_yellow')
-    try:
-        while True:
-            try:
-                print()
-                cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
-                if not cmd_input:
-                    continue
-                server.command_history.append(cmd_input)
-                server.history_index = len(server.command_history)
-                cmd = cmd_input.split()
-                command = cmd[0].lower()
-                if command == 'exit':
-                    server.kick_client("all", "The server is closing.")
+    if not args.daemon:
+        Log.print("Type 'help' for a list of available commands", 'bright_yellow')
+        try:
+            while True:
+                try:
+                    print()
+                    cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+                    if not cmd_input:
+                        continue
+                    server.command_history.append(cmd_input)
+                    server.history_index = len(server.command_history)
+                    cmd = cmd_input.split()
+                    command = cmd[0].lower()
+                    if command == 'exit':
+                        server.kick_client("all", "The server is closing.")
+                        break
+                    elif command == 'list':
+                        server.list_clients()
+                    elif command == 'upload':
+                        if len(cmd) < 3:
+                            Log.error("Usage: upload <targets> <file>")
+                            Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                            continue
+                        server.upload_file(cmd[1], cmd[2])
+                    elif command == 'start':
+                        if len(cmd) < 3:
+                            Log.error("Usage: start <targets> <file> [freq] [ps] [rt] [pi] [loop]")
+                            Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                            continue
+                        frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
+                        ps = cmd[4] if len(cmd) > 4 else "BotWave"
+                        rt = cmd[5] if len(cmd) > 5 else "Broadcasting"
+                        pi = cmd[6] if len(cmd) > 6 else "FFFF"
+                        loop = cmd[7].lower() == 'true' if len(cmd) > 7 else False
+                        server.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
+                    elif command == 'stop':
+                        if len(cmd) < 2:
+                            Log.error("Usage: stop <targets>")
+                            Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                            continue
+                        server.stop_broadcast(cmd[1])
+                    elif command == 'kick':
+                        if len(cmd) < 2:
+                            Log.error("Usage: kick <targets> [reason]")
+                            Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                            continue
+                        reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
+                        server.kick_client(cmd[1], reason)
+                    elif command == 'restart':
+                        if len(cmd) < 2:
+                            Log.error("Usage: restart <targets>")
+                            Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                            continue
+                        server.restart_client(cmd[1])
+                    elif command == 'help':
+                        display_help()
+                    else:
+                        Log.error(f"Unknown command: {command}")
+                        Log.info("Type 'help' for a list of available commands")
+                except KeyboardInterrupt:
+                    Log.warning("Use 'exit' to exit")
+                except EOFError:
+                    Log.server_message("Exiting...")
                     break
-                elif command == 'list':
-                    server.list_clients()
-                elif command == 'upload':
-                    if len(cmd) < 3:
-                        Log.error("Usage: upload <targets> <file>")
-                        Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                        continue
-                    server.upload_file(cmd[1], cmd[2])
-                elif command == 'start':
-                    if len(cmd) < 3:
-                        Log.error("Usage: start <targets> <file> [freq] [ps] [rt] [pi] [loop]")
-                        Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                        continue
-                    frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
-                    ps = cmd[4] if len(cmd) > 4 else "BotWave"
-                    rt = cmd[5] if len(cmd) > 5 else "Broadcasting"
-                    pi = cmd[6] if len(cmd) > 6 else "FFFF"
-                    loop = cmd[7].lower() == 'true' if len(cmd) > 7 else False
-                    server.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
-                elif command == 'stop':
-                    if len(cmd) < 2:
-                        Log.error("Usage: stop <targets>")
-                        Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                        continue
-                    server.stop_broadcast(cmd[1])
-                elif command == 'kick':
-                    if len(cmd) < 2:
-                        Log.error("Usage: kick <targets> [reason]")
-                        Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                        continue
-                    reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
-                    server.kick_client(cmd[1], reason)
-                elif command == 'restart':
-                    if len(cmd) < 2:
-                        Log.error("Usage: restart <targets>")
-                        Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                        continue
-                    server.restart_client(cmd[1])
-                elif command == 'help':
-                    display_help()
-                else:
-                    Log.error(f"Unknown command: {command}")
-                    Log.info("Type 'help' for a list of available commands")
-            except KeyboardInterrupt:
-                Log.warning("Use 'exit' to exit")
-            except EOFError:
-                Log.server_message("Exiting...")
-                break
-            except Exception as e:
-                Log.error(f"Error: {e}")
-    finally:
-        server.stop()
+                except Exception as e:
+                    Log.error(f"Error: {e}")
+        finally:
+            server.stop()
+    else:
+        try:
+            while True:
+                time.sleep(1) # we dont do anything in daemon
+        except KeyboardInterrupt:
+            server.stop()
 
 if __name__ == "__main__":
     main()
