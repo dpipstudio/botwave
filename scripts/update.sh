@@ -53,6 +53,20 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o /usr/bin/bw-client
         chmod +x /usr/bin/bw-client
         log INFO "Client updated."
+
+        log INFO "Updating PiWave..."
+        ./venv/bin/pip -U git+https://github.com/douxxtech/piwave.git
+        log INFO "PiWave updated."
+
+        log INFO "Updating PiFmRds..."
+        rm -rf PiFmRds
+        git clone https://github.com/ChristopheJacquet/PiFmRds || true
+        cd PiFmRds/src
+        log INFO "Building PiFmRds..."
+        make clean
+        make
+        cd $INSTALL_DIR
+        log INFO "Updated PiFmRds."
     fi
 
     # update server
@@ -64,6 +78,11 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         log INFO "Server updated."
     fi
 
+    # update binaries -> for binaries not related to client - server
+    log INFO "Updating binaries..."
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o /usr/bin/bw-update
+    chmod +x /usr/bin/bw-update
+    log INFO "Binaries updated."
 
     echo "$LATEST_COMMIT" > "$INSTALL_DIR/last_commit"
     log INFO "Update complete."
