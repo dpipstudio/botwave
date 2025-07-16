@@ -32,7 +32,7 @@ log() {
 
 # validate input
 if [[ "$1" != "client" && "$1" != "server" && "$1" != "both" ]]; then
-    log ERROR "Usage: $0 {client|server|both}"
+    log ERROR "Usage: $0 -s {client|server|both}"
     exit 1
 fi
 MODE="$1"
