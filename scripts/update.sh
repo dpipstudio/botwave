@@ -50,7 +50,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client files..."
         curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-client -o /usr/bin/bw-client
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o /usr/bin/bw-client
         chmod +x /usr/bin/bw-client
         log INFO "Client updated."
     fi
@@ -59,7 +59,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     if [[ -d "$INSTALL_DIR/server" ]]; then
         log INFO "Updating server files..."
         curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-server -o /usr/bin/bw-server
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o /usr/bin/bw-server
         chmod +x /usr/bin/bw-server
         log INFO "Server updated."
     fi

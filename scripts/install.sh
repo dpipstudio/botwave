@@ -84,7 +84,7 @@ install_client() {
     log INFO "Downloading client.py and wrapper..."
     mkdir -p "$INSTALL_DIR/client"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-client -o /usr/bin/bw-client
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o /usr/bin/bw-client
     chmod +x /usr/bin/bw-client
 }
 
@@ -92,13 +92,13 @@ install_server() {
     log INFO "Downloading server.py and wrapper..."
     mkdir -p "$INSTALL_DIR/server"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-server -o /usr/bin/bw-server
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o /usr/bin/bw-server
     chmod +x /usr/bin/bw-server
 }
 
 install_update() {
     log INFO "Downloading update wrapper..."
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/scripts/bw-update -o /usr/bin/bw-update
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o /usr/bin/bw-update
     chmod +x /usr/bin/bw-update
 }
 
