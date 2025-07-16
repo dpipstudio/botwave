@@ -42,6 +42,7 @@ log INFO "Removing binaries..."
 rm -f /usr/local/bin/bw-client
 rm -f /usr/local/bw-server
 rm -f /usr/local/bw-update
+rm -f /usr/local/bw-autorun
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave"

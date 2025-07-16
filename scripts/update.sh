@@ -94,6 +94,14 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         log INFO "Server updated."
     fi
 
+    # update autorun
+    log INFO "Updating autorunner..."
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
+    chmod +x "$BIN_DIR/bw-autorun"
+    create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
+    log INFO "AutoRunner updated."
+
     # update binaries -> for binaries not related to client/server
     log INFO "Updating general binaries..."
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"

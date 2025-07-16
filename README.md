@@ -66,7 +66,7 @@ curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
 ```
 
 ## Usage
-See [server/server.md](server/server.md) for BotWave Server's usage, and [client/client.md](client/client.md) for BotWave Client's usage.
+See [server/server.md](server/server.md) for BotWave Server's usage, and [client/client.md](client/client.md) for BotWave Client's usage. You might start automatically the server or the client on boot by using the AutoRunner. See [autorun/autorun.md](autorun/autorun.md).
 
 ## License
 BotWave is licensed under [GPLv3.0](LICENSE).

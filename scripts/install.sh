@@ -117,6 +117,16 @@ install_server() {
     log INFO "Installed server.py and bw-server."
 }
 
+install_autorun() {
+    log INFO "Downloading autorun.py and binary..."
+    mkdir -p "$INSTALL_DIR/autorun"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
+    chmod +x "$BIN_DIR/bw-autorun"
+    create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
+    log INFO "Installed autorun.py and bw-autorun."
+}
+
 install_binaries() {
     log INFO "Downloading binaries..."
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
@@ -127,13 +137,16 @@ install_binaries() {
 
 if [[ "$MODE" == "client" ]]; then
     install_client
+    install_autorun
     install_binaries
 elif [[ "$MODE" == "server" ]]; then
     install_server
+    install_autorun
     install_binaries
 elif [[ "$MODE" == "both" ]]; then
     install_client
     install_server
+    install_autorun
     install_binaries
 fi
 
