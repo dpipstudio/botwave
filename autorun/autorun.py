@@ -411,7 +411,12 @@ Service Management:
             success = False
         else:
             Log.info("Installing BotWave Server service...")
-            server_service = SystemdService('bw-server', SERVER_SCRIPT, args.args, False, current_user)
+
+            server_args = args.args.copy()
+            if '--daemon' not in server_args:
+                server_args.append('--daemon')
+                
+            server_service = SystemdService('bw-server', SERVER_SCRIPT, server_args, False, current_user)
             if server_service.install():
                 server_service.start()
             else:
