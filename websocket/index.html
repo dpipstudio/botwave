@@ -1,9 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BotWave - WebSocket Terminal</title>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--=============== FAVICON ===============-->
+  <link rel="shortcut icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
+  <link rel="icon" href="https://botwave.dpip.lol/assets/img/icon.png" type="image/png">
+  <title>BotWave - WebSocket terminal</title>
+  <meta property="og:title" content="BotWave - WebSocket terminal">
+  <meta property="og:description"
+    content="Connect to your BotWave Server via websocket !">
+  <meta property="og:image" content="https://botwave.dpip.lol/assets/img/icon.png">
+  <meta property="og:url" content="https://botwave.dpip.lol">
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta property="og:type" content="website" />
+  <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
+  <meta name='description'
+    content='Connect to your BotWave Server via websocket !'>
+  <meta name='subject' content='FM Broadcasting'>
+  <meta name='copyright' content='botwave.dpip.lol'>
+  <meta name='language' content='EN'>
+  <meta name='topic' content='BotWave'>
+  <meta name='Classification' content='BotWave'>
+  <meta name='author' content='douxx.tech, douxx@douxx.tech'>
+  <meta name='designer' content='douxx.tech'>
+  <meta name='reply-to' content='admin@dpip.lol'>
+  <meta name='url' content='https://botwave.dpip.lol/'>
+  <meta name='identifier-URL' content='https://botwave.dpip.lol'>
+  <meta name='distribution' content='Global'>
+  <meta name='rating' content='General'>
+  <meta name='target' content='all'>
+  <meta name="news_keywords" content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
+  <meta name='og:site_name' content="Your RPI FM Network">
+  <meta name='og:email' content='admin@dpip.lol'>
+
   <style>
     body {
       margin: 0;
@@ -125,7 +156,7 @@
         };
 
       } catch (err) {
-        appendToTerminal("[ERROR] Failed to connect.");
+        appendToTerminal("[ERROR] Failed to connect. If you're running directly from botwave.dpip.lol/websocket, make sure your websocket is running on wss (eg. via a reverse proxy). If not, save this website (Ctrl + S) and open it from the file.");
       }
     }
 
