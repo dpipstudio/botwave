@@ -58,7 +58,7 @@ apt install -y python3 python3-pip libsndfile1-dev make ffmpeg git curl
 # setup working directory
 INSTALL_DIR="/opt/BotWave_Deps"
 log INFO "Creating install directory at $INSTALL_DIR..."
-mkdir -p "$INSTALL_DIR/upload"
+mkdir -p "$INSTALL_DIR/uploads"
 cd "$INSTALL_DIR"
 
 umask 002
