@@ -8,14 +8,9 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-# ensure we're root
-if [[ "$EUID" -ne 0 ]]; then
-    log ERROR "This script must be run as root. Try: sudo $0"
-    exit 1
-fi
+set -e
 
 START_PWD=$(pwd)
-
 
 RED='\033[0;31m'
 GRN='\033[0;32m'
@@ -35,7 +30,27 @@ log() {
     printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*"
 }
 
+# ensure we're root
+if [[ "$EUID" -ne 0 ]]; then
+    log ERROR "This script must be run as root. Try: sudo $0"
+    exit 1
+fi
+
 INSTALL_DIR="/opt/BotWave"
+BIN_DIR="$INSTALL_DIR/bin"
+SYMLINK_DIR="/usr/local/bin"
+
+create_symlink() {
+    local target="$1"
+    local link_name="$2"
+    if [[ -e "$SYMLINK_DIR/$link_name" ]]; then
+        log WARN "Removing existing symlink or file: $SYMLINK_DIR/$link_name"
+        rm -f "$SYMLINK_DIR/$link_name"
+    fi
+    ln -s "$target" "$SYMLINK_DIR/$link_name"
+    log INFO "Symlink created: $SYMLINK_DIR/$link_name -> $target"
+}
+
 cd "$INSTALL_DIR"
 
 log INFO "Checking if we have to update..."
@@ -50,8 +65,9 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client files..."
         curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o /usr/bin/bw-client
-        chmod +x /usr/bin/bw-client
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
+        chmod +x "$BIN_DIR/bw-client"
+        create_symlink "$BIN_DIR/bw-client" "bw-client"
         log INFO "Client updated."
 
         log INFO "Updating PiWave..."
@@ -62,27 +78,28 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         rm -rf PiFmRds
         git clone https://github.com/ChristopheJacquet/PiFmRds || true
         cd PiFmRds/src
-        log INFO "Building PiFmRds..."
         make clean
         make
-        cd $INSTALL_DIR
-        log INFO "Updated PiFmRds."
+        cd "$INSTALL_DIR"
+        log INFO "PiFmRds updated."
     fi
 
     # update server
     if [[ -d "$INSTALL_DIR/server" ]]; then
         log INFO "Updating server files..."
         curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o /usr/bin/bw-server
-        chmod +x /usr/bin/bw-server
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
+        chmod +x "$BIN_DIR/bw-server"
+        create_symlink "$BIN_DIR/bw-server" "bw-server"
         log INFO "Server updated."
     fi
 
-    # update binaries -> for binaries not related to client - server
-    log INFO "Updating binaries..."
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o /usr/bin/bw-update
-    chmod +x /usr/bin/bw-update
-    log INFO "Binaries updated."
+    # update binaries -> for binaries not related to client/server
+    log INFO "Updating general binaries..."
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
+    chmod +x "$BIN_DIR/bw-update"
+    create_symlink "$BIN_DIR/bw-update" "bw-update"
+    log INFO "General binaries updated."
 
     echo "$LATEST_COMMIT" > "$INSTALL_DIR/last_commit"
     log INFO "Update complete."
@@ -90,4 +107,4 @@ else
     log INFO "BotWave is already up-to-date."
 fi
 
-cd $START_PWD
+cd "$START_PWD"
