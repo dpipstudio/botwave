@@ -1,9 +1,8 @@
 #!/opt/BotWave/venv/bin/python3
+
+
 # this path HAS to be changed if you are not on a traditional linux distribution
-
-
 # BotWave - Client
-
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # PiWave is required ! (https://github.com/douxxtech/piwave)
 # Built on Top of Christophe Jacquet's amazing work: https://github.com/ChristopheJacquet/PiFmRds
@@ -11,7 +10,6 @@
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
-
 
 
 import socket
@@ -28,14 +26,15 @@ import urllib.request
 import urllib.error
 from typing import Optional, Dict
 from datetime import datetime, timezone
+
 try:
     from piwave import PiWave
 except ImportError:
-    print("Error: BotWave module not found. Please install it first.")
+    print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.0.0" # if missmatch of 1th or 2th part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
+PROTOCOL_VERSION = "1.0.0" # if mismatch of 1st or 2nd part: error
+VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
 
 class Log:
     COLORS = { # absolutely not taken from stackoverflow trust
@@ -138,7 +137,6 @@ class Log:
     def update_message(cls, message: str):
         cls.print(message, 'bright_yellow', 'update')
 
-
 def parse_version(version_str: str) -> tuple:
     """Parse version string into tuple of integers for comparison"""
     try:
@@ -151,15 +149,15 @@ def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
     try:
         with urllib.request.urlopen(check_url, timeout=10) as response:
             remote_version = response.read().decode('utf-8').strip()
-            
+
         current_tuple = parse_version(current_version)
         remote_tuple = parse_version(remote_version)
-        
+
         if remote_tuple > current_tuple:
             return remote_version
         return None
     except (urllib.error.URLError, urllib.error.HTTPError, Exception):
-        # dont interrupt startup for client updates, we do not care
+        # don't interrupt startup for client updates, we do not care
         return None
 
 class BotWaveClient:
@@ -168,12 +166,12 @@ class BotWaveClient:
         self.server_port = server_port
         self.upload_dir = upload_dir
         self.socket = None
-        self.BotWave = None
+        self.piwave = None
         self.running = False
         self.current_file = None
         self.broadcasting = False
         self.passkey = passkey
-        # command queue for main thread processing -> fucking BotWave doesnt supports being in a subthread
+        # command queue for main thread processing -> PiWave doesn't support being in a subthread
         self.command_queue = queue.Queue()
         self.response_queue = queue.Queue()
         self.broadcast_params = None
@@ -193,14 +191,13 @@ class BotWaveClient:
         sys.exit(0)
 
     def connect(self):
-        # connect to the server, if its an external ip, make sure to open the fw
+        # connect to the server, if it's an external ip, make sure to open the firewall
         # if behind a NAT, make sure to do a port forwarding
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(30)
             Log.info(f"Attempting to connect to {self.server_host}:{self.server_port}...")
             self.socket.connect((self.server_host, self.server_port))
-
             # Send registration info with passkey and protocol version
             machine_info = {
                 "hostname": platform.node(),
@@ -216,10 +213,8 @@ class BotWaveClient:
             }
             message = json.dumps(registration)
             self.socket.send((message + '\n').encode('utf-8'))
-
             response = self.socket.recv(1024).decode('utf-8').strip()
             reg_response = json.loads(response)
-
             if reg_response.get('type') == 'register_ok':
                 Log.success(f"Successfully registered with server as {reg_response.get('client_id')}")
                 server_version = reg_response.get('server_protocol_version', 'unknown')
@@ -260,6 +255,7 @@ class BotWaveClient:
                     self._start_broadcast_main_thread()
                 if self.stop_broadcast_requested and self.broadcasting:
                     self._stop_broadcast_main_thread()
+
                 try:
                     command_data = self.command_queue.get_nowait()
                     command = command_data['command']
@@ -288,21 +284,17 @@ class BotWaveClient:
                     if not data:
                         Log.warning("Server disconnected")
                         break
-
                     text_data = data.decode('utf-8')
                     buffer += text_data
-
                     while '\n' in buffer:
                         message, buffer = buffer.split('\n', 1)
                         if message.strip():
                             try:
                                 command = json.loads(message.strip())
-
                                 if command.get('type') == 'ping':
                                     response = {"type": "pong"}
                                     self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
                                     continue
-
                                 if command.get('type') == 'upload_file':
                                     try:
                                         # Handle file upload - this method manages its own responses
@@ -312,14 +304,12 @@ class BotWaveClient:
                                         error_response = {"status": "error", "message": f"Upload error: {str(e)}"}
                                         self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
                                     continue
-
                                 # For other commands, use the queue system
                                 command_id += 1
                                 self.command_queue.put({
                                     'id': command_id,
                                     'command': command
                                 })
-
                                 timeout = 30
                                 response = self._wait_for_response(command_id, timeout=timeout)
                                 if response:
@@ -327,23 +317,19 @@ class BotWaveClient:
                                 else:
                                     error_response = {"status": "error", "message": "Command timeout"}
                                     self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-
                             except json.JSONDecodeError as e:
                                 Log.error(f"Invalid JSON received: {message} - Error: {e}")
                             except Exception as e:
                                 Log.error(f"Error processing message: {e}")
-
                 except socket.timeout:
                     try:
                         self.response_queue.get_nowait()
                     except queue.Empty:
                         pass
                     continue
-
             except Exception as e:
                 Log.error(f"Error handling network command: {e}")
                 break
-
         self.running = False
 
     def _wait_for_response(self, command_id: int, timeout: int = 30) -> Optional[Dict]:
@@ -386,13 +372,10 @@ class BotWaveClient:
                 return {"status": "error", "message": "Missing filename or size"}
             if not filename.endswith('.wav'):
                 return {"status": "error", "message": "Only WAV files are supported"}
-
             file_path = os.path.join(self.upload_dir, filename)
             Log.file_message(f"Preparing to receive file: {filename} ({file_size} bytes)")
-
             ready_response = {"status": "ready", "message": "Ready to receive file"}
             self.socket.sendall((json.dumps(ready_response) + '\n').encode('utf-8'))
-
             Log.file_message(f"Receiving file data...")
             received_data = b''
             while len(received_data) < file_size:
@@ -410,20 +393,15 @@ class BotWaveClient:
                 except Exception as e:
                     Log.error(f"Error receiving file chunk: {e}")
                     break
-
             if len(received_data) != file_size:
                 Log.error(f"File upload incomplete: received {len(received_data)}/{file_size} bytes")
                 return {"status": "error", "message": f"Incomplete file transfer"}
-
             with open(file_path, 'wb') as f:
                 f.write(received_data)
-
             Log.success(f"File {filename} uploaded successfully ({len(received_data)} bytes)")
-
             final_response = {"status": "uploaded", "message": "File uploaded successfully"}
             self.socket.sendall((json.dumps(final_response) + '\n').encode('utf-8'))
             return final_response
-
         except Exception as e:
             Log.error(f"Upload error: {str(e)}")
             return {"status": "error", "message": f"Upload error: {str(e)}"}
@@ -433,21 +411,17 @@ class BotWaveClient:
             filename = command.get('filename')
             if not filename:
                 return {"status": "error", "message": "Missing filename"}
-
             file_path = os.path.join(self.upload_dir, filename)
             if not os.path.exists(file_path):
                 return {"status": "error", "message": f"File {filename} not found"}
-
             if self.broadcasting:
                 self.stop_broadcast_requested = True
                 timeout = 0
                 while self.broadcasting and timeout < 100:  # 10 secs timeout
                     time.sleep(0.1)
                     timeout += 1
-
-            # Récupérer le timestamp start_at
+            # Get the timestamp start_at
             start_at = command.get('start_at', 0)
-
             self.broadcast_params = {
                 'filename': filename,
                 'file_path': file_path,
@@ -457,25 +431,21 @@ class BotWaveClient:
                 'pi': command.get('pi', 'FFFF'),
                 'loop': command.get('loop', False)
             }
-
             if start_at > 0:
                 current_time = datetime.now(timezone.utc).timestamp()
                 if start_at > current_time:
                     delay = start_at - current_time
                     Log.broadcast_message(f"Waiting {delay:.2f} seconds before starting broadcast...")
-
                     broadcast_thread = threading.Thread(target=self._start_broadcast_after_delay, args=(delay,))
                     broadcast_thread.daemon = True
                     broadcast_thread.start()
-
                     return {"status": "success", "message": f"Broadcast scheduled to start in {delay:.2f} seconds"}
                 else:
-                    self._start_broadcast()
+                    self._start_broadcast_main_thread()
                     return {"status": "success", "message": "Broadcasting started"}
             else:
-                self._start_broadcast()
+                self._start_broadcast_main_thread()
                 return {"status": "success", "message": "Broadcasting started"}
-
         except Exception as e:
             Log.error(f"Broadcast error: {str(e)}")
             return {"status": "error", "message": f"Broadcast error: {str(e)}"}
@@ -483,18 +453,9 @@ class BotWaveClient:
     def _start_broadcast_after_delay(self, delay: float):
         try:
             time.sleep(delay)
-            self._start_broadcast()
+            self.broadcast_requested = True
         except Exception as e:
             Log.error(f"Error starting broadcast after delay: {str(e)}")
-
-    def _start_broadcast(self):
-        try:
-            self.broadcast_requested = True
-            Log.broadcast_message(
-                f"Started broadcasting {self.broadcast_params['filename']} on {self.broadcast_params['frequency']} MHz"
-            )
-        except Exception as e:
-            Log.error(f"Broadcast error: {str(e)}")
 
     def _start_broadcast_main_thread(self):
         if not self.broadcast_params:
@@ -512,9 +473,8 @@ class BotWaveClient:
             self.current_file = params['filename']
             self.broadcasting = True
             self.broadcast_requested = False
-            self.piwave.send([params['file_path']])
+            self.piwave.play([params['file_path']])
             Log.broadcast_message(f"PiWave broadcast started for {params['filename']}")
-
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")
             self.broadcasting = False
@@ -525,17 +485,14 @@ class BotWaveClient:
         try:
             if not self.broadcasting:
                 return {"status": "error", "message": "No broadcast running"}
-
             self.stop_broadcast_requested = True
-            Log.broadcast_message("Broadcasting stopped")
-            return {"status": "success", "message": "Broadcasting stopped"}
-
+            Log.broadcast_message("Stopping broadcast...")
+            return {"status": "success", "message": "Stopping broadcast"}
         except Exception as e:
             Log.error(f"Stop error: {str(e)}")
             return {"status": "error", "message": f"Stop error: {str(e)}"}
 
     def _stop_broadcast_main_thread(self):
-        """Stop broadcast in main thread"""
         if self.piwave:
             try:
                 self.piwave.stop()
@@ -544,7 +501,6 @@ class BotWaveClient:
                 Log.error(f"Error stopping PiWave: {e}")
             finally:
                 self.piwave = None
-
         self.broadcasting = False
         self.current_file = None
         self.stop_broadcast_requested = False
@@ -579,7 +535,7 @@ def find_pi_fm_rds_path() -> Optional[str]:
                 else:
                     Log.error("[Launcher] The path in pi_fm_rds_path is invalid.")
                     Log.info("[Launcher] Please relaunch this program.")
-                    Log.info("[Launcher] This won't happen everytime.")
+                    Log.info("[Launcher] This won't happen every time.")
                     os.remove(path_file)
         except Exception as e:
             Log.error(f"Error reading {path_file}: {e}")
@@ -622,16 +578,19 @@ def is_raspberry_pi() -> bool:
     except:
         return False
 
-def check_requirements(): # checking if its running on a raspberry pi, if we are root, and if we have pifmrds
+def check_requirements():
+    # checking if it's running on a raspberry pi, if we are root, and if we have pifmrds
     if not is_raspberry_pi():
         Log.warning("This doesn't appear to be a Raspberry Pi")
         response = input("Continue anyway? (y/N): ").lower()
         if response != 'y':
             sys.exit(1)
+
     # Check if running as root
     if os.geteuid() != 0:
         Log.error("This client must be run as root for GPIO access")
         sys.exit(1)
+
     pi_fm_rds_path = find_pi_fm_rds_path()
     if not pi_fm_rds_path:
         Log.error("pi_fm_rds not found. Please install PiFmRds first.")
@@ -641,7 +600,7 @@ def check_requirements(): # checking if its running on a raspberry pi, if we are
 
 def main():
     Log.header("BotWave - Client")
-    
+
     Log.info("Checking for protocol updates...")
     try:
         latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
@@ -652,7 +611,7 @@ def main():
             Log.success("You are using the latest protocol version")
     except Exception as e:
         Log.warning("Unable to check for updates (continuing anyway)")
-    
+
     parser = argparse.ArgumentParser(description='BotWave - Client')
     parser.add_argument('server_host', help='Server hostname or IP address')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
@@ -664,15 +623,15 @@ def main():
     parser.add_argument('--skip-update-check', action='store_true',
                        help='Skip checking for protocol updates')
     args = parser.parse_args()
-    
+
     if not args.skip_checks:
         check_requirements()
-    
+
     client = BotWaveClient(args.server_host, args.port, args.upload_dir, args.pk)
     Log.info(f"Starting BotWave client, connecting to {args.server_host}:{args.port}")
     Log.info(f"Upload directory: {args.upload_dir}")
     Log.info("Press Ctrl+C to stop")
-    
+
     try:
         client.start()
     except KeyboardInterrupt:
