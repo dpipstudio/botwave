@@ -1,5 +1,7 @@
 # BotWave - Server | Documentation
 
+> This tool is included in the **CLIENT** install.
+
 BotWave Server is a program designed to manage multiple BotWave clients, allowing for the upload and broadcast of audio files over FM radio using Raspberry Pi devices.
 
 ## Requirements

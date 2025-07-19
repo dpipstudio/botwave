@@ -66,7 +66,46 @@ curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
 ```
 
 ## Usage
-See [server/server.md](server/server.md) for BotWave Server's usage, and [client/client.md](client/client.md) for BotWave Client's usage. You might start automatically the server or the client on boot by using the AutoRunner. See [autorun/autorun.md](autorun/autorun.md).
+
+BotWave usage depends on the tool you're using. Here's a breakdown of each component:
+
+### **Server**
+> This tool is included in the **SERVER** install.
+The BotWave Server lets you manage multiple Raspberry Pi clients remotely — upload audio files, control broadcasts, and more.
+
+**Full documentation:** [server/server.md](server/server.md)
+
+---
+
+### **Client**
+> This tool is included in the **CLIENT** install.
+The BotWave Client runs on a Raspberry Pi and connects to the server to receive and broadcast audio files over FM.
+
+**Full documentation:** [client/client.md](client/client.md)
+
+---
+
+### **Local Client**
+> This tool is included in the **CLIENT** install.
+The Local Client allows you to broadcast audio files **without a server**, directly from the Raspberry Pi using command-line controls.
+
+**Full documentation:** [local/local.md](local/local.md)
+
+---
+
+### **AutoRunner**
+> This tool is included in the **CLIENT & SERVER** install.
+The AutoRunner lets you set up `systemd` services to automatically start the BotWave Client or Server on boot.
+
+**Full documentation:** [autorun/autorun.md](autorun/autorun.md)
+
+---
+
+*We highly recommend using the automatic installer to set up the desired components (`server`, `client`, or `both`):*
+
+```bash
+curl -sSL https://botwave.dpip.lol/install | sudo bash -s <server, client or both>
+```
 
 ## License
 BotWave is licensed under [GPLv3.0](LICENSE).

@@ -1,5 +1,7 @@
 # BotWave - Client | Documentation
 
+> This tool is included in the **CLIENT** install.
+
 BotWave Client is a client application designed to connect to a BotWave Server, allowing for the upload and broadcast of audio files over FM radio using a Raspberry Pi.
 
 ## Requirements

@@ -1,5 +1,7 @@
 # BotWave - AutoRunner | Documentation
 
+> This tool is included in the **CLIENT & SERVER** install.
+
 BotWave AutoRunner is a server / client application allowing you to manage easily systemd services, allowing you to create autorun scripts for BotWave Client and BotWave Server, starting immediatly when booting up your device.
 
 ## Requirements
