@@ -70,6 +70,14 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         create_symlink "$BIN_DIR/bw-client" "bw-client"
         log INFO "Client updated."
 
+        log INFO "Updating local client files..."
+        mkdir -p local
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/local/local.py -o "$INSTALL_DIR/local/client.py"
+        curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+        chmod +x "$BIN_DIR/bw-local"
+        create_symlink "$BIN_DIR/bw-local" "bw-local"
+        log INFO "Local client updated."
+
         log INFO "Updating PiWave..."
         ./venv/bin/pip install -U git+https://github.com/douxxtech/piwave.git
         log INFO "PiWave updated."

@@ -98,13 +98,21 @@ install_client() {
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
     log INFO "Installed PiWave."
 
-    log INFO "Downloading client.py, binary..."
+    log INFO "Downloading client.py and binary..."
     mkdir -p "$INSTALL_DIR/client"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
     chmod +x "$BIN_DIR/bw-client"
     create_symlink "$BIN_DIR/bw-client" "bw-client"
     log INFO "Installed client.py and bw-client."
+
+    log INFO "Downloading local.py and binary..."
+    mkdir -p "$INSTALL_DIR/local"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/local/local.py -o "$INSTALL_DIR/local/local.py"
+    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+    chmod +x "$BIN_DIR/bw-local"
+    create_symlink "$BIN_DIR/bw-local" "bw-local"
+    log INFO "Installed local.py and bw-local."
 }
 
 install_server() {

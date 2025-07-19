@@ -37,12 +37,13 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# remove client and server binaries
+# remove binaries
 log INFO "Removing binaries..."
 rm -f /usr/local/bin/bw-client
 rm -f /usr/local/bw-server
 rm -f /usr/local/bw-update
 rm -f /usr/local/bw-autorun
+rm -f /usr/local/bw-local
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave"
