@@ -53,7 +53,7 @@ fi
 # install dependencies
 log INFO "Installing system dependencies..."
 apt update
-apt install -y python3 python3-pip libsndfile1-dev make ffmpeg git curl
+apt install -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl
 
 INSTALL_DIR="/opt/BotWave"
 BIN_DIR="$INSTALL_DIR/bin"
@@ -98,7 +98,7 @@ install_client() {
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
     log INFO "Installed PiWave."
 
-    log INFO "Downloading client.py and wrapper..."
+    log INFO "Downloading client.py, binary..."
     mkdir -p "$INSTALL_DIR/client"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
