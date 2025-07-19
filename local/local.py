@@ -361,7 +361,7 @@ def main():
 
     while cli.running:
         try:
-            cmd_input = input("\033[1;32mbotwave >\033[0m ").strip()
+            cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
             if not cmd_input:
                 continue
 
