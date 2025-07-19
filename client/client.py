@@ -1,7 +1,7 @@
 #!/opt/BotWave/venv/bin/python3
-
-
 # this path HAS to be changed if you are not on a traditional linux distribution
+
+
 # BotWave - Client
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # PiWave is required ! (https://github.com/douxxtech/piwave)
