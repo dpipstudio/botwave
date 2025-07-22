@@ -1,5 +1,5 @@
 #!/opt/BotWave/venv/bin/python3
-# this path HAS to be changed if you are not on a traditional linux distribution
+# this path won't be correct if you didnt use the botwave.dpip.lol/install installer or similar.
 
 
 # BotWave - Client
