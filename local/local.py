@@ -1,7 +1,6 @@
 #!/opt/BotWave/venv/bin/python3
 # this path HAS to be changed if you are not on a traditional linux distribution
 
-
 # BotWave - Local Client
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # PiWave is required ! (https://github.com/douxxtech/piwave)
@@ -11,11 +10,13 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
+
 import os
 import sys
 import signal
 import argparse
 from typing import Optional
+
 try:
     from piwave import PiWave
 except ImportError:
@@ -54,6 +55,7 @@ class Log:
         'broadcast': 'BCAST',
         'version': 'VER',
         'update': 'UPD',
+        'handler': 'HNDL',
     }
 
     @classmethod
@@ -122,6 +124,10 @@ class Log:
     def update_message(cls, message: str):
         cls.print(message, 'bright_yellow', 'update')
 
+    @classmethod
+    def handler_message(cls, message: str):
+        cls.print(message, 'magenta', 'handler')
+
 def parse_version(version_str: str) -> tuple:
     try:
         return tuple(map(int, version_str.split('.')))
@@ -150,11 +156,75 @@ class BotWaveCLI:
         self.stop()
         sys.exit(0)
 
+    def onready_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
+        if not os.path.exists(dir_path):
+            Log.error(f"Directory {dir_path} not found")
+            return False
+
+        for filename in os.listdir(dir_path):
+            if filename.startswith("l_onready"):
+                file_path = os.path.join(dir_path, filename)
+                try:
+                    Log.handler_message(f"Running onready handler on {file_path}")
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line:
+                                Log.handler_message(f"Executing command: {line}")
+                                self._execute_command(line)
+                except Exception as e:
+                    Log.error(f"Error executing command from {filename}: {e}")
+
+    def _execute_command(self, command: str):
+        try:
+            cmd_parts = command.split()
+            if not cmd_parts:
+                return True
+
+            cmd = cmd_parts[0].lower()
+            if cmd == 'start':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: start <file> [frequency] [ps] [rt] [pi] [loop]")
+                    return True
+                file_path = os.path.join(self.upload_dir, cmd_parts[1])
+                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
+                ps = cmd_parts[3] if len(cmd_parts) > 3 else "RADIOOOO"
+                rt = " ".join(cmd_parts[4:-2]) if len(cmd_parts) > 4 else "Broadcasting"
+                pi = cmd_parts[-2] if len(cmd_parts) > 5 else "FFFF"
+                loop = cmd_parts[-1].lower() == 'true' if len(cmd_parts) > 6 else False
+                self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
+                return True
+            elif cmd == 'stop':
+                self.stop_broadcast()
+                return True
+            elif cmd == 'list':
+                directory = cmd_parts[1] if len(cmd_parts) > 1 else None
+                self.list_files(directory)
+                return True
+            elif cmd == 'upload':
+                if len(cmd_parts) < 3:
+                    Log.error("Usage: upload <source> <destination>")
+                    return True
+                source = cmd_parts[1]
+                destination = cmd_parts[2]
+                self.upload_file(source, destination)
+            elif cmd == 'help':
+                self.display_help()
+                return True
+            elif cmd == 'exit':
+                self.stop()
+                return True
+            else:
+                Log.error(f"Unknown command: {cmd}")
+                return True
+        except Exception as e:
+            Log.error(f"Error executing command '{command}': {e}")
+            return True
+
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
             return False
-
         if self.broadcasting:
             self.stop_broadcast()
 
@@ -204,7 +274,6 @@ class BotWaveCLI:
             if not files:
                 Log.info(f"No files found in the directory {target_dir}")
                 return
-
             Log.info(f"Files in directory {target_dir}:")
             for file in files:
                 Log.print(f"  {file}", 'white')
@@ -241,7 +310,6 @@ class BotWaveCLI:
             return False
 
         dest_path = os.path.join(self.upload_dir, dest_name)
-
         try:
             with open(source_path, 'rb') as src_file:
                 with open(dest_path, 'wb') as dest_file:
@@ -307,11 +375,9 @@ def find_pi_fm_rds_path() -> Optional[str]:
             with open(path_file, "w") as file:
                 file.write(user_path)
             return user_path
-
         Log.error("The path you provided is not valid or `pi_fm_rds` is not executable.")
         Log.info("Please make sure `pi_fm_rds` is installed and accessible, then restart the program.")
         exit(1)
-
     return None
 
 def is_raspberry_pi() -> bool:
@@ -325,17 +391,14 @@ def is_raspberry_pi() -> bool:
 def check_requirements(skip_checks: bool = False):
     if skip_checks:
         return
-
     if not is_raspberry_pi():
         Log.warning("This doesn't appear to be a Raspberry Pi")
         response = input("Continue anyway? (y/N): ").lower()
         if response != 'y':
             sys.exit(1)
-
     if os.geteuid() != 0:
         Log.error("This client must be run as root for GPIO access")
         sys.exit(1)
-
     pi_fm_rds_path = find_pi_fm_rds_path()
     if not pi_fm_rds_path:
         Log.error("pi_fm_rds not found. Please install PiFmRds first.")
@@ -346,11 +409,11 @@ def check_requirements(skip_checks: bool = False):
 def main():
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive l_ handlers from')
     parser.add_argument('--skip-checks', action='store_true', help='Skip system requirements checks')
     args = parser.parse_args()
 
     Log.header("BotWave Local Client")
-
     check_requirements(args.skip_checks)
 
     cli = BotWaveCLI(args.upload_dir)
@@ -359,51 +422,20 @@ def main():
 
     Log.info("Type 'help' for a list of available commands")
 
+    # Execute onready handlers
+    cli.onready_handlers(args.handlers_dir)
+
     while cli.running:
         try:
             cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
             if not cmd_input:
                 continue
-
             cli.command_history.append(cmd_input)
             cli.history_index = len(cli.command_history)
+            exit = cli._execute_command(cmd_input)
 
-            cmd_parts = cmd_input.split()
-            command = cmd_parts[0].lower()
-
-            if command == 'exit':
-                cli.stop()
+            if not exit:
                 break
-            elif command == 'start':
-                if len(cmd_parts) < 2:
-                    Log.error("Usage: start <file> [frequency] [ps] [rt] [pi] [loop]")
-                    continue
-
-                file_path = os.path.join(args.upload_dir, cmd_parts[1])
-                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
-                ps = cmd_parts[3] if len(cmd_parts) > 3 else "RADIOOOO"
-                rt = " ".join(cmd_parts[4:-2]) if len(cmd_parts) > 4 else "Broadcasting"
-                pi = cmd_parts[-2] if len(cmd_parts) > 5 else "FFFF"
-                loop = cmd_parts[-1].lower() == 'true' if len(cmd_parts) > 6 else False
-
-                cli.start_broadcast(file_path, frequency, ps, rt, pi, loop)
-            elif command == 'stop':
-                cli.stop_broadcast()
-            elif command == 'list':
-                directory = cmd_parts[1] if len(cmd_parts) > 1 else None
-                cli.list_files(directory)
-            elif command == 'upload':
-                if len(cmd_parts) < 3:
-                    Log.error("Usage: upload <source> <destination>")
-                    continue
-                source = cmd_parts[1]
-                destination = cmd_parts[2]
-                cli.upload_file(source, destination)
-            elif command == 'help':
-                cli.display_help()
-            else:
-                Log.error(f"Unknown command: {command}")
-                Log.info("Type 'help' for a list of available commands")
         except KeyboardInterrupt:
             Log.warning("Use 'exit' to exit")
         except EOFError:
