@@ -60,11 +60,19 @@ Once the client is running, you can use the following commands:
 - `upload`: Upload a file to the upload directory.  
     - Usage: `botwave> upload <source> <destination>`
 
+- `handlers`: List all handlers or commands in a specific handler file.  
+    - Usage: `botwave> handlers [filename]`
+
 - `help`: Display the help message.  
     - Usage: `botwave> help`
 
 - `exit`: Exit the application.  
     - Usage: `botwave> exit`
+
+### Supported handlers
+- `l_onready`: When the client is ready (on startup).
+- `l_onstart`: When a broadcast has been start.
+- `l_onstop`: When a broadcast has been stopped (manually).
 
 ---
 
