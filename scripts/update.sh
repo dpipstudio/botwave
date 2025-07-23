@@ -61,6 +61,9 @@ CURRENT_COMMIT=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
 if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     log INFO "New version available. Updating now..."
 
+    # create handlers dir
+    mkdir -p handlers
+
     # update client
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client files..."
@@ -109,9 +112,6 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     chmod +x "$BIN_DIR/bw-autorun"
     create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
     log INFO "AutoRunner updated."
-
-    # create handlers dir
-    mkdir -p handlers
 
     # update binaries -> for binaries not related to client/server
     log INFO "Updating general binaries..."
