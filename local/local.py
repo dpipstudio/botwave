@@ -136,7 +136,7 @@ def parse_version(version_str: str) -> tuple:
         return (0, 0, 0)
 
 class BotWaveCLI:
-    def __init__(self, upload_dir: str = "/opt/BotWave/uploads"):
+    def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers"):
         self.piwave = None
         self.running = False
         self.current_file = None
@@ -146,6 +146,7 @@ class BotWaveCLI:
         self.command_history = []
         self.history_index = 0
         self.upload_dir = upload_dir
+        self.handlers_dir = handlers_dir
 
         os.makedirs(upload_dir, exist_ok=True)
 
@@ -228,7 +229,10 @@ class BotWaveCLI:
             Log.error(f"Error executing command '{command}': {e}")
             return True
 
-    def onready_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
+    def onready_handlers(self, dir_path: str = None):
+        if dir_path is None:
+            dir_path = self.handlers_dir
+
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
@@ -580,7 +584,7 @@ def main():
     Log.header("BotWave Local Client")
     check_requirements(args.skip_checks)
 
-    cli = BotWaveCLI(args.upload_dir)
+    cli = BotWaveCLI(args.upload_dir, args.handlers_dir)
     cli._setup_signal_handlers()
     cli.running = True
 
