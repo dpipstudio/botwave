@@ -60,6 +60,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `restart`: Restarts specified client(s).  
     - Usage: `botwave> restart <targets>`  
 
+`handlers`: List all handlers or commands in a specific handler file.  
+    - Usage: `botwave> handlers [filename]`
+
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 
@@ -69,6 +72,15 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 ```
 targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or a comma-separated list of clients (client1,client2,etc).
 ```
+
+### Supported handlers
+- `s_onready`: When the server is ready (on startup).
+- `s_onstart`: When a broadcast has been start.
+- `s_onstop`: When a broadcast has been stopped (manually).
+- `s_onconnect`: When a client connects to the server.
+- `s_ondisconnect`: When a client disconnects form the server.
+- `s_onwsjoin`: When a websocket client joins the server.
+- `s_onwsleave`: When a websocket client leaves the server (buggy).
 
 ---
 
