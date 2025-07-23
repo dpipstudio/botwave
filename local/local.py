@@ -15,6 +15,7 @@ import sys
 import signal
 import argparse
 from typing import Optional
+import time
 
 try:
     from piwave import PiWave
@@ -584,6 +585,8 @@ def main():
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive l_ handlers from')
     parser.add_argument('--skip-checks', action='store_true', help='Skip system requirements checks')
+    parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
+
 
     args = parser.parse_args()
 
@@ -598,28 +601,37 @@ def main():
 
     cli.onready_handlers(args.handlers_dir)
 
-    while cli.running:
-        try:
-            cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+    if not args.daemon:
+        while cli.running:
+            try:
+                cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
 
-            if not cmd_input:
-                continue
+                if not cmd_input:
+                    continue
 
-            cli.command_history.append(cmd_input)
-            cli.history_index = len(cli.command_history)
+                cli.command_history.append(cmd_input)
+                cli.history_index = len(cli.command_history)
 
-            exit = cli._execute_command(cmd_input)
+                exit = cli._execute_command(cmd_input)
 
-            if not exit:
+                if not exit:
+                    break
+            except KeyboardInterrupt:
+                Log.warning("Use 'exit' to exit")
+            except EOFError:
+                Log.info("Exiting...")
+                cli.stop()
                 break
+            except Exception as e:
+                Log.error(f"Error: {e}")
+    else:
+        Log.info("Running in daemon mode. Server will continue to run in the background.")
+
+        try:
+            while True:
+                time.sleep(1)
         except KeyboardInterrupt:
-            Log.warning("Use 'exit' to exit")
-        except EOFError:
-            Log.info("Exiting...")
             cli.stop()
-            break
-        except Exception as e:
-            Log.error(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
