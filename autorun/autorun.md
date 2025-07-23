@@ -27,7 +27,7 @@ We highly recommand using the official installer (Check the [main README](/READM
 To start the BotWave AutoRunner, use the following command:
 
 ```bash
-sudo bw-autorun <client, server or both> [additional arguments to add to command line]
+sudo bw-autorun <client, server, local or all> [additional arguments to add to command line]
 ```
 
 ### Arguments
