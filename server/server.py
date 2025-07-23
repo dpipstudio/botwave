@@ -57,6 +57,7 @@ class Log:
         'broadcast': 'BCAST',
         'version': 'VER',
         'update': 'UPD',
+        'handler': 'HNDL',
     }
 
     ws_clients = set()
