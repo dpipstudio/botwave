@@ -36,6 +36,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--skip-checks]
 ### Arguments
 
 - `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
+- `--handlers-dir`: The directory to retrive l_ handlers from (default: `/opt/BotWave/handlers`)
 - `--skip-checks`: Skip system requirements checks.
 
 ### Example
