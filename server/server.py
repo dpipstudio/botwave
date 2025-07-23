@@ -898,12 +898,12 @@ class BotWaveServer:
                 del self.clients[client_id]
 
                 Log.success(f"  {client.get_display_name()}: Kicked - {reason}")
-                self.ondisconnect_handlers()
                 success_count += 1
             except Exception as e:
                 Log.error(f"  {client.get_display_name()}: Error kicking - {e}")
 
         Log.client_message(f"Kick completed: {success_count}/{total_count} successful")
+        self.ondisconnect_handlers()
         return success_count > 0
 
     def restart_client(self, client_targets: str):
