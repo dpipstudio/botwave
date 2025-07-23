@@ -110,6 +110,9 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
     log INFO "AutoRunner updated."
 
+    # create handlers dir
+    mkdir -p handlers
+
     # update binaries -> for binaries not related to client/server
     log INFO "Updating general binaries..."
     curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"

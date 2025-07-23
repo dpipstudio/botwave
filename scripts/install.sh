@@ -61,6 +61,7 @@ SYMLINK_DIR="/usr/local/bin"
 
 log INFO "Creating install directories..."
 mkdir -p "$INSTALL_DIR/uploads"
+mkdir -p "$INSTALL_DIR/handlers"
 mkdir -p "$BIN_DIR"
 cd "$INSTALL_DIR"
 
