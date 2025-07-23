@@ -254,7 +254,10 @@ class BotWaveCLI:
                 except Exception as e:
                     Log.error(f"Error executing command from {filename}: {e}")
 
-    def onstart_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
+    def onstart_handlers(self, dir_path: str = None):
+        if dir_path is None:
+            dir_path = self.handlers_dir
+
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
@@ -276,7 +279,10 @@ class BotWaveCLI:
                 except Exception as e:
                     Log.error(f"Error executing command from {filename}: {e}")
 
-    def onstop_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
+    def onstop_handlers(self, dir_path: str = None):
+        if dir_path is None:
+            dir_path = self.handlers_dir
+    
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
