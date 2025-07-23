@@ -292,7 +292,7 @@ class BotWaveCLI:
                 file_path = os.path.join(dir_path, filename)
 
                 try:
-                    Log.handler_message(f"Running onstop' handler on {file_path}")
+                    Log.handler_message(f"Running onstop handler on {file_path}")
 
                     with open(file_path, "r", encoding="utf-8") as f:
                         for line in f:
