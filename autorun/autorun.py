@@ -187,7 +187,7 @@ Environment=PATH=/opt/BotWave/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/BotWave/uploads
+ReadWritePaths=/opt/BotWave/uploads /opt/BotWave/handlers
 """
 
         service_content += """
