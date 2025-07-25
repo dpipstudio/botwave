@@ -205,6 +205,8 @@ class BotWaveCLI:
 
                 self.upload_file(source, destination)
 
+                return True
+
             elif cmd == 'handlers':
                 if len(cmd_parts) > 1:
                     filename = cmd_parts[1]
