@@ -15,6 +15,7 @@ import sys
 import signal
 import argparse
 from typing import Optional
+import subprocess
 import time
 
 try:
@@ -219,6 +220,14 @@ class BotWaveCLI:
             elif cmd == 'help':
                 self.display_help()
                 return True
+            
+            elif cmd == '<':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: > <shell command>")
+                    return True
+                shell_command = ' '.join(cmd_parts[1:])
+                self.run_shell_command(shell_command)
+                return True
 
             elif cmd == 'exit':
                 self.stop()
@@ -306,6 +315,24 @@ class BotWaveCLI:
                                 self._execute_command(line)
                 except Exception as e:
                     Log.error(f"Error executing command from {filename}: {e}")
+
+    def run_shell_command(self, command: str):
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+            for line in process.stdout:
+                Log.print(line, end='')
+
+            return_code = process.wait()
+
+            if return_code != 0:
+                for line in process.stderr:
+                    Log.error(line, end='')
+                Log.error(f"Command failed with return code {return_code}")
+            else:
+                Log.success("Command executed successfully")
+        except Exception as e:
+            Log.error(f"Error executing shell command: {e}")
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         if not os.path.exists(file_path):
@@ -443,7 +470,11 @@ class BotWaveCLI:
 
         Log.print("handlers [filename]", 'bright_green')
         Log.print("  List all handlers or commands in a specific handler file", 'white')
-        Log.print("  Example: handlers", 'cyan')
+        Log.print("")
+
+        Log.print("< <command>", 'bright_green')
+        Log.print("  Run a shell command on the main OS", 'white')
+        Log.print("  Example: < df -h", 'cyan')
         Log.print("")
 
         Log.print("help", 'bright_green')

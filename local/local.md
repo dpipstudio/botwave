@@ -66,6 +66,9 @@ Once the client is running, you can use the following commands:
 - `handlers`: List all handlers or commands in a specific handler file.  
     - Usage: `botwave> handlers [filename]`
 
+- `>`: Run a shell command on the main OS.  
+    - Usage: `botwave> < <command>`
+
 - `help`: Display the help message.  
     - Usage: `botwave> help`
 
