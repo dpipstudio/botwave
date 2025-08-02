@@ -21,6 +21,7 @@ import asyncio
 import websockets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
+import subprocess
 
 PROTOCOL_VERSION = "1.0.0" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
@@ -423,6 +424,8 @@ class BotWaveServer:
                             else:
                                 self.list_handlers()
                             return True
+                        elif command == '<':
+                            Log.warning("Hmmm, you can't do that. ;)")
                         elif command == 'exit':
                             Log.warning("Hmmm, you can't do that. ;)")
                         else:
@@ -522,6 +525,14 @@ class BotWaveServer:
                     self.list_handler_commands(filename)
                 else:
                     self.list_handlers()
+                return True
+            
+            elif command == '<':
+                if len(cmd) < 2:
+                    Log.error("Usage: > <shell command>")
+                    return True
+                shell_command = ' '.join(cmd[1:])
+                self.run_shell_command(shell_command)
                 return True
 
             elif command == 'help':
@@ -710,6 +721,25 @@ class BotWaveServer:
                                 self._execute_command(line)
                 except Exception as e:
                     Log.error(f"Error executing command from {filename}: {e}")
+
+
+    def run_shell_command(self, command: str):
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+            for line in process.stdout:
+                Log.print(line, end='')
+
+            return_code = process.wait()
+
+            if return_code != 0:
+                for line in process.stderr:
+                    Log.error(line, end='')
+                Log.error(f"Command failed with return code {return_code}")
+            else:
+                Log.success("Command executed successfully")
+        except Exception as e:
+            Log.error(f"Error executing shell command: {e}")
 
     def list_clients(self):
         if not self.clients:
@@ -1045,6 +1075,11 @@ class BotWaveServer:
         Log.print("handlers [filename]", 'bright_green')
         Log.print("  List all handlers or commands in a specific handler file", 'white')
         Log.print("  Example: handlers", 'cyan')
+        Log.print("")
+
+        Log.print("< <command>", 'bright_green')
+        Log.print("  Run a shell command on the main OS", 'white')
+        Log.print("  Example: < df -h", 'cyan')
         Log.print("")
 
         Log.print("exit", 'bright_green')

@@ -63,6 +63,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `handlers`: List all handlers or commands in a specific handler file.  
     - Usage: `botwave> handlers [filename]`
 
+- `>`: Run a shell command on the main OS.  
+    - Usage: `botwave> < <command>`
+
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 
