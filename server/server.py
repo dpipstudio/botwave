@@ -550,178 +550,114 @@ class BotWaveServer:
     def onready_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onready"):
+            if filename.endswith(".hdl") and filename.startswith("s_onready"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running onready handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onready"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def onstart_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onstart"):
+            if filename.endswith(".hdl") and filename.startswith("s_onstart"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running onstart handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onstart"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def onstop_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onstop"):
+            if filename.endswith(".hdl") and filename.startswith("s_onstop"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running onstop handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onstop"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def onconnect_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onconnect"):
+            if filename.endswith(".hdl") and filename.startswith("s_onconnect"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running onconnect handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onconnect"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def ondisconnect_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_ondisconnect"):
+            if filename.endswith(".hdl") and filename.startswith("s_ondisconnect"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running ondisconnect handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_ondisconnect"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def onwsjoin_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onwsjoin"):
+            if filename.endswith(".hdl") and filename.startswith("s_onwsjoin"):
                 file_path = os.path.join(dir_path, filename)
-
-                try:
-                    Log.handler_message(f"Running onwsjoin handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onwsjoin"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
     def onwsleave_handlers(self, dir_path: str = None):
         if dir_path is None:
             dir_path = self.handlers_dir
-
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
             return False
-
         for filename in os.listdir(dir_path):
-            if filename.startswith("s_onwsleave"):
+            if filename.endswith(".hdl") and filename.startswith("s_onwsleave"):
                 file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=False)
+            elif filename.endswith(".shdl") and filename.startswith("s_onwsleave"):
+                file_path = os.path.join(dir_path, filename)
+                self._execute_handler(file_path, silent=True)
 
-                try:
-                    Log.handler_message(f"Running onwsleave handler on {file_path}")
-
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-
-                            if line:
-                                Log.handler_message(f"Executing command: {line}")
-                                self._execute_command(line)
-                except Exception as e:
-                    Log.error(f"Error executing command from {filename}: {e}")
-
+    def _execute_handler(self, file_path: str, silent: bool = False):
+        try:
+            if not silent:
+                Log.handler_message(f"Running handler on {file_path}")
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        if not silent:
+                            Log.handler_message(f"Executing command: {line}")
+                        self._execute_command(line)
+        except Exception as e:
+            Log.error(f"Error executing command from {file_path}: {e}")
 
     def run_shell_command(self, command: str):
         try:
