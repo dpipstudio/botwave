@@ -1,5 +1,5 @@
 <?php
-$url = 'https://raw.githubusercontent.com/douxxtech/botwave/refs/heads/main/assets/latest.ver.txt';
+$url = 'https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/assets/latest.ver.txt';
 
 $options = [
     "http" => [
