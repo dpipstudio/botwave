@@ -736,8 +736,7 @@ class BotWaveServer:
                 for line in process.stderr:
                     Log.error(line, end='')
                 Log.error(f"Command failed with return code {return_code}")
-            else:
-                Log.success("Command executed successfully")
+            
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
