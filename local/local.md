@@ -10,7 +10,7 @@ BotWave Local Client is a standalone application designed to broadcast audio fil
 - Root Access
 - Python 3.x
 - [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds) installed
-- [PiWave](https://github.com/douxxtech/piwave) Python module
+- [PiWave](https://github.com/dpipstudio/piwave) Python module
 
 ## Installation
 

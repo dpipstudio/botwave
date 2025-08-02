@@ -2,8 +2,8 @@
 
 # BotWave - Install script
 
-# A program by Douxx (douxx.tech | github.com/douxxtech)
-# https://github.com/douxxtech/botwave
+# A program by Douxx (douxx.tech | github.com/dpipstudio)
+# https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
@@ -96,21 +96,21 @@ install_client() {
 
     log INFO "Installing PiWave..."
     ./venv/bin/pip install --upgrade pip
-    ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
+    ./venv/bin/pip install git+https://github.com/dpipstudio/piwave.git
     log INFO "Installed PiWave."
 
     log INFO "Downloading client.py and binary..."
     mkdir -p "$INSTALL_DIR/client"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
     chmod +x "$BIN_DIR/bw-client"
     create_symlink "$BIN_DIR/bw-client" "bw-client"
     log INFO "Installed client.py and bw-client."
 
     log INFO "Downloading local.py and binary..."
     mkdir -p "$INSTALL_DIR/local"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/local/local.py -o "$INSTALL_DIR/local/local.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py -o "$INSTALL_DIR/local/local.py"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
     chmod +x "$BIN_DIR/bw-local"
     create_symlink "$BIN_DIR/bw-local" "bw-local"
     log INFO "Installed local.py and bw-local."
@@ -120,8 +120,8 @@ install_server() {
     log INFO "Downloading server.py, requirements and binary..."
     ./venv/bin/pip install websockets
     mkdir -p "$INSTALL_DIR/server"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
     chmod +x "$BIN_DIR/bw-server"
     create_symlink "$BIN_DIR/bw-server" "bw-server"
     log INFO "Installed server.py and bw-server."
@@ -130,8 +130,8 @@ install_server() {
 install_autorun() {
     log INFO "Downloading autorun.py and binary..."
     mkdir -p "$INSTALL_DIR/autorun"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
     chmod +x "$BIN_DIR/bw-autorun"
     create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
     log INFO "Installed autorun.py and bw-autorun."
@@ -139,7 +139,7 @@ install_autorun() {
 
 install_binaries() {
     log INFO "Downloading binaries..."
-    curl -L https://raw.githubusercontent.com/douxxtech/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
+    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
     chmod +x "$BIN_DIR/bw-update"
     create_symlink "$BIN_DIR/bw-update" "bw-update"
     log INFO "Installed bw-update."
@@ -161,7 +161,7 @@ elif [[ "$MODE" == "both" ]]; then
 fi
 
 log INFO "Retrieving last commit"
-curl -s https://api.github.com/repos/douxxtech/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
+curl -s https://api.github.com/repos/dpipstudio/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
 
 log INFO "Installation complete."
 

@@ -2,8 +2,8 @@
 # this path won't be correct if you didnt use the botwave.dpip.lol/install installer or similar.
 
 # BotWave - Server
-# A program by Douxx (douxx.tech | github.com/douxxtech)
-# https://github.com/douxxtech/botwave
+# A program by Douxx (douxx.tech | github.com/dpipstudio)
+# https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)

@@ -9,7 +9,7 @@ BotWave AutoRunner is a server / client application allowing you to manage easil
 * Root Access
 * Python 3.x
 * [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds) installed
-* [PiWave](https://github.com/douxxtech/piwave) python module
+* [PiWave](https://github.com/dpipstudio/piwave) python module
 
 ## Installation
 

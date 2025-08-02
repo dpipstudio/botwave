@@ -1,5 +1,5 @@
 <?php
-$url = 'https://raw.githubusercontent.com/douxxtech/botwave/refs/heads/main/scripts/uninstall.sh';
+$url = 'https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/scripts/uninstall.sh';
 
 $options = [
     "http" => [
