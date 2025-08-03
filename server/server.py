@@ -269,7 +269,7 @@ class BotWaveServer:
 
             if latest_version:
                 Log.update_message(f"Update available! Latest version: {latest_version}")
-                Log.update_message("Consider updating to the latest version by running 'sudo bw-update' in your shell.")
+                Log.update_message("Consider updating to the latest version by running 'bw-update' in your shell.")
             else:
                 Log.success("You are using the latest protocol version")
         except Exception as e:
