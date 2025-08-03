@@ -107,6 +107,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
 
     # update autorun
     log INFO "Updating autorunner..."
+    mkdir -p autorun
     curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
     curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
     chmod +x "$BIN_DIR/bw-autorun"
