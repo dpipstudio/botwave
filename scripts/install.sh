@@ -96,7 +96,7 @@ install_client() {
 
     log INFO "Installing PiWave..."
     ./venv/bin/pip install --upgrade pip
-    ./venv/bin/pip install git+https://github.com/dpipstudio/piwave.git
+    ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
     log INFO "Installed PiWave."
 
     log INFO "Downloading client.py and binary..."

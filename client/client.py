@@ -3,8 +3,8 @@
 
 
 # BotWave - Client
-# A program by Douxx (douxx.tech | github.com/dpipstudio)
-# PiWave is required ! (https://github.com/dpipstudio/piwave)
+# A program by Douxx (douxx.tech | github.com/douxxtech)
+# PiWave is required ! (https://github.com/douxxtech/piwave)
 # Built on Top of Christophe Jacquet's amazing work: https://github.com/ChristopheJacquet/PiFmRds
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol

@@ -82,7 +82,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         log INFO "Local client updated."
 
         log INFO "Updating PiWave..."
-        ./venv/bin/pip install -U git+https://github.com/dpipstudio/piwave.git
+        ./venv/bin/pip install -U git+https://github.com/douxxtech/piwave.git
         log INFO "PiWave updated."
 
         log INFO "Updating PiFmRds..."
