@@ -361,6 +361,11 @@ class BotWaveClient:
             Log.info("Restart requested by server")
             self._stop_broadcast_main_thread()
             return {"status": "success", "message": "Restart acknowledged"}
+        elif cmd_type == 'download_file':
+            url = command.get('url')
+            if not url:
+                return {"status": "error", "message": "Missing URL"}
+            return self._handle_download_file(url)
         else:
             return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
 
@@ -405,6 +410,25 @@ class BotWaveClient:
         except Exception as e:
             Log.error(f"Upload error: {str(e)}")
             return {"status": "error", "message": f"Upload error: {str(e)}"}
+        
+    def _handle_download_file(self, url: str) -> dict:
+        try:
+            filename = url.split('/')[-1]
+
+            if not filename.lower().endswith('.wav'):
+                return {"status": "error", "message": "Only WAV files are supported"}
+
+            file_path = os.path.join(self.upload_dir, filename)
+
+            Log.file_message(f"Downloading file from {url}...")
+            urllib.request.urlretrieve(url, file_path)
+
+            Log.success(f"File {filename} downloaded successfully")
+            return {"status": "success", "message": "File downloaded successfully"}
+        except Exception as e:
+            Log.error(f"Download error: {str(e)}")
+            return {"status": "error", "message": f"Download error: {str(e)}"}
+
 
     def _handle_start_broadcast_request(self, command: dict) -> dict:
         try:
