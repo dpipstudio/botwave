@@ -1018,7 +1018,7 @@ class BotWaveServer:
             Log.error(f"Error listing commands from {filename}: {e}")
 
     def display_help(self):
-        Log.header("BotWave Socket Manager - Help")
+        Log.header("BotWave Server - Help")
         Log.section("Available Commands")
 
         Log.print("list", 'bright_green')
@@ -1082,7 +1082,7 @@ class BotWaveServer:
         Log.print("Example: 'pi1,pi2' or 'all' or 'kitchen-pi'", 'cyan')
 
 def main():
-    parser = argparse.ArgumentParser(description='BotWave Socket Manager - Server')
+    parser = argparse.ArgumentParser(description='BotWave - Server')
 
     parser.add_argument('--host', default='0.0.0.0', help='Server host')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
@@ -1099,7 +1099,7 @@ def main():
         Log.error("Daemon mode requires a WebSocket port to be specified")
         sys.exit(1)
 
-    Log.header("BotWave Socket Manager - Server")
+    Log.header("BotWave - Server")
 
     server = BotWaveServer(args.host, args.port, args.pk, args.start_asap, args.ws, args.daemon)
     server.start()
