@@ -426,6 +426,8 @@ class BotWaveServer:
                             return True
                         elif command == '<':
                             Log.warning("Hmmm, you can't do that. ;)")
+                        elif command == 'dl' and len(cmd) >= 3:
+                            self.download_file(cmd[1], cmd[2])
                         elif command == 'exit':
                             Log.warning("Hmmm, you can't do that. ;)")
                         else:
@@ -534,6 +536,15 @@ class BotWaveServer:
                 shell_command = ' '.join(cmd[1:])
                 self.run_shell_command(shell_command)
                 return True
+            
+            elif command == 'dl':
+                if len(cmd) < 3:
+                    Log.error("Usage: dl <targets> <url>")
+                    Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                    return True
+                self.download_file(cmd[1], cmd[2])
+                return True
+
 
             elif command == 'help':
                 self.display_help()
@@ -754,6 +765,38 @@ class BotWaveServer:
 
         Log.broadcast_message(f"Upload completed: {success_count}/{total_count} successful")
         return success_count > 0
+    
+    def download_file(self, client_targets: str, url: str):
+        target_clients = self._parse_client_targets(client_targets)
+        if not target_clients:
+            return False
+
+        command = {
+            "type": "download_file",
+            "url": url
+        }
+
+        success_count = 0
+        total_count = len(target_clients)
+        Log.broadcast_message(f"Requesting download from {total_count} client(s)...")
+
+        for client_id in target_clients:
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
+                continue
+
+            client = self.clients[client_id]
+            response = client.send_command(command)
+
+            if response and response.get('status') == 'success':
+                Log.success(f"  {client.get_display_name()}: Download successful")
+                success_count += 1
+            else:
+                Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
+
+        Log.broadcast_message(f"Download request completed: {success_count}/{total_count} successful")
+        return success_count > 0
+
 
     def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0,
                        ps: str = "RADIOOOO", rt: str = "Broadcasting since 2025", pi: str = "FFFF",
@@ -985,6 +1028,11 @@ class BotWaveServer:
         Log.print("upload <targets> <file>", 'bright_green')
         Log.print("  Upload a WAV file to client(s)", 'white')
         Log.print("  Example: upload all broadcast.wav", 'cyan')
+        Log.print("")
+
+        Log.print("dl <targets> <url>", 'bright_green')
+        Log.print("  Request client(s) to download a file from a URL", 'white')
+        Log.print("  Example: dl all http://example.com/file.wav", 'cyan')
         Log.print("")
 
         Log.print("start <targets> <file> [freq] [ps] [rt] [pi] [loop]", 'bright_green')
