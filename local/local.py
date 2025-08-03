@@ -329,6 +329,28 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
+    def upload_file(self, source_path: str, dest_name: str):
+        if not os.path.exists(source_path):
+            Log.error(f"Source file {source_path} not found")
+            return False
+        
+        if dest_name is None:
+            dest_name = os.path.basename(source_path)
+
+        dest_path = os.path.join(self.upload_dir, dest_name)
+
+        try:
+            with open(source_path, 'rb') as src_file:
+                with open(dest_path, 'wb') as dest_file:
+                    dest_file.write(src_file.read())
+
+            Log.success(f"File uploaded successfully to {dest_path}")
+            return True
+
+        except Exception as e:
+            Log.error(f"Error uploading file: {e}")
+            return False
+
     def download_file(self, url: str, dest_name: str):
         try:
             if not dest_name:
@@ -478,7 +500,7 @@ class BotWaveCLI:
         Log.print("  Example: list /opt/BotWave/uploads", 'cyan')
         Log.print("")
 
-        Log.print("upload <source> <destination>", 'bright_green')
+        Log.print("upload <source> [destination]", 'bright_green')
         Log.print("  Upload a file to the upload directory", 'white')
         Log.print("  Example: upload /path/to/myfile.wav broadcast.wav", 'cyan')
         Log.print("")
@@ -503,25 +525,6 @@ class BotWaveCLI:
 
         Log.print("exit", 'bright_green')
         Log.print("  Exit the application", 'white')
-
-    def upload_file(self, source_path: str, dest_name: str):
-        if not os.path.exists(source_path):
-            Log.error(f"Source file {source_path} not found")
-            return False
-
-        dest_path = os.path.join(self.upload_dir, dest_name)
-
-        try:
-            with open(source_path, 'rb') as src_file:
-                with open(dest_path, 'wb') as dest_file:
-                    dest_file.write(src_file.read())
-
-            Log.success(f"File uploaded successfully to {dest_path}")
-            return True
-
-        except Exception as e:
-            Log.error(f"Error uploading file: {e}")
-            return False
 
     def stop(self):
         self.running = False

@@ -61,7 +61,7 @@ Once the client is running, you can use the following commands:
     - Usage: `botwave> list [directory]`
 
 - `upload`: Upload a file to the upload directory.  
-    - Usage: `botwave> upload <source> <destination>`
+    - Usage: `botwave> upload <source> [destination]`
 
 - `dl`: Downloads a file from an external URL.  
     - Usage: `botwave> dl <url> [destination]`
