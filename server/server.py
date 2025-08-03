@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import subprocess
 
-PROTOCOL_VERSION = "1.0.0" # if mismatch of 1th or 2th part: error
+PROTOCOL_VERSION = "1.0.1" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 class Log:

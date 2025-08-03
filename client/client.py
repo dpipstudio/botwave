@@ -33,7 +33,7 @@ except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.0.0" # if mismatch of 1st or 2nd part: error
+PROTOCOL_VERSION = "1.0.1" # if mismatch of 1st or 2nd part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
 
 class Log:
