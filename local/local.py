@@ -17,6 +17,7 @@ import argparse
 from typing import Optional
 import subprocess
 import time
+import urllib.request
 
 try:
     from piwave import PiWave
@@ -229,6 +230,15 @@ class BotWaveCLI:
                 self.run_shell_command(shell_command)
                 return True
 
+            elif cmd == 'dl':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: dl <url> [destination]")
+                    return True
+                url = cmd_parts[1]
+                dest_name = cmd_parts[2] if len(cmd_parts) > 2 else None
+                self.download_file(url, dest_name)
+                return True
+
             elif cmd == 'exit':
                 self.stop()
                 return True
@@ -318,6 +328,26 @@ class BotWaveCLI:
                 Log.error(f"Command failed with return code {return_code}")
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
+
+    def download_file(self, url: str, dest_name: str):
+        try:
+            if not dest_name:
+                dest_name = url.split('/')[-1]
+
+            if not dest_name.lower().endswith('.wav'):
+                Log.error("Only WAV files are supported")
+                return False
+
+            dest_path = os.path.join(self.upload_dir, dest_name)
+
+            Log.file_message(f"Downloading file from {url}...")
+            urllib.request.urlretrieve(url, dest_path)
+
+            Log.success(f"File {dest_name} downloaded successfully to {dest_path}")
+            return True
+        except Exception as e:
+            Log.error(f"Download error: {str(e)}")
+            return False
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         if not os.path.exists(file_path):
@@ -451,6 +481,11 @@ class BotWaveCLI:
         Log.print("upload <source> <destination>", 'bright_green')
         Log.print("  Upload a file to the upload directory", 'white')
         Log.print("  Example: upload /path/to/myfile.wav broadcast.wav", 'cyan')
+        Log.print("")
+
+        Log.print("dl <url> [destination]", 'bright_green')
+        Log.print("  Download a WAV file from a URL", 'white')
+        Log.print("  Example: download http://example.com/file.wav myfile.wav", 'cyan')
         Log.print("")
 
         Log.print("handlers [filename]", 'bright_green')
