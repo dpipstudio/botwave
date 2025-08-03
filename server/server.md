@@ -48,6 +48,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `upload`: Upload a file to specified client(s).  
     - Usage: `botwave> upload <targets> <path/of/file.wav>`  
 
+- `dl`: Downloads a file from an external URL.  
+    - Usage: `botwave> dl <targets> <url>`
+
 `start`: Starts broadcasting on specified client(s).  
     - Usage: `botwave> start <targets> <file> [freq] [ps] [rt] [pi] [loop]`  
 

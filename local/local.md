@@ -63,6 +63,9 @@ Once the client is running, you can use the following commands:
 - `upload`: Upload a file to the upload directory.  
     - Usage: `botwave> upload <source> <destination>`
 
+- `dl`: Downloads a file from an external URL.  
+    - Usage: `botwave> dl <url> [destination]`
+
 - `handlers`: List all handlers or commands in a specific handler file.  
     - Usage: `botwave> handlers [filename]`
 
