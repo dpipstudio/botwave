@@ -233,7 +233,7 @@ if [[ ! -f "$TARGET_FILE" ]]; then
 # Available commands: ${VALID_COMMANDS[*]}
 #
 # Example commands:
-# start audio.wav 433000000
+# start audio.wav 90.0
 # list
 # < echo "Handler executed"
 
