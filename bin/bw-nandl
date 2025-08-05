@@ -27,16 +27,16 @@ log() {
 
 # ensure we're root
 if [[ "$EUID" -ne 0 ]]; then
-    log ERROR "This script must be run as root. Try: sudo $0 $1"
+    log ERROR "This script must be run as root. Try: sudo bw-nandl"
     exit 1
 fi
 
 if [[ -z "$1" ]]; then
     log ERROR "Missing filename or path argument"
-    log INFO "Usage: $0 <filename_or_path>"
-    log INFO "Usage: $0 list"
-    log INFO "Example: $0 s_onready.hdl"
-    log INFO "Example: $0 /custom/path/l_onstart.hdl"
+    log INFO "Usage: bw-nandl <filename_or_path>"
+    log INFO "Usage: bw-nandl list"
+    log INFO "Example: bw-nandl s_onready.hdl"
+    log INFO "Example: bw-nandle /custom/path/l_onstart.hdl"
     exit 1
 fi
 
