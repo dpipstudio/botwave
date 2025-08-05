@@ -549,6 +549,9 @@ class BotWaveServer:
             elif command == 'help':
                 self.display_help()
                 return True
+            
+            elif command == '#':
+                return True # ignore comments
 
             else:
                 Log.error(f"Unknown command: {command}")

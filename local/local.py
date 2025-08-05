@@ -242,6 +242,9 @@ class BotWaveCLI:
             elif cmd == 'exit':
                 self.stop()
                 return True
+            
+            elif cmd == '#':
+                return True # ignore comments
 
             else:
                 Log.error(f"Unknown command: {cmd}")
