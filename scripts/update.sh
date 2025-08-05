@@ -67,16 +67,16 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     # update client
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client files..."
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
         chmod +x "$BIN_DIR/bw-client"
         create_symlink "$BIN_DIR/bw-client" "bw-client"
         log INFO "Client updated."
 
         log INFO "Updating local client files..."
         mkdir -p local
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py -o "$INSTALL_DIR/local/client.py"
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py -o "$INSTALL_DIR/local/client.py"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
         chmod +x "$BIN_DIR/bw-local"
         create_symlink "$BIN_DIR/bw-local" "bw-local"
         log INFO "Local client updated."
@@ -98,8 +98,8 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     # update server
     if [[ -d "$INSTALL_DIR/server" ]]; then
         log INFO "Updating server files..."
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-        curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
         chmod +x "$BIN_DIR/bw-server"
         create_symlink "$BIN_DIR/bw-server" "bw-server"
         log INFO "Server updated."
@@ -108,17 +108,22 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     # update autorun
     log INFO "Updating autorunner..."
     mkdir -p autorun
-    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
-    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
     chmod +x "$BIN_DIR/bw-autorun"
     create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
     log INFO "AutoRunner updated."
 
     # update binaries -> for binaries not related to client/server
     log INFO "Updating general binaries..."
-    curl -L https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
     chmod +x "$BIN_DIR/bw-update"
     create_symlink "$BIN_DIR/bw-update" "bw-update"
+
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-nandl -o "$BIN_DIR/bw-nandl"
+    chmod +x "$BIN_DIR/bw-nandl"
+    create_symlink "$BIN_DIR/bw-nandl" "bw-nandl"
+
     log INFO "General binaries updated."
 
     echo "$LATEST_COMMIT" > "$INSTALL_DIR/last_commit"

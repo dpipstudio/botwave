@@ -22,6 +22,10 @@ Handler files must start with specific prefixes and have the correct file extens
   - `.hdl`: Standard handler files.
   - `.shdl`: Silent handler files (no log messages for command execution).
 
+## Handlers editor
+BotWaves comes shipped with our own file validator and checker, named `bw-nanld`. Run it with `sudo bw-nanld <filename>` to automatically create the handler and validate input once you finished editing it. 
+
+
 ## File Formatting
 Each line in a handler file represents a command to be executed. Ensure that:
 

@@ -1,0 +1,261 @@
+#!/bin/bash
+
+# A program by Douxx (douxx.tech | github.com/dpipstudio)
+# https://github.com/dpipstudio/botwave
+# https://botwave.dpip.lol
+# A DPIP Studios project. https://dpip.lol
+# Licensed under GPL-v3.0 (see LICENSE)
+
+
+RED='\033[0;31m'
+GRN='\033[0;32m'
+YEL='\033[1;33m'
+NC='\033[0m'
+
+log() {
+    local level="$1"
+    shift
+    local color=""
+    case "$level" in
+        INFO) color="$GRN" ;;
+        WARN) color="$YEL" ;;
+        ERROR) color="$RED" ;;
+        *) color="$NC" ;;
+    esac
+    printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*"
+}
+
+# ensure we're root
+if [[ "$EUID" -ne 0 ]]; then
+    log ERROR "This script must be run as root. Try: sudo $0 $1"
+    exit 1
+fi
+
+if [[ -z "$1" ]]; then
+    log ERROR "Missing filename or path argument"
+    log INFO "Usage: $0 <filename_or_path>"
+    log INFO "Usage: $0 list"
+    log INFO "Example: $0 s_onready.hdl"
+    log INFO "Example: $0 /custom/path/l_onstart.hdl"
+    exit 1
+fi
+
+INPUT="$1"
+BOTWAVE_DIR="/opt/BotWave/handlers"
+EDITOR="${EDITOR:-nano}"
+
+# supported handlers and commands
+VALID_PREFIXES=("l_onready" "l_onstart" "l_onstop" "s_onready" "s_onstart" "s_onstop" "s_onconnect" "s_ondisconnect" "s_onwsjoin" "s_onwsleave")
+VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit" "kick" "restart")
+
+list_handlers() {
+    echo ""
+
+    if [[ ! -d "$BOTWAVE_DIR" ]]; then
+        log WARN "Handler directory does not exist: $BOTWAVE_DIR"
+        return 1
+    fi
+
+    local found_handlers=false
+    local total_handlers=0
+    local silent_count=0
+    local regular_count=0
+
+    echo "=============================================="
+    printf "%-30s %-10s %s\n" "Filename" "Type" "Status"
+    echo "----------------------------------------------"
+
+    shopt -s nullglob
+    local handler_files=("$BOTWAVE_DIR"/*.hdl "$BOTWAVE_DIR"/*.shdl)
+    shopt -u nullglob
+
+    if [[ ${#handler_files[@]} -gt 0 ]]; then
+        IFS=$'\n' handler_files=($(sort <<<"${handler_files[*]}"))
+        unset IFS
+
+        for file in "${handler_files[@]}"; do
+            if [[ -f "$file" ]]; then
+                found_handlers=true
+                local filename=$(basename "$file")
+                local type=""
+                local status=""
+
+                # determine type
+                if [[ "$filename" =~ \.shdl$ ]]; then
+                    type="Silent"
+                    ((silent_count++))
+                elif [[ "$filename" =~ \.hdl$ ]]; then
+                    type="Regular"
+                    ((regular_count++))
+                else
+                    type="Unknown"
+                fi
+
+                # check file status
+                if [[ -r "$file" ]]; then
+                    if [[ -s "$file" ]]; then
+                        status="Ready"
+                    else
+                        status="Empty"
+                    fi
+                else
+                    status="Error"
+                fi
+
+                printf "%-30s %-18s %s\n" "$filename" "$type" "$status"
+                ((total_handlers++))
+            fi
+        done
+    fi
+
+    echo "=============================================="
+
+    if [[ "$found_handlers" == false ]]; then
+        log INFO "No handler files found in $BOTWAVE_DIR"
+        log INFO "Checking directory permissions..."
+        ls -la "$BOTWAVE_DIR" 2>/dev/null || log ERROR "Cannot access directory $BOTWAVE_DIR"
+    fi
+
+    return 0
+}
+
+# check if we ask to list handlers
+if [[ "$INPUT" == "list" ]]; then
+    list_handlers
+    exit $?
+fi
+
+# check if input is a valid file format
+check_handler_format() {
+    local filename="$1"
+    local basename=$(basename "$filename")
+
+    if [[ ! "$basename" =~ \.(hdl|shdl)$ ]]; then
+        return 1
+    fi
+
+    for prefix in "${VALID_PREFIXES[@]}"; do
+        if [[ "$basename" =~ ^${prefix} ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+validate_handler_content() {
+    local filepath="$1"
+    local errors=0
+    local line_num=0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        ((line_num++))
+
+        # skip empty lines and comments
+        if [[ -z "$line" ]] || [[ "$line" =~ ^[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+
+        # extract cmd
+        local command=$(echo "$line" | awk '{print $1}')
+
+        local valid_command=false
+        for cmd in "${VALID_COMMANDS[@]}"; do
+            if [[ "$command" == "$cmd" ]]; then
+                valid_command=true
+                break
+            fi
+        done
+
+        if [[ "$valid_command" == false ]]; then
+            log WARN "Line $line_num contains unknown command: '$command'"
+            log WARN "  Line content: $line"
+            ((errors++))
+        fi
+    done < "$filepath"
+
+    if [[ $errors -eq 0 ]]; then
+        return 0
+    else
+        echo -n "Do you want to continue anyway? (y/N): "
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+if [[ "$INPUT" == *"/"* ]]; then
+    TARGET_FILE="$INPUT"
+    TARGET_DIR=$(dirname "$TARGET_FILE")
+else
+    # jut a file, use default dir
+    TARGET_FILE="$BOTWAVE_DIR/$INPUT"
+    TARGET_DIR="$BOTWAVE_DIR"
+fi
+
+if [[ ! -d "$TARGET_DIR" ]]; then
+    mkdir -p "$TARGET_DIR"
+    if [[ $? -ne 0 ]]; then
+        log ERROR "Failed to create directory $TARGET_DIR"
+        exit 1
+    fi
+fi
+
+FILENAME=$(basename "$TARGET_FILE")
+if ! check_handler_format "$FILENAME"; then
+    log WARN "'$FILENAME' does not match the expected handler format."
+    log INFO "Expected format: <prefix><optional_content>.<hdl|shdl>"
+    log INFO "Valid prefixes: ${VALID_PREFIXES[*]}"
+    echo ""
+    echo -n "Are you sure you want to continue? (y/N): "
+    read -r response
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        log INFO "Operation cancelled."
+        exit 0
+    fi
+fi
+
+if [[ ! -f "$TARGET_FILE" ]]; then
+    touch "$TARGET_FILE"
+    chmod 644 "$TARGET_FILE"
+
+    if check_handler_format "$FILENAME"; then
+        cat > "$TARGET_FILE" << EOF
+# BotWave Handler: $FILENAME
+# Each line represents a command to be executed
+# Empty lines and lines starting with # are ignored
+# 
+# Check documentation on github.com/dpipstudio/botwave for more details
+#
+# Available commands: ${VALID_COMMANDS[*]}
+#
+# Example commands:
+# start audio.wav 433000000
+# list
+# < echo "Handler executed"
+
+EOF
+    fi
+fi
+
+"$EDITOR" "$TARGET_FILE"
+
+if [[ -f "$TARGET_FILE" ]] && [[ -s "$TARGET_FILE" ]]; then
+    echo ""
+    if validate_handler_content "$TARGET_FILE"; then
+        echo ""
+        echo "=============================================="
+        cat "$TARGET_FILE"
+        echo "=============================================="
+    else
+        log ERROR "Handler file validation failed. Please review and edit again if needed."
+        exit 1
+    fi
+else
+    log WARN "Handler file is empty or was not saved."
+fi
+
+echo ""
