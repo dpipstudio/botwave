@@ -37,3 +37,5 @@ document.querySelectorAll('.feature-item').forEach(item => {
         item.style.background = 'transparent';
     });
 });
+
+fetch('https://track.dpip.lol?id=botwave') // dpip.lol/privacy for the privacy policy
