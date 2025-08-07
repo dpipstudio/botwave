@@ -240,17 +240,18 @@ class BotWaveCLI:
             cmd = cmd_parts[0].lower()
             if cmd == 'start':
                 if len(cmd_parts) < 2:
-                    Log.error("Usage: start <file> [frequency] [ps] [rt] [pi] [loop]")
+                    Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
                     return True
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
                 frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
-                ps = cmd_parts[3] if len(cmd_parts) > 3 else "RADIOOOO"
-                rt = " ".join(cmd_parts[4:-2]) if len(cmd_parts) > 4 else "Broadcasting"
-                pi = cmd_parts[-2] if len(cmd_parts) > 5 else "FFFF"
-                loop = cmd_parts[-1].lower() == 'true' if len(cmd_parts) > 6 else False
+                loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
+                ps = cmd_parts[4] if len(cmd_parts) > 4 else "RADIOOOO"
+                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else "Broadcasting"
+                pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers()
                 return True
+
             elif cmd == 'stop':
                 self.stop_broadcast()
                 self.onstop_handlers()

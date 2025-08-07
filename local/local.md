@@ -55,7 +55,7 @@ sudo bw-local --upload-dir /tmp/my_uploads --skip-checks
 Once the client is running, you can use the following commands:
 
 - `start`: Start broadcasting a WAV file.  
-    - Usage: `botwave> start <file> [frequency] [ps] [rt] [pi] [loop]`
+    - Usage: `botwave> start <file> [frequency] [loop] [ps] [rt] [pi]`
 
 - `stop`: Stop the current broadcast.  
     - Usage: `botwave> stop`
