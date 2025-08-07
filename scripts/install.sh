@@ -99,6 +99,8 @@ install_client() {
     ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
     log INFO "Installed PiWave."
 
+    ./venv/bin/pip install websockets
+
     log INFO "Downloading client.py and binary..."
     mkdir -p "$INSTALL_DIR/client"
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
