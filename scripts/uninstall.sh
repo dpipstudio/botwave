@@ -44,6 +44,7 @@ rm -f /usr/local/bin/bw-server
 rm -f /usr/local/bin/bw-update
 rm -f /usr/local/bin/bw-autorun
 rm -f /usr/local/bin/bw-local
+rm -f /usr/local/bin/bw-nandl
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave"
