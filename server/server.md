@@ -52,7 +52,7 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
     - Usage: `botwave> dl <targets> <url>`
 
 `start`: Starts broadcasting on specified client(s).  
-    - Usage: `botwave> start <targets> <file> [freq] [ps] [rt] [pi] [loop]`  
+    - Usage: `botwave> start <targets> <file> [freq] [loop] [ps] [rt] [pi]`  
 
 `stop`: Stops broadcasting on specified client(s).  
     - Usage: `botwave> stop <targets>`  

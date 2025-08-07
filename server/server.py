@@ -405,10 +405,10 @@ class BotWaveServer:
                             self.upload_file(cmd[1], cmd[2])
                         elif command == 'start' and len(cmd) >= 3:
                             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
-                            ps = cmd[4] if len(cmd) > 4 else "BotWave"
-                            rt = cmd[5] if len(cmd) > 5 else "Broadcasting"
-                            pi = cmd[6] if len(cmd) > 6 else "FFFF"
-                            loop = cmd[7].lower() == 'true' if len(cmd) > 7 else False
+                            loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
+                            ps = cmd[5] if len(cmd) > 5 else "BotWave"
+                            rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
+                            pi = cmd[7] if len(cmd) > 7 else "FFFF"
                             self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
                         elif command == 'stop' and len(cmd) >= 2:
                             self.stop_broadcast(cmd[1])
@@ -480,15 +480,15 @@ class BotWaveServer:
 
             elif command == 'start':
                 if len(cmd) < 3:
-                    Log.error("Usage: start <targets> <file> [freq] [ps] [rt] [pi] [loop]")
+                    Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
                     Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
                     return True
-
+                
                 frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
-                ps = cmd[4] if len(cmd) > 4 else "BotWave"
-                rt = cmd[5] if len(cmd) > 5 else "Broadcasting"
-                pi = cmd[6] if len(cmd) > 6 else "FFFF"
-                loop = cmd[7].lower() == 'true' if len(cmd) > 7 else False
+                loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
+                ps = cmd[5] if len(cmd) > 5 else "BotWave"
+                rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
+                pi = cmd[7] if len(cmd) > 7 else "FFFF"
 
                 self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
                 return True
