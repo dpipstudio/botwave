@@ -30,7 +30,7 @@ sudo bw-server [--host HOST] [--port PORT] [--pk PASSKEY] [--ws PORT] [--skip-up
 * `--host`: The host address to bind the server to (default: 0.0.0.0).
 * `--port`: The port on which the server will listen (default: 9938).
 * `--pk`: Optional passkey for client authentication.
-* `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md)
+* `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
 * `--skip-update-check`: Skip checking for protocol updates.
 * `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
 * `--daemon`: Run in daemon mode (non-interactive, requires --ws port).
