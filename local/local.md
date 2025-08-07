@@ -38,7 +38,10 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--skip-checks]
 - `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
 - `--handlers-dir`: The directory to retrive l_ handlers from (default: `/opt/BotWave/handlers`)
 - `--skip-checks`: Skip system requirements checks.
-* `--daemon`: Run in daemon mode (non-interactive).
+- `--daemon`: Run in daemon mode (non-interactive).
+- `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+- `--pk`: Optional passkey for websocket authentication.
+
 
 
 ### Example
