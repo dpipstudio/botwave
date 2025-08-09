@@ -75,7 +75,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
 
         log INFO "Updating local client files..."
         mkdir -p local
-        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/local/local.py -o "$INSTALL_DIR/local/client.py"
+        curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/local/local.py -o "$INSTALL_DIR/local/local.py"
         curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-local -o "$BIN_DIR/bw-local"
         chmod +x "$BIN_DIR/bw-local"
         create_symlink "$BIN_DIR/bw-local" "bw-local"
