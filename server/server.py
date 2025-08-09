@@ -1038,7 +1038,7 @@ class BotWaveServer:
         Log.print("  Example: dl all http://example.com/file.wav", 'cyan')
         Log.print("")
 
-        Log.print("start <targets> <file> [freq] [ps] [rt] [pi] [loop]", 'bright_green')
+        Log.print("start <targets> <file> [loop] [freq] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Start broadcasting on client(s)", 'white')
         Log.print("  Example: start all broadcast.wav 100.5 MyRadio", 'cyan')
         Log.print("")

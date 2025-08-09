@@ -497,7 +497,7 @@ class BotWaveCLI:
     def display_help(self):
         Log.header("BotWave Standalone CLI - Help")
         Log.section("Available Commands")
-        Log.print("start <file> [frequency] [ps] [rt] [pi] [loop]", 'bright_green')
+        Log.print("start <file> [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Start broadcasting a WAV file", 'white')
         Log.print("  Example: start broadcast.wav 100.5 MyRadio \"My Radio Text\" FFFF true", 'cyan')
         Log.print("")
