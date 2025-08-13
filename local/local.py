@@ -221,7 +221,7 @@ class BotWaveCLI:
 
         async def start_server():
             async with websockets.serve(handler, "0.0.0.0", self.ws_port):
-                Log.server_message(f"WebSocket server started on localhost:{self.ws_port}")
+                Log.server_message(f"WebSocket server started on 0.0.0.0:{self.ws_port}")
                 await asyncio.Future()
 
         def run_server():
