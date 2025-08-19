@@ -354,10 +354,12 @@ class BotWaveCLI:
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
+
                     if line:
-                        if not silent:
-                            Log.handler_message(f"Executing command: {line}")
-                        self._execute_command(line)
+                        if line[0] != "#":
+                            if not silent:
+                                Log.handler_message(f"Executing command: {line}")
+                            self._execute_command(line)
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
 
