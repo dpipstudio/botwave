@@ -88,6 +88,19 @@ install_client() {
     git clone https://github.com/ChristopheJacquet/PiFmRds || true
     cd PiFmRds/src
     log INFO "Building PiFmRds..."
+
+    if [[ $(tr -d '\0' < /proc/device-tree/model) == *"Zero 2 W"* ]]; then
+        log INFO "Detected Raspberry Pi Zero 2 W. Patching Makefile..."
+        if [ -f Makefile ]; then
+            sed -i 's/^RPI_VERSION :=.*/RPI_VERSION = 3/' Makefile
+            log INFO "Makefile patched for Raspberry Pi Zero 2 W."
+        else
+            log WARN "Makefile not found in src! Cannot patch."
+            exit 1
+        fi
+
+    fi
+
     make clean
     make
     log INFO "Installed PiFmRds"
