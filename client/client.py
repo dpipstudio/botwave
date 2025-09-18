@@ -138,14 +138,14 @@ class Log:
         cls.print(message, 'bright_yellow', 'update')
 
 def parse_version(version_str: str) -> tuple:
-    """Parse version string into tuple of integers for comparison"""
+    #Parse version string into tuple of integers for comparison
     try:
         return tuple(map(int, version_str.split('.')))
     except (ValueError, AttributeError):
         return (0, 0, 0)
 
 def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
-    """Check for protocol updates from remote URL"""
+    #Check for protocol updates from remote URL
     try:
         with urllib.request.urlopen(check_url, timeout=10) as response:
             remote_version = response.read().decode('utf-8').strip()
@@ -366,6 +366,8 @@ class BotWaveClient:
             if not url:
                 return {"status": "error", "message": "Missing URL"}
             return self._handle_download_file(url)
+        elif cmd_type == 'list_files':
+            return self._handle_list_files_request(command)
         else:
             return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
 
@@ -428,6 +430,64 @@ class BotWaveClient:
         except Exception as e:
             Log.error(f"Download error: {str(e)}")
             return {"status": "error", "message": f"Download error: {str(e)}"}
+        
+
+    def _handle_list_files_request(self, command: dict) -> dict:
+        try:
+            directory = self.upload_dir
+            
+            if not os.path.exists(directory): #should not be possible, but meh
+                return {
+                    "status": "error", 
+                    "message": f"Upload directory {directory} does not exist"
+                }
+            
+            wav_files = []
+            
+            try:
+                for filename in os.listdir(directory):
+                    if filename.lower().endswith('.wav'):
+                        file_path = os.path.join(directory, filename)
+                        
+                        if os.path.isfile(file_path):
+                            stat_info = os.stat(file_path)
+                            
+                            file_info = {
+                                'name': filename,
+                                'size': stat_info.st_size,
+                                'modified': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                            }
+                            wav_files.append(file_info)
+                
+                # sort by name bcs why not
+                wav_files.sort(key=lambda x: x['name'])
+                
+                Log.file_message(f"Listed {len(wav_files)} broadcastable WAV files")
+                
+                return {
+                    "status": "success",
+                    "message": f"Found {len(wav_files)} WAV files",
+                    "files": wav_files,
+                    "directory": directory
+                }
+                
+            except PermissionError:
+                return {
+                    "status": "error",
+                    "message": f"Permission denied accessing upload directory"
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "message": f"Error listing upload directory: {str(e)}"
+                }
+                
+        except Exception as e:
+            Log.error(f"List files error: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"List files error: {str(e)}"
+            }
 
 
     def _handle_start_broadcast_request(self, command: dict) -> dict:
