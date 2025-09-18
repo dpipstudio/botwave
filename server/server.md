@@ -52,6 +52,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `dl`: Downloads a file from an external URL.  
     - Usage: `botwave> dl <targets> <url>`
 
+`lf`: Lists broadcastable files on clients.  
+    - Usage: `botwave> lf <targets>`
+
 `start`: Starts broadcasting on specified client(s).  
     - Usage: `botwave> start <targets> <file> [freq] [loop] [ps] [rt] [pi]`  
 
