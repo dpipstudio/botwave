@@ -423,7 +423,8 @@ class BotWaveServer:
                                 self.list_handler_commands(filename)
                             else:
                                 self.list_handlers()
-                            return True
+                        elif command == 'lf':
+                            self.list_files(cmd[1]);
                         elif command == '<':
                             Log.warning("Hmmm, you can't do that. ;)")
                         elif command == 'dl' and len(cmd) >= 3:
@@ -544,7 +545,15 @@ class BotWaveServer:
                     return True
                 self.download_file(cmd[1], cmd[2])
                 return True
-
+            
+            elif command == 'lf':
+                if len(cmd) < 2:
+                    Log.error("Usage: lf <targets>")
+                    Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                    return True
+                
+                self.list_files(cmd[1])
+                return True
 
             elif command == 'help':
                 self.display_help()
@@ -1022,6 +1031,62 @@ class BotWaveServer:
         except Exception as e:
             Log.error(f"Error listing commands from {filename}: {e}")
 
+    def list_files(self, client_targets: str): #broadcastable files (WAVS) listing
+        target_clients = self._parse_client_targets(client_targets)
+        
+        if not target_clients:
+            return False
+        
+        command = {
+            "type": "list_files"
+        }
+        
+        success_count = 0
+        total_count = len(target_clients)
+        
+        Log.info(f"Listing broadcastable files from {total_count} client(s)")
+        
+        for client_id in target_clients:
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
+                continue
+            
+            client = self.clients[client_id]
+            response = client.send_command(command)
+            
+            if response and response.get('status') == 'success':
+                files = response.get('files', [])
+                file_count = len(files)
+                
+                Log.success(f"  {client.get_display_name()}: {file_count} broadcastable files found")
+                
+                if files:
+                    for file_info in files:
+                        filename = file_info.get('name', 'unknown')
+                        size = file_info.get('size', 0)
+                        modified = file_info.get('modified', 'unknown')
+                        
+                        # format
+                        if size < 1024:
+                            size_str = f"{size} B"
+                        elif size < 1024 * 1024:
+                            size_str = f"{size / 1024:.1f} KB"
+                        else:
+                            size_str = f"{size / (1024 * 1024):.1f} MB"
+                        
+                        Log.print(f"    {filename} ({size_str}) - {modified}", 'white')
+                else:
+                    Log.print("    No WAV files found", 'yellow')
+                
+                success_count += 1
+                Log.info('=' * 10)
+            else:
+                error_msg = response.get('message', 'Unknown error') if response else 'No response'
+                Log.error(f"  {client.get_display_name()}: {error_msg}")
+        
+        Log.info(f"File listing completed: {success_count}/{total_count} successful")
+        return success_count > 0
+
     def display_help(self):
         Log.header("BotWave Server - Help")
         Log.section("Available Commands")
@@ -1038,6 +1103,11 @@ class BotWaveServer:
         Log.print("dl <targets> <url>", 'bright_green')
         Log.print("  Request client(s) to download a file from a URL", 'white')
         Log.print("  Example: dl all http://example.com/file.wav", 'cyan')
+        Log.print("")
+
+        Log.print("lf <targets>", 'bright_green')
+        Log.print("  List broadcastable files on client(s)", 'white')
+        Log.print("  Example: lf all", 'cyan')
         Log.print("")
 
         Log.print("start <targets> <file> [loop] [freq] [ps] [rt] [pi]", 'bright_green')
