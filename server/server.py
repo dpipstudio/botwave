@@ -86,10 +86,12 @@ class Log:
 
         sys.stdout.flush()
 
+        ws_message = f"[{icon_char}] {message}" if icon_char else message
+
         for ws in list(cls.ws_clients):
             try:
                 if cls.ws_loop:
-                    asyncio.run_coroutine_threadsafe(ws.send(message), cls.ws_loop)
+                    asyncio.run_coroutine_threadsafe(ws.send(ws_message), cls.ws_loop)
             except Exception as e:
                 print(f"Error sending to WebSocket client: {e}")
                 try:
@@ -401,21 +403,41 @@ class BotWaveServer:
                             self.list_clients()
                         elif command == 'help':
                             self.display_help()
-                        elif command == 'upload' and len(cmd) >= 3:
+                        elif command == 'upload':
+                            if len(cmd) < 3:
+                                Log.error("Usage: upload <targets> <file>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             self.upload_file(cmd[1], cmd[2])
-                        elif command == 'start' and len(cmd) >= 3:
+                        elif command == 'start':
+                            if len(cmd) < 3:
+                                Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
                             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
                             ps = cmd[5] if len(cmd) > 5 else "BotWave"
                             rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
                             pi = cmd[7] if len(cmd) > 7 else "FFFF"
                             self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
-                        elif command == 'stop' and len(cmd) >= 2:
+                        elif command == 'stop':
+                            if len(cmd) < 2:
+                                Log.error("Usage: stop <targets>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             self.stop_broadcast(cmd[1])
-                        elif command == 'kick' and len(cmd) >= 2:
+                        elif command == 'kick':
+                            if len(cmd) < 2:
+                                Log.error("Usage: kick <targets> [reason]")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
                             self.kick_client(cmd[1], reason)
-                        elif command == 'restart' and len(cmd) >= 2:
+                        elif command == 'restart':
+                            if len(cmd) < 2:
+                                Log.error("Usage: restart <targets>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             self.restart_client(cmd[1])
                         elif command == 'handlers':
                             if len(cmd) > 1:
@@ -424,15 +446,27 @@ class BotWaveServer:
                             else:
                                 self.list_handlers()
                         elif command == 'lf':
-                            self.list_files(cmd[1]);
+                            if len(cmd) < 2:
+                                Log.error("Usage: lf <targets>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
+                            self.list_files(cmd[1])
                         elif command == '<':
                             Log.warning("Hmmm, you can't do that. ;)")
-                        elif command == 'dl' and len(cmd) >= 3:
+                        elif command == 'dl':
+                            if len(cmd) < 3:
+                                Log.error("Usage: dl <targets> <url>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
                             self.download_file(cmd[1], cmd[2])
                         elif command == 'exit':
                             Log.warning("Hmmm, you can't do that. ;)")
+                        elif command == '#':
+                            # ignore comments
+                            pass
                         else:
                             Log.error(f"Unknown WebSocket command: {command}")
+                            Log.info("Type 'help' for a list of available commands")
 
                     asyncio.get_event_loop().call_soon_threadsafe(inject_cmd)
             except asyncio.TimeoutError:

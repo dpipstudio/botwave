@@ -75,6 +75,8 @@ class Log:
     def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
         color = cls.COLORS.get(style, '')
         icon_char = cls.ICONS.get(icon, '')
+
+
         if icon_char:
             if color:
                 print(f"{color}[{icon_char}]\033[0m {message}", end=end)
@@ -85,11 +87,15 @@ class Log:
                 print(f"{color}{message}\033[0m", end=end)
             else:
                 print(f"{message}", end=end)
+
         sys.stdout.flush()
+
+        ws_message = f"[{icon_char}] {message}" if icon_char else message
+
         for ws in list(cls.ws_clients):
             try:
                 if cls.ws_loop:
-                    asyncio.run_coroutine_threadsafe(ws.send(message), cls.ws_loop)
+                    asyncio.run_coroutine_threadsafe(ws.send(ws_message), cls.ws_loop)
             except Exception as e:
                 print(f"Error sending to WebSocket client: {e}")
                 try:
