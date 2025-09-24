@@ -557,7 +557,7 @@ class BotWaveClient:
             self.current_file = params['filename']
             self.broadcasting = True
             self.broadcast_requested = False
-            self.piwave.play([params['file_path']])
+            self.piwave.play(params['file_path'])
             Log.broadcast_message(f"PiWave broadcast started for {params['filename']}")
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")

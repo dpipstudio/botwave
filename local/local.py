@@ -433,7 +433,7 @@ class BotWaveCLI:
             )
             self.current_file = file_path
             self.broadcasting = True
-            self.piwave.play([file_path])
+            self.piwave.play(file_path)
             Log.success(f"Broadcast started for {file_path} on frequency {frequency} MHz")
             return True
         except Exception as e:
