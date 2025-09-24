@@ -1113,7 +1113,6 @@ class BotWaveServer:
                     Log.print("    No WAV files found", 'yellow')
                 
                 success_count += 1
-                Log.info('=' * 10)
             else:
                 error_msg = response.get('message', 'Unknown error') if response else 'No response'
                 Log.error(f"  {client.get_display_name()}: {error_msg}")
