@@ -109,7 +109,7 @@ install_client() {
 
     log INFO "Installing PiWave..."
     ./venv/bin/pip install --upgrade pip
-    ./venv/bin/pip install git+https://github.com/douxxtech/piwave.git
+    ./venv/bin/pip install piwave==2.0.7
     log INFO "Installed PiWave."
 
     ./venv/bin/pip install websockets

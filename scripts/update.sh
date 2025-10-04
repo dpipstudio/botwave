@@ -81,8 +81,8 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         create_symlink "$BIN_DIR/bw-local" "bw-local"
         log INFO "Local client updated."
 
-        log INFO "Updating PiWave..."
-        ./venv/bin/pip install -U git+https://github.com/douxxtech/piwave.git
+        log INFO "Updating PiWave..." # here to ensure we're still at this version
+        ./venv/bin/pip install piwave==2.0.7
         log INFO "PiWave updated."
 
         log INFO "Updating PiFmRds..."
