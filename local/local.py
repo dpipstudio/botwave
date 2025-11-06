@@ -15,6 +15,7 @@ import sys
 import signal
 import argparse
 from typing import Optional
+from pathlib import Path
 import subprocess
 import time
 import urllib.request
@@ -22,6 +23,12 @@ import asyncio
 import websockets
 import json
 import threading
+
+try:
+    from pysstv.color import MODES
+    MODE_MAP = { cls.__name__.lower(): cls for cls in MODES }
+except ImportError:
+    MODE_MAP = None
 
 try:
     from piwave import PiWave
@@ -62,6 +69,7 @@ class Log:
         'version': 'VER',
         'update': 'UPD',
         'handler': 'HNDL',
+        'sstv': 'SSTV'
     }
 
     ws_clients = set()
@@ -157,6 +165,10 @@ class Log:
     def handler_message(cls, message: str):
         cls.print(message, 'magenta', 'handler')
 
+    @classmethod
+    def sstv_message(cls, message: str):
+        cls.print(message, 'bright_blue', 'sstv')
+
 def parse_version(version_str: str) -> tuple:
     try:
         return tuple(map(int, version_str.split('.')))
@@ -251,11 +263,13 @@ class BotWaveCLI:
             cmd_parts = command.split()
             if not cmd_parts:
                 return True
+            
             cmd = cmd_parts[0].lower()
             if cmd == 'start':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
                     return True
+                
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
                 frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
@@ -270,49 +284,91 @@ class BotWaveCLI:
                 self.stop_broadcast()
                 self.onstop_handlers()
                 return True
+            
+            elif cmd == 'sstv':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]")
+                    return True
+
+                img_path = cmd_parts[1]
+                mode = cmd_parts[2] if len(cmd_parts) > 2 else None
+                output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
+                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
+                loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
+                ps = cmd_parts[6] if len(cmd_parts) > 6 else "RADIOOOO"
+                rt = cmd_parts[7] if len(cmd_parts) > 7 else "Broadcasting"
+                pi = cmd_parts[8] if len(cmd_parts) > 8 else "FFFF"
+
+                if not os.path.exists(img_path):
+                    Log.error(f"Image file {img_path} not found")
+                    return True
+
+                Log.sstv_message(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
+                success = self.make_sstv_wav(img_path, output_wav, mode)
+                if success:
+                    Log.sstv_message(f"Broadcasting {output_wav} on {frequency} MHz...")
+                    self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
+                return True
+
+
             elif cmd == 'list':
                 directory = cmd_parts[1] if len(cmd_parts) > 1 else None
                 self.list_files(directory)
                 return True
+            
             elif cmd == 'upload':
                 if len(cmd_parts) < 3:
                     Log.error("Usage: upload <source> <destination>")
                     return True
+                
                 source = cmd_parts[1]
                 destination = cmd_parts[2]
+
                 self.upload_file(source, destination)
                 return True
+            
             elif cmd == 'handlers':
                 if len(cmd_parts) > 1:
                     filename = cmd_parts[1]
                     self.list_handler_commands(filename)
                 else:
                     self.list_handlers()
+
                 return True
+            
             elif cmd == 'help':
                 self.display_help()
                 return True
+            
             elif cmd == '<':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: > <shell command>")
                     return True
+                
                 shell_command = ' '.join(cmd_parts[1:])
                 self.run_shell_command(shell_command)
+
                 return True
+            
             elif cmd == 'dl':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: dl <url> [destination]")
                     return True
+                
                 url = cmd_parts[1]
                 dest_name = cmd_parts[2] if len(cmd_parts) > 2 else None
+
                 self.download_file(url, dest_name)
                 return True
+            
             elif cmd == 'exit':
                 self.stop()
                 return False
+            
             else:
                 Log.error(f"Unknown command: {cmd}")
                 return True
+            
         except Exception as e:
             Log.error(f"Error executing command '{command}': {e}")
             return True
@@ -465,6 +521,84 @@ class BotWaveCLI:
         self.current_file = None
         return True
 
+    def make_sstv_wav(self, img_path, wav_path, mode_name=None):
+        # deps check
+        try:
+            from PIL import Image
+            import numpy as np
+            import wave
+        except ImportError:
+            parent_parent = Path(__file__).parent.parent
+            pip_path = parent_parent / "venv" / "bin" / "pip"
+            Log.sstv_message("Please install required modules:")
+            Log.sstv_message(f"{pip_path} install pysstv numpy pillow")
+            return False
+        
+
+        if MODE_MAP is None:
+            parent_parent = Path(__file__).parent.parent
+            pip_path = parent_parent / "venv" / "bin" / "pip"
+            Log.sstv_message("Please install required modules:")
+            Log.sstv_message(f"{pip_path} install pysstv")
+            return False
+
+        try:
+            img = Image.open(img_path).convert("RGB")
+        except Exception as e:
+            Log.sstv_message(f"Cannot open image: {e}")
+            return False
+
+        # select mode
+        if mode_name and mode_name.lower() in MODE_MAP:
+            cls = MODE_MAP[mode_name.lower()]
+        else:
+            cls = self._sstv_best_mode_for(*img.size)
+            if cls is None:
+                return False
+
+        # resize so SSTV encoder is :)
+        img = img.resize((cls.WIDTH, cls.HEIGHT))
+
+        try:
+            sstv = cls(img, 44100, 16)
+            samples = np.array(list(sstv.gen_samples())).astype(np.int16)
+
+            with wave.open(wav_path, "wb") as f:
+                f.setnchannels(1)
+                f.setsampwidth(2)
+                f.setframerate(44100)
+                f.writeframes(samples.tobytes())
+
+            Log.sstv_message(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
+            return True
+        except Exception as e:
+            Log.sstv_message(f"SSTV encode error: {e}")
+            return False
+
+
+    def _sstv_best_mode_for(self, w, h):
+        if MODE_MAP is None:
+            print("Install pysstv:  pip install pysstv")
+            return None
+
+        best = None
+        best_score = 999999999
+
+        for cls in MODES:
+            try:
+                dw = abs(cls.WIDTH  - w)
+                dh = abs(cls.HEIGHT - h)
+            except:
+                continue
+
+            score = dw + dh
+            if score < best_score:
+                best_score = score
+                best = cls
+
+        return best
+
+
     def list_files(self, directory: str = None):
         target_dir = directory if directory else self.upload_dir
         try:
@@ -513,10 +647,14 @@ class BotWaveCLI:
         Log.section("Available Commands")
         Log.print("start <file> [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Start broadcasting a WAV file", 'white')
-        Log.print("  Example: start broadcast.wav 100.5 MyRadio \"My Radio Text\" FFFF true", 'cyan')
+        Log.print("  Example: start broadcast.wav 100.5 true MyRadio \"My Radio Text\" FFFF", 'cyan')
         Log.print("")
         Log.print("stop", 'bright_green')
         Log.print("  Stop the current broadcast", 'white')
+        Log.print("")
+        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
+        Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
         Log.print("")
         Log.print("list [directory]", 'bright_green')
         Log.print("  List files in the specified directory (default: upload directory)", 'white')
