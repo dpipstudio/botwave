@@ -489,7 +489,7 @@ class BotWaveServer:
                         elif command == '#':
                             # ignore comments
                             pass
-                        
+
                         else:
                             Log.error(f"Unknown WebSocket command: {command}")
                             Log.info("Type 'help' for a list of available commands")
@@ -1275,10 +1275,6 @@ def main():
     parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive, requires --ws port)')
 
     args = parser.parse_args()
-
-    if args.daemon and not args.ws:
-        Log.error("Daemon mode requires a WebSocket port to be specified")
-        sys.exit(1)
 
     Log.header("BotWave - Server")
 
