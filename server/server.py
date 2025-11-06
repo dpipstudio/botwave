@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import subprocess
 
-PROTOCOL_VERSION = "1.0.2" # if mismatch of 1th or 2th part: error
+PROTOCOL_VERSION = "1.1.0" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 class Log:
@@ -192,6 +192,7 @@ class BotWaveClient:
         self.passkey = passkey
         self.authenticated = False
         self.handlers_dir = handlers_dir
+        self.uploading = False
 
     def send_command(self, command: dict) -> Optional[dict]:
         try:
@@ -208,6 +209,9 @@ class BotWaveClient:
         return f"{self.machine_info.get('hostname', 'unknown')} ({self.addr[0]})"
 
     def is_alive(self) -> bool:
+        if self.uploading:
+            return True # skip pings while uploading
+
         try:
             message = '{"type": "ping"}'
             self.conn.send((message + '\n').encode('utf-8'))
@@ -238,6 +242,7 @@ class BotWaveServer:
     def start(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
         try:
             self.server_socket.bind((self.host, self.port))
@@ -778,8 +783,19 @@ class BotWaveServer:
 
         success_count = 0
         total_count = len(target_clients)
+        file_size = len(file_data)
 
-        Log.broadcast_message(f"Uploading {os.path.basename(file_path)} to {total_count} client(s)...")
+        # dynamic chunk sizing based on file size
+        if file_size < 1024 * 1024:  # < 1MB
+            chunk_size = 32768  # 32KB
+        elif file_size < 10 * 1024 * 1024:  # < 10MB
+            chunk_size = 131072  # 128KB
+        elif file_size < 100 * 1024 * 1024:  # < 100MB
+            chunk_size = 524288  # 512KB
+        else:  # >= 100MB
+            chunk_size = 1048576  # 1MB
+
+        Log.broadcast_message(f"Uploading {os.path.basename(file_path)} to {total_count} client(s)... (chunk size: {chunk_size / 1024:.0f}KB)")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -788,29 +804,60 @@ class BotWaveServer:
 
             client = self.clients[client_id]
 
+            client.uploading = True
+
             try:
                 command = {
                     "type": "upload_file",
                     "filename": os.path.basename(file_path),
-                    "size": len(file_data)
+                    "size": file_size
                 }
 
                 response = client.send_command(command)
 
                 if response and response.get('status') == 'ready':
-                    client.conn.sendall(file_data)
+                    bytes_sent = 0
+                    
+                    while bytes_sent < file_size:
+                        chunk = file_data[bytes_sent:bytes_sent + chunk_size]
+                        client.conn.sendall(chunk)
+                        bytes_sent += len(chunk)
 
                     try:
-                        confirm_data = client.conn.recv(4096).decode('utf-8').strip()
-                        confirm_json = json.loads(confirm_data)
+                        confirm_buffer = ""
+                        client.conn.settimeout(10)  # 10 second timeout for confirmation
+                        
+                        while '\n' not in confirm_buffer:
+                            data = client.conn.recv(1024).decode('utf-8')
+                            if not data:
+                                raise Exception("Connection closed while waiting for confirmation")
+                            confirm_buffer += data
+                        
+                        confirm_line = confirm_buffer.split('\n', 1)[0].strip()
+                        
+                        if not confirm_line:
+                            raise Exception("Empty confirmation received")
+                        
+                        confirm_json = json.loads(confirm_line)
 
                         if confirm_json.get('status') == 'uploaded':
                             Log.success(f"  {client.get_display_name()}: Upload successful")
                             success_count += 1
                         else:
                             Log.error(f"  {client.get_display_name()}: {confirm_json.get('message', 'Unknown error')}")
+
+                        client.uploading = False
+                        
+                            
+                    except json.JSONDecodeError as e:
+                        Log.error(f"  {client.get_display_name()}: Invalid JSON in confirmation - {e}")
+                    except socket.timeout:
+                        Log.error(f"  {client.get_display_name()}: Timeout waiting for confirmation")
                     except Exception as e:
                         Log.error(f"  {client.get_display_name()}: Error receiving confirmation - {e}")
+                    finally:
+                        client.uploading = False
+                        client.conn.settimeout(None)
                 else:
                     Log.error(f"  {client.get_display_name()}: {response.get('message') if response else 'No response'}")
             except Exception as e:

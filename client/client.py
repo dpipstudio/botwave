@@ -33,7 +33,7 @@ except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.0.2" # if mismatch of 1st or 2nd part: error
+PROTOCOL_VERSION = "1.1.0" # if mismatch of 1st or 2nd part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
 
 class Log:
@@ -170,6 +170,7 @@ class BotWaveClient:
         self.running = False
         self.current_file = None
         self.broadcasting = False
+        self.uploading = False
         self.passkey = passkey
         # command queue for main thread processing -> PiWave doesn't support being in a subthread
         self.command_queue = queue.Queue()
@@ -195,6 +196,7 @@ class BotWaveClient:
         # if behind a NAT, make sure to do a port forwarding
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             self.socket.settimeout(30)
             Log.info(f"Attempting to connect to {self.server_host}:{self.server_port}...")
             self.socket.connect((self.server_host, self.server_port))
@@ -291,7 +293,7 @@ class BotWaveClient:
                         if message.strip():
                             try:
                                 command = json.loads(message.strip())
-                                if command.get('type') == 'ping':
+                                if command.get('type') == 'ping' and not self.uploading:
                                     response = {"type": "pong"}
                                     self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
                                     continue
@@ -375,39 +377,84 @@ class BotWaveClient:
         try:
             filename = command.get('filename')
             file_size = command.get('size')
+
+            self.uploading = True
+
             if not filename or not file_size:
                 return {"status": "error", "message": "Missing filename or size"}
+            
             if not filename.endswith('.wav'):
                 return {"status": "error", "message": "Only WAV files are supported"}
+            
+            original_timeout = self.socket.gettimeout()
+            transfer_timeout = max(60, file_size / 100000)
+            self.socket.settimeout(transfer_timeout)
+
             file_path = os.path.join(self.upload_dir, filename)
+
             Log.file_message(f"Preparing to receive file: {filename} ({file_size} bytes)")
+
             ready_response = {"status": "ready", "message": "Ready to receive file"}
+
             self.socket.sendall((json.dumps(ready_response) + '\n').encode('utf-8'))
+
             Log.file_message(f"Receiving file data...")
             received_data = b''
+            
+            # dynamic buffer sizing based on file size
+            if file_size < 1024 * 1024:  # < 1MB
+                chunk_size = 32768  # 32KB
+            elif file_size < 10 * 1024 * 1024:  # < 10MB
+                chunk_size = 131072  # 128KB
+            elif file_size < 100 * 1024 * 1024:  # < 100MB
+                chunk_size = 524288  # 512KB
+            else:  # >= 100MB
+                chunk_size = 1048576  # 1MB
+
+            Log.file_message(f"Using chunk size: {chunk_size / 1024:.0f}KB")
+
             while len(received_data) < file_size:
                 try:
                     remaining = file_size - len(received_data)
-                    chunk_size = min(4096, remaining)
-                    chunk = self.socket.recv(chunk_size)
+                    current_chunk_size = min(chunk_size, remaining)  # Don't read more than needed
+                    
+                    chunk = self.socket.recv(current_chunk_size)
                     if not chunk:
                         Log.error("Connection closed during file transfer")
                         break
+
                     received_data += chunk
+
+                    if file_size > 1024 * 1024:  # files > 1MB
+                        progress = (len(received_data) / file_size) * 100
+                        report_interval = max(1 * 1024 * 1024, file_size // 20)  # report every 5% or 1MB, whichever is larger
+                        if len(received_data) % report_interval < chunk_size:
+                            Log.file_message(f"Progress: {progress:.1f}%")
+
                 except socket.timeout:
                     Log.error("Timeout while receiving file data")
                     break
+
                 except Exception as e:
                     Log.error(f"Error receiving file chunk: {e}")
                     break
+
             if len(received_data) != file_size:
                 Log.error(f"File upload incomplete: received {len(received_data)}/{file_size} bytes")
+                self.socket.settimeout(original_timeout)
                 return {"status": "error", "message": f"Incomplete file transfer"}
+            
+            # Write the file
             with open(file_path, 'wb') as f:
                 f.write(received_data)
+
             Log.success(f"File {filename} uploaded successfully ({len(received_data)} bytes)")
+
             final_response = {"status": "uploaded", "message": "File uploaded successfully"}
             self.socket.sendall((json.dumps(final_response) + '\n').encode('utf-8'))
+            self.socket.settimeout(original_timeout)
+
+            self.uploading = False
             return final_response
         except Exception as e:
             Log.error(f"Upload error: {str(e)}")
