@@ -292,7 +292,7 @@ class BotWaveCLI:
 
                 img_path = cmd_parts[1]
                 mode = cmd_parts[2] if len(cmd_parts) > 2 else None
-                output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
+                output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
                 frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
                 loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
                 ps = cmd_parts[6] if len(cmd_parts) > 6 else "RADIOOOO"
