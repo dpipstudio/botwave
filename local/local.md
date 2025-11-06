@@ -62,7 +62,7 @@ Once the client is running, you can use the following commands:
 - `stop`: Stop the current broadcast.  
     - Usage: `botwave> stop`
 
-- `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/) 
+- `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
     - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
 
 - `list`: List files in the specified directory (default: upload directory).  
@@ -85,6 +85,9 @@ Once the client is running, you can use the following commands:
 
 - `exit`: Exit the application.  
     - Usage: `botwave> exit`
+
+> [!WARNING]
+> `sstv` command modules are not installed by default. Install them with `[sudo /opt/BotWave/venv/bin/]pip install pysstv numpy pillow`
 
 ### Supported handlers
 - `l_onready`: When the client is ready (on startup).

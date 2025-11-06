@@ -61,6 +61,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `stop`: Stops broadcasting on specified client(s).  
     - Usage: `botwave> stop <targets>`  
 
+`sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
+    - Usage: `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
+
 `kick`: Kicks specified client(s) from the server.  
     - Usage: `botwave> kick <targets> [reason]`  
 
@@ -82,6 +85,10 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 ```
 targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or a comma-separated list of clients (client1,client2,etc).
 ```
+
+> [!WARNING]
+> 1. `update` command support is experimental. Your client / server connexion may crash or act strange.  
+> 2. `sstv` command modules are not installed by default. Install them with `[sudo /opt/BotWave/venv/bin/]pip install pysstv numpy pillow`
 
 ### Supported handlers
 - `s_onready`: When the server is ready (on startup).
