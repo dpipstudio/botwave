@@ -32,7 +32,7 @@ We highly recommand using the official installer (Check the [main README](/READM
 
 To start the BotWave Local Client, use the following command:
 ```bash
-sudo bw-local [--upload-dir UPLOAD_DIR] [--skip-checks]
+sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--ws PORT] [--pk PASSKEY]
 ```
 
 ### Arguments
@@ -49,7 +49,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--skip-checks]
 ### Example
 
 ```bash
-sudo bw-local --upload-dir /tmp/my_uploads --skip-checks
+sudo bw-local --upload-dir /tmp/my_uploads --skip-checks --ws 9939
 ```
 
 ### Available Commands
@@ -61,6 +61,9 @@ Once the client is running, you can use the following commands:
 
 - `stop`: Stop the current broadcast.  
     - Usage: `botwave> stop`
+
+- `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/) 
+    - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
 
 - `list`: List files in the specified directory (default: upload directory).  
     - Usage: `botwave> list [directory]`
