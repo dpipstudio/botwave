@@ -22,7 +22,7 @@ BotWave Client is a client application designed to connect to a BotWave Server, 
 >
 > Please exercise caution and ensure you have the proper permissions, equipment, and knowledge of regulations before using BotWave for broadcasting purposes.
 
-We highly recommand using the official installer (Check the [main README](/README.md)) -- If you don't want to or are not using a Linux distribution, find how to install it by yourself. (Tip: on windows, use wsl)
+We highly recommand using the official installer (Check the [main README](/README.md)) -- Note that if you aren't on a raspberry pi, the client is very unlikely to work.
 
 ## Usage
 To start the BotWave Client, use the following command:

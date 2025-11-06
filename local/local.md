@@ -26,7 +26,7 @@ BotWave Local Client is a standalone application designed to broadcast audio fil
 ### Installation
 
 
-We highly recommand using the official installer (Check the [main README](/README.md)) -- If you don't want to or are not using a Linux distribution, find how to install it by yourself. (Tip: on windows, use wsl)
+We highly recommand using the official installer (Check the [main README](/README.md)) -- Note that if you aren't on a raspberry pi, the client is very unlikely to work.
 
 ## Usage
 
