@@ -493,6 +493,14 @@ class BotWaveServer:
 
     def _execute_command(self, command: str):
         try:
+
+            if "#" in command:
+                command = command.split("#", 1)[0]
+
+            command = command.strip()
+            if not command:
+                return True
+            
             cmd = command.split()
             command = cmd[0].lower()
 
@@ -592,9 +600,6 @@ class BotWaveServer:
             elif command == 'help':
                 self.display_help()
                 return True
-            
-            elif command == '#':
-                return True # ignore comments
 
             else:
                 Log.error(f"Unknown command: {command}")

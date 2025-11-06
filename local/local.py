@@ -240,6 +240,14 @@ class BotWaveCLI:
 
     def _execute_command(self, command: str):
         try:
+
+            if "#" in command:
+                command = command.split("#", 1)[0]
+
+            command = command.strip()
+            if not command:
+                return True
+
             cmd_parts = command.split()
             if not cmd_parts:
                 return True
@@ -302,8 +310,6 @@ class BotWaveCLI:
             elif cmd == 'exit':
                 self.stop()
                 return False
-            elif cmd == '#':
-                return True
             else:
                 Log.error(f"Unknown command: {cmd}")
                 return True
