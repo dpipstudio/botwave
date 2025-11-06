@@ -21,7 +21,14 @@ import asyncio
 import websockets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
+from pathlib import Path
 import subprocess
+
+try:
+    from pysstv.color import MODES
+    MODE_MAP = { cls.__name__.lower(): cls for cls in MODES }
+except ImportError:
+    MODE_MAP = None
 
 PROTOCOL_VERSION = "1.1.0" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
@@ -59,6 +66,7 @@ class Log:
         'version': 'VER',
         'update': 'UPD',
         'handler': 'HNDL',
+        'sstv': 'SSTV'
     }
 
     ws_clients = set()
@@ -153,6 +161,10 @@ class Log:
     @classmethod
     def handler_message(cls, message: str):
         cls.print(message, 'magenta', 'handler')
+
+    @classmethod
+    def sstv_message(cls, message: str):
+        cls.print(message, 'bright_blue', 'sstv')
 
 def parse_version(version_str: str) -> tuple:
     try:
@@ -570,6 +582,43 @@ class BotWaveServer:
 
                 self.stop_broadcast(cmd[1])
                 return True
+            
+            elif command == 'sstv':
+                if len(cmd) < 3:
+                    Log.error("Usage: sstv <targets> <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]")
+                    return True
+
+                targets = cmd[1]
+                img_path = cmd[2]
+                mode = cmd[3] if len(cmd) > 3 else None
+                output_wav = cmd[4] if len(cmd) > 4 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
+                frequency = float(cmd[5]) if len(cmd) > 5 else 90.0
+                loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
+                ps = cmd[7] if len(cmd) > 7 else "RADIOOOO"
+                rt = cmd[8] if len(cmd) > 8 else "Broadcasting"
+                pi = cmd[9] if len(cmd) > 9 else "FFFF"
+
+                target_clients = self._parse_client_targets(targets)
+
+                if not target_clients:
+                    return False
+
+                if not os.path.exists(img_path):
+                    Log.error(f"Image file {img_path} not found")
+                    return True
+
+                Log.sstv_message(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
+
+                success = self.make_sstv_wav(img_path, output_wav, mode)
+
+                if success:
+                    Log.sstv_message(f"Uploading {output_wav} to {targets}...")
+                    self.upload_file(targets, output_wav)
+
+                    Log.sstv_message(f"Broadcasting {os.path.basename(output_wav)} on {frequency} MHz to {targets}...")
+                    self.start_broadcast(targets, output_wav, frequency, ps, rt, pi, loop)
+                return True
+
 
             elif command == 'kick':
                 if len(cmd) < 2:
@@ -997,6 +1046,83 @@ class BotWaveServer:
         Log.broadcast_message(f"Broadcast stop completed: {success_count}/{total_count} successful")
         self.onstop_handlers()
         return success_count > 0
+    
+    def make_sstv_wav(self, img_path, wav_path, mode_name=None):
+        # deps check
+        try:
+            from PIL import Image
+            import numpy as np
+            import wave
+        except ImportError:
+            parent_parent = Path(__file__).parent.parent
+            pip_path = parent_parent / "venv" / "bin" / "pip"
+            Log.sstv_message("Please install required modules:")
+            Log.sstv_message(f"{pip_path} install pysstv numpy pillow")
+            return False
+        
+
+        if MODE_MAP is None:
+            parent_parent = Path(__file__).parent.parent
+            pip_path = parent_parent / "venv" / "bin" / "pip"
+            Log.sstv_message("Please install required modules:")
+            Log.sstv_message(f"{pip_path} install pysstv")
+            return False
+
+        try:
+            img = Image.open(img_path).convert("RGB")
+        except Exception as e:
+            Log.sstv_message(f"Cannot open image: {e}")
+            return False
+
+        # select mode
+        if mode_name and mode_name.lower() in MODE_MAP:
+            cls = MODE_MAP[mode_name.lower()]
+        else:
+            cls = self._sstv_best_mode_for(*img.size)
+            if cls is None:
+                return False
+
+        # resize so SSTV encoder is :)
+        img = img.resize((cls.WIDTH, cls.HEIGHT))
+
+        try:
+            sstv = cls(img, 44100, 16)
+            samples = np.array(list(sstv.gen_samples())).astype(np.int16)
+
+            with wave.open(wav_path, "wb") as f:
+                f.setnchannels(1)
+                f.setsampwidth(2)
+                f.setframerate(44100)
+                f.writeframes(samples.tobytes())
+
+            Log.sstv_message(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
+            return True
+        except Exception as e:
+            Log.sstv_message(f"SSTV encode error: {e}")
+            return False
+
+
+    def _sstv_best_mode_for(self, w, h):
+        if MODE_MAP is None:
+            print("Install pysstv:  pip install pysstv")
+            return None
+
+        best = None
+        best_score = 999999999
+
+        for cls in MODES:
+            try:
+                dw = abs(cls.WIDTH  - w)
+                dh = abs(cls.HEIGHT - h)
+            except:
+                continue
+
+            score = dw + dh
+            if score < best_score:
+                best_score = score
+                best = cls
+
+        return best
 
     def kick_client(self, client_targets: str, reason: str = "Kicked by administrator"):
         target_clients = self._parse_client_targets(client_targets)
