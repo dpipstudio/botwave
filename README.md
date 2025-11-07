@@ -1,6 +1,6 @@
 <div align=center>
 
-<img src="assets/botwave_icon.png" alt="BotWave" width="300"/>
+<img src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave"/>
 
 <h1> BotWave - Your RPI FM Network </h1>
 <h4> <a href="https://botwave.dpip.lol">botwave.dpip.lol btw</a></h4>   
