@@ -1352,6 +1352,11 @@ class BotWaveServer:
         Log.print("  Example: stop all", 'cyan')
         Log.print("")
 
+        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
+        Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
+        Log.print("")
+        
         Log.print("kick <targets> [reason]", 'bright_green')
         Log.print("  Kick client(s) from the server", 'white')
         Log.print("  Example: kick pi1 Maintenance", 'cyan')
