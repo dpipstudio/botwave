@@ -37,14 +37,51 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
+# stop and remove systemd services
+SERVICES=("bw-client" "bw-server" "bw-local")
+SYSTEMD_CHANGED=false
+
+for svc in "${SERVICES[@]}"; do
+    if systemctl list-unit-files | grep -q "^${svc}.service"; then
+        SYSTEMD_CHANGED=true
+        log INFO "Stopping and disabling service: ${svc}"
+        systemctl stop "$svc" 2>/dev/null || true
+        systemctl disable "$svc" 2>/dev/null || true
+        if [[ -f "/etc/systemd/system/${svc}.service" ]]; then
+            rm -f "/etc/systemd/system/${svc}.service"
+            log INFO "Removed service file: /etc/systemd/system/${svc}.service"
+        fi
+    else
+        log WARN "Service ${svc} not found — skipping."
+    fi
+done
+
+# reload systemd only if needed
+if [[ "$SYSTEMD_CHANGED" == true ]]; then
+    log INFO "Reloading systemd daemon..."
+    systemctl daemon-reload
+    systemctl reset-failed 2>/dev/null || true
+fi
+
 # remove binaries
 log INFO "Removing binaries..."
-rm -f /usr/local/bin/bw-client
-rm -f /usr/local/bin/bw-server
-rm -f /usr/local/bin/bw-update
-rm -f /usr/local/bin/bw-autorun
-rm -f /usr/local/bin/bw-local
-rm -f /usr/local/bin/bw-nandl
+BINARIES=(
+    /usr/local/bin/bw-client
+    /usr/local/bin/bw-server
+    /usr/local/bin/bw-update
+    /usr/local/bin/bw-autorun
+    /usr/local/bin/bw-local
+    /usr/local/bin/bw-nandl
+)
+
+for bin in "${BINARIES[@]}"; do
+    if [[ -f "$bin" ]]; then
+        rm -f "$bin"
+        log INFO "Removed $bin"
+    else
+        log WARN "Binary not found: $bin"
+    fi
+done
 
 # remove installation directory
 INSTALL_DIR="/opt/BotWave"
@@ -55,4 +92,6 @@ else
     log WARN "Install directory $INSTALL_DIR does not exist."
 fi
 
-log INFO "Uninstallation complete."
+# done
+log INFO "System cleanup complete."
+log INFO "Uninstallation of BotWave is complete."
