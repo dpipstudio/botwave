@@ -30,7 +30,7 @@ try:
 except ImportError:
     MODE_MAP = None
 
-PROTOCOL_VERSION = "1.1.0" # if mismatch of 1th or 2th part: error
+PROTOCOL_VERSION = "1.1.1" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 class Log:
@@ -520,6 +520,14 @@ class BotWaveServer:
                             
                             self.download_file(cmd[1], cmd[2])
 
+                        elif command == 'rm':
+                            if len(cmd) < 3:
+                                Log.error("Usage: rm <targets> <filename|all>")
+                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                                return
+                            
+                            self.remove_file(cmd[1], cmd[2])
+
                         elif command == 'exit':
                             Log.warning("Hmmm, you can't do that. ;)")
 
@@ -695,6 +703,15 @@ class BotWaveServer:
                     return True
                 
                 self.list_files(cmd[1])
+                return True
+
+            elif command == 'rm':
+                if len(cmd) < 3:
+                    Log.error("Usage: rm <targets> <filename|all>")
+                    Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
+                    return True
+                
+                self.remove_file(cmd[1], cmd[2])
                 return True
 
             elif command == 'help':
@@ -993,6 +1010,40 @@ class BotWaveServer:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
         Log.broadcast_message(f"Download request completed: {success_count}/{total_count} successful")
+        return success_count > 0
+    
+
+    def remove_file(self, client_targets: str, filename: str):
+        target_clients = self._parse_client_targets(client_targets)
+
+        if not target_clients:
+            return False
+        
+        command = {
+            "type": "remove_file",
+            "filename": filename
+        }
+
+        success_count = 0
+        total_count = len(target_clients)
+
+        Log.broadcast_message(f"Removing file '{filename}' from {total_count} client(s)...")
+        for client_id in target_clients:
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
+                continue
+
+            client = self.clients[client_id]
+            response = client.send_command(command)
+
+            if response and response.get('status') == 'success':
+                Log.success(f"  {client.get_display_name()}: File removed")
+                success_count += 1
+
+            else:
+                Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
+
+        Log.broadcast_message(f"File removal completed: {success_count}/{total_count} successful")
         return success_count > 0
 
 
@@ -1355,6 +1406,21 @@ class BotWaveServer:
         Log.print("  List all connected clients", 'white')
         Log.print("")
 
+        Log.print("start <targets> <file> [loop] [freq] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Start broadcasting on client(s)", 'white')
+        Log.print("  Example: start all broadcast.wav 100.5 MyRadio", 'cyan')
+        Log.print("")
+
+        Log.print("stop <targets>", 'bright_green')
+        Log.print("  Stop broadcasting on client(s)", 'white')
+        Log.print("  Example: stop all", 'cyan')
+        Log.print("")
+
+        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
+        Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
+        Log.print("")
+
         Log.print("upload <targets> <file>", 'bright_green')
         Log.print("  Upload a WAV file to client(s)", 'white')
         Log.print("  Example: upload all broadcast.wav", 'cyan')
@@ -1370,19 +1436,9 @@ class BotWaveServer:
         Log.print("  Example: lf all", 'cyan')
         Log.print("")
 
-        Log.print("start <targets> <file> [loop] [freq] [ps] [rt] [pi]", 'bright_green')
-        Log.print("  Start broadcasting on client(s)", 'white')
-        Log.print("  Example: start all broadcast.wav 100.5 MyRadio", 'cyan')
-        Log.print("")
-
-        Log.print("stop <targets>", 'bright_green')
-        Log.print("  Stop broadcasting on client(s)", 'white')
-        Log.print("  Example: stop all", 'cyan')
-        Log.print("")
-
-        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
-        Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
-        Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
+        Log.print("rm <targets> <filename|all>", 'bright_green')
+        Log.print("  Remove a file from client(s)", 'white')
+        Log.print("  Example: rm all broadcast.wav", 'cyan')
         Log.print("")
         
         Log.print("kick <targets> [reason]", 'bright_green')

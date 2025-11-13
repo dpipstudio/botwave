@@ -33,7 +33,7 @@ except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.1.0" # if mismatch of 1st or 2nd part: error
+PROTOCOL_VERSION = "1.1.1" # if mismatch of 1st or 2nd part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
 
 class Log:
@@ -396,6 +396,8 @@ class BotWaveClient:
             return self._handle_download_file(url)
         elif cmd_type == 'list_files':
             return self._handle_list_files_request(command)
+        elif cmd_type == 'remove_file':
+            return self._handle_remove_file(command)
         else:
             return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
 
@@ -569,6 +571,47 @@ class BotWaveClient:
                 "status": "error",
                 "message": f"List files error: {str(e)}"
             }
+        
+    def _handle_remove_file(self, command: dict) -> dict:
+        filename = command.get('filename')
+
+        if not filename:
+            return {"status": "error", "message": "Missing filename"}
+        
+        if filename.lower() == 'all':
+            # Remove all WAV files
+            try:
+                removed_count = 0
+
+                for f in os.listdir(self.upload_dir):
+                    if f.lower().endswith('.wav'):
+                        os.remove(os.path.join(self.upload_dir, f))
+                        removed_count += 1
+
+                Log.success(f"Removed {removed_count} WAV files from {self.upload_dir}")
+
+                return {"status": "success", "message": f"Removed {removed_count} WAV files"}
+            
+            except Exception as e:
+                Log.error(f"Error removing WAV files: {str(e)}")
+                return {"status": "error", "message": f"Error removing WAV files: {str(e)}"}
+            
+        else:
+
+            file_path = os.path.join(self.upload_dir, filename)
+
+            if not os.path.exists(file_path):
+                return {"status": "error", "message": f"File {filename} not found"}
+            
+            try:
+                os.remove(file_path)
+                Log.success(f"Removed file {filename}")
+                return {"status": "success", "message": f"Removed file {filename}"}
+            
+            except Exception as e:
+                Log.error(f"Error removing file {filename}: {str(e)}")
+                return {"status": "error", "message": f"Error removing file {filename}: {str(e)}"}
+
 
 
     def _handle_start_broadcast_request(self, command: dict) -> dict:
