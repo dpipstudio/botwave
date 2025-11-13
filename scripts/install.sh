@@ -113,13 +113,13 @@ install_client() {
 
     mkdir -p "$INSTALL_DIR/client"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py?t=$(date +%s)" -o "$INSTALL_DIR/client/client.py"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client?t=$(date +%s)" -o "$BIN_DIR/bw-client"
 
     chmod +x "$BIN_DIR/bw-client"
     create_symlink "$BIN_DIR/bw-client" "bw-client"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/requirements.txt -o "$INSTALL_DIR/client/requirements.txt"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/client/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/client/requirements.txt"
     ./venv/bin/pip install -r "$INSTALL_DIR/client/requirements.txt"
 
 
@@ -129,13 +129,13 @@ install_client() {
 
     mkdir -p "$INSTALL_DIR/local"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py -o "$INSTALL_DIR/local/local.py"
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py?t=$(date +%s)" -o "$INSTALL_DIR/local/local.py"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local?t=$(date +%s)" -o "$BIN_DIR/bw-local"
 
     chmod +x "$BIN_DIR/bw-local"
     create_symlink "$BIN_DIR/bw-local" "bw-local"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/local/requirements.txt -o "$INSTALL_DIR/local/requirements.txt"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/local/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/local/requirements.txt"
     ./venv/bin/pip install -r "$INSTALL_DIR/local/requirements.txt"
 
     log INFO "Installed local.py, requirements and bw-local."
@@ -146,13 +146,13 @@ install_server() {
 
     mkdir -p "$INSTALL_DIR/server"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py?t=$(date +%s)" -o "$INSTALL_DIR/server/server.py"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server?t=$(date +%s)" -o "$BIN_DIR/bw-server"
 
     chmod +x "$BIN_DIR/bw-server"
     create_symlink "$BIN_DIR/bw-server" "bw-server"
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/server/requirements.txt -o "$INSTALL_DIR/server/requirements.txt"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/server/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/server/requirements.txt"
     ./venv/bin/pip install -r "$INSTALL_DIR/server/requirements.txt"
 
     log INFO "Installed server.py, requirements and bw-server."
@@ -161,21 +161,21 @@ install_server() {
 install_autorun() {
     log INFO "Downloading autorun.py and binary..."
     mkdir -p "$INSTALL_DIR/autorun"
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py -o "$INSTALL_DIR/autorun/autorun.py"
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun -o "$BIN_DIR/bw-autorun"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py?t=$(date +%s)" -o "$INSTALL_DIR/autorun/autorun.py"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun?t=$(date +%s)" -o "$BIN_DIR/bw-autorun"
     chmod +x "$BIN_DIR/bw-autorun"
     create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
     log INFO "Installed autorun.py and bw-autorun."
 }
 
 install_binaries() {
-    log INFO "Downloading binaries..."
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update -o "$BIN_DIR/bw-update"
+    log INFO "Downloading general binaries..."
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update?t=$(date +%s)" -o "$BIN_DIR/bw-update"
     chmod +x "$BIN_DIR/bw-update"
     create_symlink "$BIN_DIR/bw-update" "bw-update"
     log INFO "Installed bw-update."
 
-    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-nandl -o "$BIN_DIR/bw-nandl"
+    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-nandl?t=$(date +%s)" -o "$BIN_DIR/bw-nandl"
     chmod +x "$BIN_DIR/bw-nandl"
     create_symlink "$BIN_DIR/bw-nandl" "bw-nandl"
     log INFO "Installed bw-nandl."
