@@ -24,7 +24,7 @@ BotWave is a system for broadcasting audio files over FM radio using Raspberry P
 - Python 3.x
 
 ### Client
-- Raspberry Pi (recommended)
+- Raspberry Pi
 - Root access
 - PiFmRds installed
 - Python 3.x
