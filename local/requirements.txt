@@ -1,0 +1,2 @@
+piwave==2.0.9
+websockets=15.0.1

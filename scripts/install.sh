@@ -70,6 +70,8 @@ umask 002
 if [[ ! -d venv ]]; then
     log INFO "Creating Python virtual environment..."
     python3 -m venv venv
+    log INFO "Updating PIP in the virtual environment..."
+    ./venv/bin/pip install --upgrade pip
 fi
 
 create_symlink() {
@@ -107,39 +109,53 @@ install_client() {
 
     cd "$INSTALL_DIR"
 
-    log INFO "Installing PiWave..."
-    ./venv/bin/pip install --upgrade pip
-    ./venv/bin/pip install piwave==2.0.9
-    log INFO "Installed PiWave."
+    log INFO "Downloading client.py, requirements and binary..."
 
-    ./venv/bin/pip install websockets
-
-    log INFO "Downloading client.py and binary..."
     mkdir -p "$INSTALL_DIR/client"
+
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py -o "$INSTALL_DIR/client/client.py"
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client -o "$BIN_DIR/bw-client"
+
     chmod +x "$BIN_DIR/bw-client"
     create_symlink "$BIN_DIR/bw-client" "bw-client"
-    log INFO "Installed client.py and bw-client."
 
-    log INFO "Downloading local.py and binary..."
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/client/requirements.txt -o "$INSTALL_DIR/client/requirements.txt"
+    ./venv/bin/pip install -r "$INSTALL_DIR/client/requirements.txt"
+
+
+    log INFO "Installed client.py, requirements and bw-client."
+
+    log INFO "Downloading local.py, recquirements and binary..."
+
     mkdir -p "$INSTALL_DIR/local"
+
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py -o "$INSTALL_DIR/local/local.py"
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local -o "$BIN_DIR/bw-local"
+
     chmod +x "$BIN_DIR/bw-local"
     create_symlink "$BIN_DIR/bw-local" "bw-local"
-    log INFO "Installed local.py and bw-local."
+
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/local/requirements.txt -o "$INSTALL_DIR/local/requirements.txt"
+    ./venv/bin/pip install -r "$INSTALL_DIR/local/requirements.txt"
+
+    log INFO "Installed local.py, requirements and bw-local."
 }
 
 install_server() {
     log INFO "Downloading server.py, requirements and binary..."
-    ./venv/bin/pip install websockets
+
     mkdir -p "$INSTALL_DIR/server"
+
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py -o "$INSTALL_DIR/server/server.py"
     curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server -o "$BIN_DIR/bw-server"
+
     chmod +x "$BIN_DIR/bw-server"
     create_symlink "$BIN_DIR/bw-server" "bw-server"
-    log INFO "Installed server.py and bw-server."
+
+    curl -sSL https://raw.githubusercontent.com/dpipstudio/botwave/main/server/requirements.txt -o "$INSTALL_DIR/server/requirements.txt"
+    ./venv/bin/pip install -r "$INSTALL_DIR/server/requirements.txt"
+
+    log INFO "Installed server.py, requirements and bw-server."
 }
 
 install_autorun() {
