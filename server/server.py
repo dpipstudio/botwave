@@ -166,6 +166,31 @@ class Log:
     def sstv_message(cls, message: str):
         cls.print(message, 'bright_blue', 'sstv')
 
+
+    @classmethod
+    def progress_bar(cls, iteration, total, prefix='', suffix='', length=30, fill='#', style='bright_cyan', icon=''):
+        percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+        filled_length = int(length * iteration // total)
+        bar = fill * filled_length + '-' * (length - filled_length)
+        color = cls.COLORS.get(style, '')
+        icon_char = cls.ICONS.get(icon, '')
+        if icon_char:
+            if color:
+                sys.stdout.write(f"\r{color}[{icon_char}]\033[0m {prefix} [{bar}] {percent}% {suffix}")
+            else:
+                sys.stdout.write(f"\r[{icon_char}] {prefix} [{bar}] {percent}% {suffix}")
+        else:
+            if color:
+                sys.stdout.write(f"\r{color}{prefix} [{bar}] {percent}% {suffix}\033[0m")
+            else:
+                sys.stdout.write(f"\r{prefix} [{bar}] {percent}% {suffix}")
+        sys.stdout.flush()
+
+    @classmethod
+    def clear_progress_bar(cls):
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+
 def parse_version(version_str: str) -> tuple:
     try:
         return tuple(map(int, version_str.split('.')))
@@ -892,6 +917,9 @@ class BotWaveServer:
                         chunk = file_data[bytes_sent:bytes_sent + chunk_size]
                         client.conn.sendall(chunk)
                         bytes_sent += len(chunk)
+                        Log.progress_bar(bytes_sent, file_size, prefix=f"Uploading to {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
+
+                    Log.clear_progress_bar()
 
                     try:
                         confirm_buffer = ""

@@ -137,6 +137,32 @@ class Log:
     def update_message(cls, message: str):
         cls.print(message, 'bright_yellow', 'update')
 
+    @classmethod
+    def progress_bar(cls, iteration, total, prefix='', suffix='', length=30, fill='#', style='bright_cyan', icon=''):
+        percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+        filled_length = int(length * iteration // total)
+        bar = fill * filled_length + '-' * (length - filled_length)
+        color = cls.COLORS.get(style, '')
+        icon_char = cls.ICONS.get(icon, '')
+        if icon_char:
+            if color:
+                sys.stdout.write(f"\r{color}[{icon_char}]\033[0m {prefix} [{bar}] {percent}% {suffix}")
+            else:
+                sys.stdout.write(f"\r[{icon_char}] {prefix} [{bar}] {percent}% {suffix}")
+        else:
+            if color:
+                sys.stdout.write(f"\r{color}{prefix} [{bar}] {percent}% {suffix}\033[0m")
+            else:
+                sys.stdout.write(f"\r{prefix} [{bar}] {percent}% {suffix}")
+        sys.stdout.flush()
+
+    @classmethod
+    def clear_progress_bar(cls):
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+
+
+
 def parse_version(version_str: str) -> tuple:
     #Parse version string into tuple of integers for comparison
     try:
@@ -426,10 +452,7 @@ class BotWaveClient:
                     received_data += chunk
 
                     if file_size > 1024 * 1024:  # files > 1MB
-                        progress = (len(received_data) / file_size) * 100
-                        report_interval = max(1 * 1024 * 1024, file_size // 20)  # report every 5% or 1MB, whichever is larger
-                        if len(received_data) % report_interval < chunk_size:
-                            Log.file_message(f"Progress: {progress:.1f}%")
+                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', icon='file')
 
                 except socket.timeout:
                     Log.error("Timeout while receiving file data")
@@ -438,6 +461,10 @@ class BotWaveClient:
                 except Exception as e:
                     Log.error(f"Error receiving file chunk: {e}")
                     break
+
+            if file_size > 1024 * 1024:
+                Log.progress_bar(file_size, file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='file')
+                Log.clear_progress_bar()
 
             if len(received_data) != file_size:
                 Log.error(f"File upload incomplete: received {len(received_data)}/{file_size} bytes")
@@ -461,6 +488,12 @@ class BotWaveClient:
             return {"status": "error", "message": f"Upload error: {str(e)}"}
         
     def _handle_download_file(self, url: str) -> dict:
+        def _download_reporthook(block_num, block_size, total_size):
+            if total_size > 0:
+                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='file')
+
+
+
         try:
             filename = url.split('/')[-1]
 
@@ -470,7 +503,8 @@ class BotWaveClient:
             file_path = os.path.join(self.upload_dir, filename)
 
             Log.file_message(f"Downloading file from {url}...")
-            urllib.request.urlretrieve(url, file_path)
+            urllib.request.urlretrieve(url, file_path, reporthook=_download_reporthook)
+            Log.clear_progress_bar()
 
             Log.success(f"File {filename} downloaded successfully")
             return {"status": "success", "message": "File downloaded successfully"}
