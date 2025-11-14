@@ -970,10 +970,13 @@ class BotWaveServer:
                         
                             
                     except json.JSONDecodeError as e:
+                        Log.clear_progress_bar()
                         Log.error(f"  {client.get_display_name()}: Invalid JSON in confirmation - {e}")
                     except socket.timeout:
+                        Log.clear_progress_bar()
                         Log.error(f"  {client.get_display_name()}: Timeout waiting for confirmation")
                     except Exception as e:
+                        Log.clear_progress_bar()
                         Log.error(f"  {client.get_display_name()}: Error receiving confirmation - {e}")
                     finally:
                         client.uploading = False
