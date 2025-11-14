@@ -32,21 +32,25 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 if [[ -z "$1" ]]; then
-    log ERROR "Missing filename or path argument"
+    log ERROR "Missing command or filename argument"
     log INFO "Usage: bw-nandl <filename_or_path>"
     log INFO "Usage: bw-nandl list"
+    log INFO "Usage: bw-nandl open <handler>"
+    log INFO "Usage: bw-nandl show <handler>"
     log INFO "Example: bw-nandl s_onready.hdl"
-    log INFO "Example: bw-nandle /custom/path/l_onstart.hdl"
+    log INFO "Example: bw-nandl open s_onready.hdl"
+    log INFO "Example: bw-nandl show l_onstart.hdl"
     exit 1
 fi
 
-INPUT="$1"
+COMMAND="$1"
+INPUT="$2"
 BOTWAVE_DIR="/opt/BotWave/handlers"
 EDITOR="${EDITOR:-nano}"
 
 # supported handlers and commands
 VALID_PREFIXES=("l_onready" "l_onstart" "l_onstop" "s_onready" "s_onstart" "s_onstop" "s_onconnect" "s_ondisconnect" "s_onwsjoin" "s_onwsleave")
-VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit" "kick" "restart")
+VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit" "kick" "restart" "rm" "sync" "lf" "sstv")
 
 list_handlers() {
     echo ""
@@ -119,11 +123,70 @@ list_handlers() {
     return 0
 }
 
-# check if we ask to list handlers
-if [[ "$INPUT" == "list" ]]; then
-    list_handlers
-    exit $?
-fi
+show_handler() {
+    local handler="$1"
+    local target_file
+
+    if [[ "$handler" == *"/"* ]]; then
+        target_file="$handler"
+    else
+        target_file="$BOTWAVE_DIR/$handler"
+    fi
+
+    if [[ ! -f "$target_file" ]]; then
+        log ERROR "Handler file not found: $target_file"
+        return 1
+    fi
+
+    echo ""
+    echo "=============================================="
+    echo "Handler: $(basename "$target_file")"
+    echo "Path: $target_file"
+    echo "=============================================="
+    cat "$target_file"
+    echo "=============================================="
+    echo ""
+
+    return 0
+}
+
+open_handler() {
+    local handler="$1"
+    local target_file
+
+    if [[ "$handler" == *"/"* ]]; then
+        target_file="$handler"
+    else
+        target_file="$BOTWAVE_DIR/$handler"
+    fi
+
+    if [[ ! -f "$target_file" ]]; then
+        log ERROR "Handler file not found: $target_file"
+        log INFO "Use 'bw-nandl <filename>' to create a new handler"
+        return 1
+    fi
+
+    log INFO "Opening handler: $(basename "$target_file")"
+    "$EDITOR" "$target_file"
+
+    if [[ -f "$target_file" ]] && [[ -s "$target_file" ]]; then
+        echo ""
+        if validate_handler_content "$target_file"; then
+            echo ""
+            echo "=============================================="
+            cat "$target_file"
+            echo "=============================================="
+        else
+            log ERROR "Handler file validation failed. Please review and edit again if needed."
+            return 1
+        fi
+    else
+        log WARN "Handler file is empty or was not saved."
+    fi
+
+    echo ""
+    return 0
+}
 
 # check if input is a valid file format
 check_handler_format() {
@@ -187,11 +250,35 @@ validate_handler_content() {
     fi
 }
 
+# Handle commands
+if [[ "$COMMAND" == "list" ]]; then
+    list_handlers
+    exit $?
+elif [[ "$COMMAND" == "show" ]]; then
+    if [[ -z "$INPUT" ]]; then
+        log ERROR "Missing handler filename"
+        log INFO "Usage: bw-nandl show <handler>"
+        exit 1
+    fi
+    show_handler "$INPUT"
+    exit $?
+elif [[ "$COMMAND" == "open" ]]; then
+    if [[ -z "$INPUT" ]]; then
+        log ERROR "Missing handler filename"
+        log INFO "Usage: bw-nandl open <handler>"
+        exit 1
+    fi
+    open_handler "$INPUT"
+    exit $?
+fi
+
+INPUT="$COMMAND"
+
 if [[ "$INPUT" == *"/"* ]]; then
     TARGET_FILE="$INPUT"
     TARGET_DIR=$(dirname "$TARGET_FILE")
 else
-    # jut a file, use default dir
+    # just a file, use default dir
     TARGET_FILE="$BOTWAVE_DIR/$INPUT"
     TARGET_DIR="$BOTWAVE_DIR"
 fi

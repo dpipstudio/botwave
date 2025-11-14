@@ -25,6 +25,15 @@ Handler files must start with specific prefixes and have the correct file extens
 ## Handlers editor
 BotWaves comes shipped with our own file validator and checker, named `bw-nanld`. Run it with `sudo bw-nanld <filename>` to automatically create the handler and validate input once you finished editing it. 
 
+### bw-nandl
+NanDl supports multiple operations:  
+- Creating new handlers: `sudo bw-nandl <handler name | full path>` (eg `sudo bw-nandl s_onready.hdl`)
+- Listing handlers: `sudo bw-nandl list`
+- Showing handlers content: `sudo bw-nandl show <handler name | full path>` (eg `sudo bw-nandl show s_onready.hdl`)
+- Editing an existing handler: `sudo bw-nandl open <handler name | full path>` (eg `sudo bw-nandl open s_onready.hdl`)
+
+> [!TIP]
+> NanDl defaults to `/opt/BotWave/handlers/` if a full path is not provided. Be sure of having that directory accessible. 
 
 ## File Formatting
 Each line in a handler file represents a command to be executed. Ensure that:
