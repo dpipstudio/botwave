@@ -43,17 +43,9 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 
 ## Commands available
 
-`list`: Lists all connected clients.  
-    - Usage: `botwave> list`  
-
-`upload`: Upload a file or a folder's files to specified client(s).  
-    - Usage: `botwave> upload <targets> <path/of/file.wav|path/of/folder/>`  
-
-`dl`: Downloads a file from an external URL.  
-    - Usage: `botwave> dl <targets> <url>`
-
-`lf`: Lists broadcastable files on clients.  
-    - Usage: `botwave> lf <targets>`
+```
+targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or a comma-separated list of clients (client1,client2,etc).
+```
 
 `start`: Starts broadcasting on specified client(s).  
     - Usage: `botwave> start <targets> <file> [freq] [loop] [ps] [rt] [pi]`  
@@ -62,7 +54,22 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
     - Usage: `botwave> stop <targets>`  
 
 `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
-    - Usage: `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
+    - Usage: `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`  
+
+`list`: Lists all connected clients.  
+    - Usage: `botwave> list`  
+
+`upload`: Upload a file or a folder's files to specified client(s).  
+    - Usage: `botwave> upload <targets> <path/of/file.wav|path/of/folder/>`  
+
+`sync`: Synchronize files across systems from a source.  
+    - Usage: `botwave> sync <targets|path/of/folder/> <target|path/of/folder/>`
+
+`dl`: Downloads a file from an external URL.  
+    - Usage: `botwave> dl <targets> <url>`  
+
+`lf`: Lists broadcastable files on clients.  
+    - Usage: `botwave> lf <targets>`  
 
 `kick`: Kicks specified client(s) from the server.  
     - Usage: `botwave> kick <targets> [reason]`  
@@ -71,20 +78,16 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
     - Usage: `botwave> restart <targets>`  
 
 `handlers`: List all handlers or commands in a specific handler file.  
-    - Usage: `botwave> handlers [filename]`
+    - Usage: `botwave> handlers [filename]`  
 
-`>`: Run a shell command on the main OS.  
-    - Usage: `botwave> < <command>`
+`<`: Run a shell command on the main OS.  
+    - Usage: `botwave> < <command>`  
 
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 
 `help`: Shows the help.  
     - Usage: `botwave> help`  
-
-```
-targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or a comma-separated list of clients (client1,client2,etc).
-```
 
 > [!WARNING]
 > 1. `update` command support is experimental. Your client / server connexion may crash or act strange.  

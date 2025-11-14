@@ -33,7 +33,7 @@ except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.1.1" # if mismatch of 1st or 2nd part: error
+PROTOCOL_VERSION = "1.1.2" # if mismatch of 1st or 2nd part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
 
 class Log:
@@ -319,10 +319,12 @@ class BotWaveClient:
                         if message.strip():
                             try:
                                 command = json.loads(message.strip())
+
                                 if command.get('type') == 'ping' and not self.uploading:
                                     response = {"type": "pong"}
                                     self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
                                     continue
+
                                 if command.get('type') == 'upload_file':
                                     try:
                                         # Handle file upload - this method manages its own responses
@@ -332,6 +334,17 @@ class BotWaveClient:
                                         error_response = {"status": "error", "message": f"Upload error: {str(e)}"}
                                         self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
                                     continue
+
+                                if command.get('type') == 'send_file':
+                                    try:
+                                        # Handle file sending - this method manages its own responses
+                                        self._handle_send_file(command)
+                                    except Exception as e:
+                                        Log.error(f"Send file error: {e}")
+                                        error_response = {"status": "error", "message": f"Send error: {str(e)}"}
+                                        self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
+                                    continue
+
                                 # For other commands, use the queue system
                                 command_id += 1
                                 self.command_queue.put({
@@ -376,28 +389,36 @@ class BotWaveClient:
 
     def _process_command(self, command: dict) -> Optional[dict]:
         cmd_type = command.get('type')
+
         if cmd_type == 'start_broadcast':
             return self._handle_start_broadcast_request(command)
+        
         elif cmd_type == 'stop_broadcast':
             return self._handle_stop_broadcast_request()
+        
         elif cmd_type == 'kick':
             reason = command.get('reason', 'Kicked by administrator')
             Log.warning(f"Kicked from server: {reason}")
             self.running = False
             return {"status": "success", "message": "Client kicked"}
+        
         elif cmd_type == 'restart':
             Log.info("Restart requested by server")
             self._stop_broadcast_main_thread()
             return {"status": "success", "message": "Restart acknowledged"}
+        
         elif cmd_type == 'download_file':
             url = command.get('url')
             if not url:
                 return {"status": "error", "message": "Missing URL"}
             return self._handle_download_file(url)
+        
         elif cmd_type == 'list_files':
             return self._handle_list_files_request(command)
+        
         elif cmd_type == 'remove_file':
             return self._handle_remove_file(command)
+        
         else:
             return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
 
@@ -454,7 +475,7 @@ class BotWaveClient:
                     received_data += chunk
 
                     if file_size > 1024 * 1024:  # files > 1MB
-                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', icon='file')
+                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='file')
 
                 except socket.timeout:
                     Log.error("Timeout while receiving file data")
@@ -488,6 +509,95 @@ class BotWaveClient:
         except Exception as e:
             Log.error(f"Upload error: {str(e)}")
             return {"status": "error", "message": f"Upload error: {str(e)}"}
+        
+
+    def _handle_send_file(self, command: dict):
+        self.uploading = True
+        
+        try:
+            filename = command.get('filename')
+            
+            if not filename:
+                error_response = {"status": "error", "message": "Missing filename"}
+                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
+                self.uploading = False
+                return
+            
+            file_path = os.path.join(self.upload_dir, filename)
+            
+            if not os.path.exists(file_path):
+                error_response = {"status": "error", "message": f"File {filename} not found"}
+                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
+                self.uploading = False
+                return
+            
+            file_size = os.path.getsize(file_path)
+            
+            Log.file_message(f"Preparing to send file: {filename} ({file_size} bytes)")
+            
+            # Send ready response
+            ready_response = {"status": "ready", "size": file_size, "message": "Ready to send file"}
+            self.socket.send((json.dumps(ready_response) + '\n').encode('utf-8'))
+            
+            # Dynamic chunk sizing based on file size
+            if file_size < 1024 * 1024:  # < 1MB
+                chunk_size = 32768  # 32KB
+            elif file_size < 10 * 1024 * 1024:  # < 10MB
+                chunk_size = 131072  # 128KB
+            elif file_size < 100 * 1024 * 1024:  # < 100MB
+                chunk_size = 524288  # 512KB
+            else:  # >= 100MB
+                chunk_size = 1048576  # 1MB
+            
+            Log.file_message(f"Sending file data... (chunk size: {chunk_size / 1024:.0f}KB)")
+            
+            # Send file data
+            with open(file_path, 'rb') as f:
+                bytes_sent = 0
+                while bytes_sent < file_size:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    self.socket.sendall(chunk)
+                    bytes_sent += len(chunk)
+                    
+                    if file_size > 1024 * 1024:  # Progress bar for files > 1MB
+                        Log.progress_bar(bytes_sent, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='file')
+            
+            if file_size > 1024 * 1024:
+                Log.progress_bar(file_size, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='file')
+                Log.clear_progress_bar()
+            
+            # Wait for confirmation from server
+            confirm_buffer = ""
+            original_timeout = self.socket.gettimeout()
+            self.socket.settimeout(10)
+            
+            while '\n' not in confirm_buffer:
+                data = self.socket.recv(1024).decode('utf-8')
+                if not data:
+                    raise Exception("Connection closed while waiting for confirmation")
+                confirm_buffer += data
+            
+            confirm_line = confirm_buffer.split('\n', 1)[0].strip()
+            confirm_json = json.loads(confirm_line)
+            
+            if confirm_json.get('status') == 'received':
+                Log.success(f"File {filename} sent successfully")
+            else:
+                Log.error(f"Server reported error: {confirm_json.get('message', 'Unknown error')}")
+            
+            self.socket.settimeout(original_timeout)
+            self.uploading = False
+            
+        except Exception as e:
+            Log.error(f"Send file error: {e}")
+            self.uploading = False
+            try:
+                error_response = {"status": "error", "message": f"Send error: {str(e)}"}
+                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
+            except:
+                pass
         
     def _handle_download_file(self, url: str) -> dict:
         def _download_reporthook(block_num, block_size, total_size):

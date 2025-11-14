@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from pathlib import Path
 import subprocess
+import tempfile
 
 try:
     from pysstv.color import MODES
@@ -30,7 +31,7 @@ try:
 except ImportError:
     MODE_MAP = None
 
-PROTOCOL_VERSION = "1.1.1" # if mismatch of 1th or 2th part: error
+PROTOCOL_VERSION = "1.1.2" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 class Log:
@@ -528,6 +529,15 @@ class BotWaveServer:
                             
                             self.remove_file(cmd[1], cmd[2])
 
+                        elif command == 'sync':
+                            if len(cmd) < 3:
+                                Log.error("Usage: sync <targets|folder/path/> <source_target|folder/path/>")
+                                Log.info("Targets: 'all', client_id, hostname, comma-separated list, or local folder ending with /")
+                                Log.info("Source: client_id, hostname, or local folder path ending with /")
+                                return
+
+                            self.sync_files(cmd[1], cmd[2])
+
                         elif command == 'exit':
                             Log.warning("Hmmm, you can't do that. ;)")
 
@@ -713,6 +723,16 @@ class BotWaveServer:
                 
                 self.remove_file(cmd[1], cmd[2])
                 return True
+            
+            elif command == 'sync':
+                if len(cmd) < 3:
+                    Log.error("Usage: sync <targets|folder/path/> <source_target|folder/path/>")
+                    Log.info("Targets: 'all', client_id, hostname, comma-separated list, or local folder ending with /")
+                    Log.info("Source: client_id, hostname, or local folder path ending with /")
+                    return True
+                
+                self.sync_files(cmd[1], cmd[2])
+                return True
 
             elif command == 'help':
                 self.display_help()
@@ -880,7 +900,6 @@ class BotWaveServer:
         if os.path.isdir(file_path):
             return self._upload_folder_contents(client_targets, file_path)
 
-
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
             return False
@@ -1029,6 +1048,7 @@ class BotWaveServer:
         Log.broadcast_message(f"Folder upload completed: {overall_success}/{total_files} files uploaded successfully")
         return overall_success > 0
     
+    
     def download_file(self, client_targets: str, url: str):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
@@ -1093,7 +1113,278 @@ class BotWaveServer:
 
         Log.broadcast_message(f"File removal completed: {success_count}/{total_count} successful")
         return success_count > 0
+    
+    def sync_files(self, client_targets: str, source: str):
+        # Sync files between clients and/or local folders.
+        # 
+        # Supports:
+        # - sync <clients> <source_client> - Sync from one client to others
+        # - sync <clients> <folder/> - Sync from local folder to clients
+        # - sync <folder/> <source_client> - Sync from client to local folder
+        
+        
+        is_target_folder = client_targets.endswith('/')
+        is_source_folder = source.endswith('/')
+        
+        # Case 1: Sync FROM client TO local folder
+        if is_target_folder and not is_source_folder:
+            return self._sync_client_to_folder(client_targets.rstrip('/'), source)
+        
+        # Case 2: Sync TO clients (from folder or another client)
+        target_clients = self._parse_client_targets(client_targets)
+        
+        if not target_clients:
+            return False
+        
+        # determine source and get files
+        temp_dir = None
+        source_dir = None
+        source_client_id = None
+        
+        if is_source_folder:
+            source_dir = source.rstrip('/')
+            if not os.path.exists(source_dir) or not os.path.isdir(source_dir):
+                Log.error(f"Source folder {source_dir} not found")
+                return False
+            
+            wav_files = [f for f in os.listdir(source_dir) 
+                        if f.lower().endswith('.wav') and os.path.isfile(os.path.join(source_dir, f))]
+            
+            if not wav_files:
+                Log.warning(f"No WAV files found in {source_dir}")
+                return False
+            
+            Log.broadcast_message(f"Syncing from local folder: {source_dir} ({len(wav_files)} files)")
+        else:
+            # client - fetch files to a temp dir
+            source_clients = self._parse_client_targets(source)
+            
+            if not source_clients or len(source_clients) != 1:
+                Log.error(f"Source '{source}' must resolve to exactly one client")
+                return False
+            
+            source_client_id = source_clients[0]
+            
+            if source_client_id not in self.clients:
+                Log.error(f"Source client {source_client_id} not found")
+                return False
+            
+            temp_dir = tempfile.mkdtemp(prefix='botwave_sync_')
+            source_dir = temp_dir
+            
+            Log.broadcast_message(f"Fetching files from source client: {source_client_id}")
+            
+            source_client = self.clients[source_client_id]
+            if not self._download_files_from_client(source_client, temp_dir):
+                if temp_dir:
+                    self._remove_temp_dir(temp_dir)
+                return False
+        
+        Log.broadcast_message(f"Clearing files from {len(target_clients)} target client(s)...")
+        
+        for client_id in target_clients:
+            if client_id == source_client_id:
+                Log.info(f"  Skipping source client: {client_id}")
+                continue
+            
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
+                continue
+            
+            remove_response = self.clients[client_id].send_command({
+                "type": "remove_file",
+                "filename": "all"
+            })
+            
+            if remove_response and remove_response.get('status') == 'success':
+                Log.success(f"  {self.clients[client_id].get_display_name()}: Files cleared")
+            else:
+                Log.warning(f"  {self.clients[client_id].get_display_name()}: Clear failed")
+        
+        Log.broadcast_message(f"Uploading synchronized files to targets...")
+        
+        sync_targets = [cid for cid in target_clients if cid != source_client_id]
+        
+        if not sync_targets:
+            Log.warning("No targets to sync to (all targets were the source)")
+            if temp_dir:
+                self._remove_temp_dir(temp_dir)
+            return True
+        
+        success = self._upload_folder_contents(','.join(sync_targets), source_dir)
+        
+        if temp_dir:
+            self._remove_temp_dir(temp_dir)
+            Log.info("Cleaned up temporary files")
+        
+        if success:
+            Log.broadcast_message(f"Sync completed successfully!")
+        else:
+            Log.error("Sync completed with errors")
+        
+        return success
 
+
+    def _sync_client_to_folder(self, target_dir: str, source: str):
+        # Download all files from a client to a local folder.
+        
+        # Validate/create target directory
+        if not os.path.exists(target_dir):
+            Log.error(f"Directory doesn't exists: {target_dir}")
+            return False
+        
+
+        source_clients = self._parse_client_targets(source)
+        
+        if not source_clients or len(source_clients) != 1:
+            Log.error(f"Source '{source}' must resolve to exactly one client")
+            return False
+        
+        source_client_id = source_clients[0]
+        
+        if source_client_id not in self.clients:
+            Log.error(f"Source client {source_client_id} not found")
+            return False
+        
+        source_client = self.clients[source_client_id]
+        
+        Log.broadcast_message(f"Syncing from {source_client.get_display_name()} to local folder: {target_dir}")
+        
+        success = self._download_files_from_client(source_client, target_dir)
+        
+        if success:
+            Log.broadcast_message(f"Sync to local folder completed successfully!")
+        else:
+            Log.error("Sync to local folder completed with errors")
+        
+        return success
+
+
+    def _download_files_from_client(self, client: 'BotWaveClient', dest_dir: str) -> bool:
+        # Download all files from a client to a destination directory.
+        
+        # get list of files from client
+        list_response = client.send_command({"type": "list_files"})
+        
+        if not list_response or list_response.get('status') != 'success':
+            Log.error(f"Failed to get file list from {client.get_display_name()}")
+            return False
+        
+        files = list_response.get('files', [])
+        
+        if not files:
+            Log.warning(f"{client.get_display_name()} has no files to download")
+            return False
+        
+        Log.broadcast_message(f"Downloading {len(files)} file(s) from {client.get_display_name()}...")
+        
+        success_count = 0
+        
+        for file_info in files:
+            filename = file_info.get('name')
+            
+            Log.file_message(f"  Requesting {filename}...")
+            
+            client.uploading = True
+            
+            send_cmd = {
+                "type": "send_file",
+                "filename": filename
+            }
+            
+            response = client.send_command(send_cmd)
+            
+            if response and response.get('status') == 'ready':
+                file_size = response.get('size', 0)
+                file_path = os.path.join(dest_dir, filename)
+                
+                try:
+                    # Dynamic chunk sizing
+                    if file_size < 1024 * 1024:
+                        chunk_size = 32768
+                    elif file_size < 10 * 1024 * 1024:
+                        chunk_size = 131072
+                    elif file_size < 100 * 1024 * 1024:
+                        chunk_size = 524288
+                    else:
+                        chunk_size = 1048576
+                    
+                    Log.file_message(f"  Receiving {filename}... (chunk size: {chunk_size / 1024:.0f}KB)")
+                    
+                    original_timeout = client.conn.gettimeout()
+                    transfer_timeout = max(60, file_size / 100000)
+                    client.conn.settimeout(transfer_timeout)
+                    
+                    received_data = b''
+                    
+                    while len(received_data) < file_size:
+                        try:
+                            remaining = file_size - len(received_data)
+                            current_chunk_size = min(chunk_size, remaining)
+                            
+                            chunk = client.conn.recv(current_chunk_size)
+                            if not chunk:
+                                Log.error("Connection closed during file transfer")
+                                break
+                            
+                            received_data += chunk
+                            
+                            if file_size > 1024 * 1024:
+                                Log.progress_bar(len(received_data), file_size, 
+                                            prefix=f'{filename}', suffix='Complete', 
+                                            style='yellow', icon='file')
+                        
+                        except socket.timeout:
+                            Log.error("Timeout while receiving file data")
+                            break
+                        except Exception as e:
+                            Log.error(f"Error receiving file chunk: {e}")
+                            break
+                    
+                    if file_size > 1024 * 1024:
+                        Log.progress_bar(file_size, file_size, prefix=f'{filename}:', 
+                                    suffix='Complete', style='yellow', icon='file')
+                        Log.clear_progress_bar()
+                    
+                    if len(received_data) != file_size:
+                        Log.error(f"  Incomplete transfer: received {len(received_data)}/{file_size} bytes")
+                        client.conn.settimeout(original_timeout)
+                        client.uploading = False
+                        continue
+                    
+                    # Write to file
+                    with open(file_path, 'wb') as f:
+                        f.write(received_data)
+                    
+                    confirm_response = {"status": "received", "message": "File received successfully"}
+                    client.conn.sendall((json.dumps(confirm_response) + '\n').encode('utf-8'))
+                    
+                    Log.success(f"  Downloaded {filename} ({len(received_data)} bytes)")
+                    success_count += 1
+                    
+                    client.conn.settimeout(original_timeout)
+                    client.uploading = False
+                    
+                except Exception as e:
+                    Log.error(f"  Failed to download {filename}: {e}")
+                    client.uploading = False
+                    try:
+                        error_response = {"status": "error", "message": f"Transfer error: {str(e)}"}
+                        client.conn.sendall((json.dumps(error_response) + '\n').encode('utf-8'))
+                    except:
+                        pass
+            else:
+                error_msg = response.get('message', 'Unknown error') if response else 'No response'
+                Log.error(f"  Client couldn't prepare {filename}: {error_msg}")
+                client.uploading = False
+        
+        return success_count > 0
+
+    def _remove_temp_dir(self, directory: str):
+        try:
+            os.rmdir(directory)
+        except Exception as e:
+            Log.warning(f"Failed to remove temp directory {directory}: {e}")
 
     def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0,
                        ps: str = "RADIOOOO", rt: str = "Broadcasting since 2025", pi: str = "FFFF",
@@ -1469,9 +1760,19 @@ class BotWaveServer:
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
         Log.print("")
 
-        Log.print("upload <targets> <file>", 'bright_green')
+        Log.print("upload <targets> <file|folder>", 'bright_green')
         Log.print("  Upload a WAV file or a folder's files to client(s)", 'white')
         Log.print("  Example: upload all broadcast.wav", 'cyan')
+        Log.print("  Example: upload pi1,pi2 /home/bw/lib", 'cyan')
+        Log.print("")
+
+        Log.print("sync <targets|folder/> <source_target|folder/>", 'bright_green')
+        Log.print("  Synchronize files across clients or to/from local folders", 'white')
+        Log.print("  Source can be a client or a local folder path ending with /", 'white')
+        Log.print("  Target can be clients or a local folder path ending with /", 'white')
+        Log.print("  Example: sync all pi1", 'cyan')
+        Log.print("  Example: sync pi2,pi3,pi4 /home/bw/lib/", 'cyan')
+        Log.print("  Example: sync /home/bw/backup/ pi1", 'cyan')
         Log.print("")
 
         Log.print("dl <targets> <url>", 'bright_green')
