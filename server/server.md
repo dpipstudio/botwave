@@ -46,8 +46,8 @@ sudo bw-client --host 0.0.0.0 --port 9938 --pk mypasskey
 `list`: Lists all connected clients.  
     - Usage: `botwave> list`  
 
-`upload`: Upload a file to specified client(s).  
-    - Usage: `botwave> upload <targets> <path/of/file.wav>`  
+`upload`: Upload a file or a folder's files to specified client(s).  
+    - Usage: `botwave> upload <targets> <path/of/file.wav|path/of/folder/>`  
 
 `dl`: Downloads a file from an external URL.  
     - Usage: `botwave> dl <targets> <url>`

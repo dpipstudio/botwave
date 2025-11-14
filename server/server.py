@@ -877,6 +877,10 @@ class BotWaveServer:
             Log.print("")
 
     def upload_file(self, client_targets: str, file_path: str):
+        if os.path.isdir(file_path):
+            return self._upload_folder_contents(client_targets, file_path)
+
+
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
             return False
@@ -934,8 +938,9 @@ class BotWaveServer:
                         chunk = file_data[bytes_sent:bytes_sent + chunk_size]
                         client.conn.sendall(chunk)
                         bytes_sent += len(chunk)
-                        Log.progress_bar(bytes_sent, file_size, prefix=f"Uploading to {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
+                        Log.progress_bar(bytes_sent, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
 
+                    Log.progress_bar(file_size, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
                     Log.clear_progress_bar()
 
                     try:
@@ -980,6 +985,46 @@ class BotWaveServer:
 
         Log.broadcast_message(f"Upload completed: {success_count}/{total_count} successful")
         return success_count > 0
+    
+    def _upload_folder_contents(self, client_targets: str, folder_path: str):
+        # Upload all WAV files from a folder to target clients.
+
+        # chosen to not use compression to support even lightest clients, even if it takes more time overall.
+
+        if not os.path.exists(folder_path):
+            Log.error(f"Folder {folder_path} not found")
+            return False
+        
+        if not os.path.isdir(folder_path):
+            Log.error(f"{folder_path} is not a directory")
+            return False
+        
+        # this isnt recursive 
+        wav_files = [f for f in os.listdir(folder_path) 
+                    if f.lower().endswith('.wav') and os.path.isfile(os.path.join(folder_path, f))]
+        
+        if not wav_files:
+            Log.warning(f"No WAV files found in {folder_path}")
+            return False
+        
+        Log.broadcast_message(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
+        
+        overall_success = 0
+        total_files = len(wav_files)
+        
+        for idx, filename in enumerate(wav_files, 1):
+            full_path = os.path.join(folder_path, filename)
+            Log.file_message(f"[{idx}/{total_files}] Processing {filename}...")
+            
+            if self.upload_file(client_targets, full_path):
+                overall_success += 1
+            
+            # small delay between uploads to prevent overwhelming clients
+            if idx < total_files:
+                time.sleep(0.5)
+        
+        Log.broadcast_message(f"Folder upload completed: {overall_success}/{total_files} files uploaded successfully")
+        return overall_success > 0
     
     def download_file(self, client_targets: str, url: str):
         target_clients = self._parse_client_targets(client_targets)
@@ -1422,7 +1467,7 @@ class BotWaveServer:
         Log.print("")
 
         Log.print("upload <targets> <file>", 'bright_green')
-        Log.print("  Upload a WAV file to client(s)", 'white')
+        Log.print("  Upload a WAV file or a folder's files to client(s)", 'white')
         Log.print("  Example: upload all broadcast.wav", 'cyan')
         Log.print("")
 
