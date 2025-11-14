@@ -26,6 +26,7 @@ import urllib.request
 import urllib.error
 from typing import Optional, Dict
 from datetime import datetime, timezone
+import getpass
 
 try:
     from piwave import PiWave
@@ -916,34 +917,46 @@ def check_requirements():
     else:
         Log.success(f"Found pi_fm_rds at: {pi_fm_rds_path}")
 
+
 def main():
     Log.header("BotWave - Client")
 
-    Log.info("Checking for protocol updates...")
-    try:
-        latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
-        if latest_version:
-            Log.update_message(f"Update available! Latest version: {latest_version}")
-            Log.update_message("Consider updating to the latest version by running 'bw-update' in your shell.")
-        else:
-            Log.success("You are using the latest protocol version")
-    except Exception as e:
-        Log.warning("Unable to check for updates (continuing anyway)")
-
     parser = argparse.ArgumentParser(description='BotWave - Client')
-    parser.add_argument('server_host', help='Server hostname or IP address')
+    parser.add_argument('server_host', nargs='?', help='Server hostname or IP address')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads',
                        help='Directory to store uploaded files')
     parser.add_argument('--skip-checks', action='store_true',
                        help='Skip system requirements checks')
-    parser.add_argument('--pk', help='Optional passkey for authentication')
+    parser.add_argument('--pk', nargs='?', const='', default=None, 
+                       help='Optional passkey for authentication')
     parser.add_argument('--skip-update-check', action='store_true',
                        help='Skip checking for protocol updates')
     args = parser.parse_args()
 
+    if not args.server_host:
+        args.server_host = input("Enter server hostname or IP address: ").strip()
+        if not args.server_host:
+            Log.error("Server hostname/IP is required")
+            sys.exit(1)
+
+    if args.pk == '':
+        pk_input = getpass.getpass("Enter passkey: ").strip()
+        args.pk = pk_input or None
+
     if not args.skip_checks:
         check_requirements()
+
+        Log.info("Checking for protocol updates...")
+        try:
+            latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
+            if latest_version:
+                Log.update_message(f"Update available! Latest version: {latest_version}")
+                Log.update_message("Consider updating to the latest version by running 'bw-update' in your shell.")
+            else:
+                Log.success("You are using the latest protocol version")
+        except Exception as e:
+            Log.warning("Unable to check for updates (continuing anyway)")
 
     client = BotWaveClient(args.server_host, args.port, args.upload_dir, args.pk)
     Log.info(f"Starting BotWave client, connecting to {args.server_host}:{args.port}")
