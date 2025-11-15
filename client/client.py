@@ -242,17 +242,31 @@ class BotWaveClient:
             }
             message = json.dumps(registration)
             self.socket.send((message + '\n').encode('utf-8'))
-            response = self.socket.recv(1024).decode('utf-8').strip()
-            reg_response = json.loads(response)
+
+
+            buffer = ""
+            while '\n' not in buffer:
+                data = self.socket.recv(1024).decode('utf-8')
+                if not data:
+                    raise Exception("Connection closed during registration")
+                buffer += data
+            
+            # process only registration response
+            first_line = buffer.split('\n', 1)[0].strip()
+            reg_response = json.loads(first_line)
+
+
             if reg_response.get('type') == 'register_ok':
                 Log.success(f"Successfully registered with server as {reg_response.get('client_id')}")
                 server_version = reg_response.get('server_protocol_version', 'unknown')
                 Log.version_message(f"Server protocol version: {server_version}")
                 Log.version_message(f"Client protocol version: {PROTOCOL_VERSION}")
                 return True
+            
             elif reg_response.get('type') == 'auth_failed':
                 Log.error("Authentication failed: Invalid passkey")
                 return False
+            
             elif reg_response.get('type') == 'version_mismatch':
                 server_version = reg_response.get('server_version', 'unknown')
                 client_version = reg_response.get('client_version', PROTOCOL_VERSION)
@@ -261,9 +275,11 @@ class BotWaveClient:
                 Log.error(f"Client version: {client_version}")
                 Log.error("Please update your client or server to match protocol versions")
                 return False
+            
             else:
                 Log.error("Registration failed")
                 return False
+            
         except Exception as e:
             Log.error(f"Error connecting to server: {e}")
             return False
@@ -271,6 +287,7 @@ class BotWaveClient:
     def start(self):
         if not self.connect():
             return False
+        
         self.running = True
         self._setup_signal_handlers()
         threading.Thread(target=self._handle_network_commands, daemon=True).start()

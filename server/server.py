@@ -365,6 +365,15 @@ class BotWaveServer:
                     return
 
                 client_id = f"{machine_info.get('hostname', 'unknown')}_{addr[0]}"
+
+                if client_id in self.clients:
+                    Log.warning(f"Client {client_id} reconnecting - cleaning up old connection")
+                    old_client = self.clients[client_id]
+                    try:
+                        old_client.conn.close()
+                    except:
+                        pass
+                    
                 client = BotWaveClient(conn, addr, machine_info, client_protocol_version, self.passkey)
                 client.authenticated = True
                 self.clients[client_id] = client
@@ -385,9 +394,21 @@ class BotWaveServer:
             Log.error(f"Error handling client {addr[0]}:{addr[1]}: {e}")
             conn.close()
 
-    def _keep_client_alive(self, client_id: str):
+    def  _keep_client_alive(self, client_id: str):
+
+        if client_id not in self.clients:
+            return
+
+        my_client = self.clients.get(client_id)
+
         while self.running and client_id in self.clients:
             try:
+                current_client = self.clients[client_id]
+                
+                # if the client object changed, this thread is obsolete
+                if current_client is not my_client:
+                    break
+
                 client = self.clients[client_id]
 
                 if not client.is_alive():
