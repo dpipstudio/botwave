@@ -1,0 +1,33 @@
+{
+    "client": {
+        "files": [
+            "client/client.py",
+            "local/local.py",
+            "shared/logger.py"
+        ],
+        "requirements": [
+            "piwave==2.0.9"
+        ],
+        "binaries": [
+            "bin/bw-client",
+            "bin/bw-local"
+        ]
+    },
+    "server": {
+        "files": [
+            "server/server.py",
+            "shared/logger.py"
+        ],
+        "requirements": [],
+        "binaries": ["bin/bw-server"]
+    },
+    "always": {
+        "files": [],
+        "requirements": [],
+        "binaries": [
+            "bin/bw-autorun",
+            "bin/bw-nandl",
+            "bin/bw-update"
+        ]
+    }
+}

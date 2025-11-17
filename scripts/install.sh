@@ -17,6 +17,11 @@ GRN='\033[0;32m'
 YEL='\033[1;33m'
 NC='\033[0m'
 
+GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
+INSTALL_DIR="/opt/BotWave"
+BIN_DIR="$INSTALL_DIR/bin"
+SYMLINK_DIR="/usr/local/bin"
+
 log() {
     local level="$1"
     shift
@@ -32,7 +37,7 @@ log() {
 
 # validate input
 if [[ "$1" != "client" && "$1" != "server" && "$1" != "both" ]]; then
-    log ERROR "Usage: $0 -s {client|server|both}"
+    log ERROR "Usage: $0 {client|server|both}"
     exit 1
 fi
 MODE="$1"
@@ -53,11 +58,7 @@ fi
 # install dependencies
 log INFO "Installing system dependencies..."
 apt update
-apt install -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl
-
-INSTALL_DIR="/opt/BotWave"
-BIN_DIR="$INSTALL_DIR/bin"
-SYMLINK_DIR="/usr/local/bin"
+apt install -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl jq
 
 log INFO "Creating install directories..."
 mkdir -p "$INSTALL_DIR/uploads"
@@ -74,9 +75,16 @@ if [[ ! -d venv ]]; then
     ./venv/bin/pip install --upgrade pip
 fi
 
+# fetch install.json
+log INFO "Fetching installation configuration..."
+INSTALL_JSON=$(curl -sSL "${GITHUB_RAW_URL}/assets/installation.json?t=$(date +%s)")
+if [[ -z "$INSTALL_JSON" ]]; then
+    log ERROR "Failed to fetch installation.json"
+    exit 1
+fi
+
 create_symlink() {
-    local target="$1"
-    local link_name="$2"
+    local link_name="$1"
     if [[ -e "$SYMLINK_DIR/$link_name" ]]; then
         log WARN "Removing existing symlink or file: $SYMLINK_DIR/$link_name"
         rm -f "$SYMLINK_DIR/$link_name"
@@ -85,13 +93,73 @@ create_symlink() {
     log INFO "Symlink created: $SYMLINK_DIR/$link_name -> $BIN_DIR/$link_name"
 }
 
-install_client() {
+download_files() {
+    local section="$1"
+    local file_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.files[]" 2>/dev/null)
+    
+    if [[ -n "$file_list" ]]; then
+        log INFO "Downloading files for section: $section"
+        while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            local target_path="$INSTALL_DIR/$file"
+            local target_dir=$(dirname "$target_path")
+            
+            mkdir -p "$target_dir"
+            log INFO "  - Downloading $file..."
+            curl -sSL "${GITHUB_RAW_URL}/${file}?t=$(date +%s)" -o "$target_path"
+        done <<< "$file_list"
+    fi
+}
+
+install_requirements() {
+    local section="$1"
+    local req_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.requirements[]" 2>/dev/null)
+    
+    if [[ -n "$req_list" ]]; then
+        log INFO "Installing Python requirements for section: $section"
+        while IFS= read -r req; do
+            [[ -z "$req" ]] && continue
+            log INFO "  - Installing $req..."
+            ./venv/bin/pip install "$req"
+        done <<< "$req_list"
+    fi
+}
+
+install_binaries() {
+    local section="$1"
+    local bin_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.binaries[]" 2>/dev/null)
+    
+    if [[ -n "$bin_list" ]]; then
+        log INFO "Installing binaries for section: $section"
+        while IFS= read -r binary; do
+            [[ -z "$binary" ]] && continue
+            local bin_name=$(basename "$binary")
+            local target_path="$INSTALL_DIR/$binary"
+            
+            mkdir -p "$(dirname "$target_path")"
+            log INFO "  - Downloading $binary..."
+            curl -sSL "${GITHUB_RAW_URL}/${binary}?t=$(date +%s)" -o "$target_path"
+            chmod +x "$target_path"
+            create_symlink "$bin_name"
+        done <<< "$bin_list"
+    fi
+}
+
+install_client_specific() {
     log INFO "Cloning PiFmRds..."
-    git clone https://github.com/ChristopheJacquet/PiFmRds || true
+    if [[ -d PiFmRds ]]; then
+        log INFO "PiFmRds already exists, pulling latest..."
+        cd PiFmRds
+        git pull || true
+        cd ..
+    else
+        git clone https://github.com/ChristopheJacquet/PiFmRds || true
+    fi
+    
     cd PiFmRds/src
     log INFO "Building PiFmRds..."
 
-    if [[ $(tr -d '\0' < /proc/device-tree/model) == *"Zero 2 W"* ]]; then
+    if [[ $(tr -d '\0' < /proc/device-tree/model 2>/dev/null) == *"Zero 2 W"* ]]; then
         log INFO "Detected Raspberry Pi Zero 2 W. Patching Makefile..."
         if [ -f Makefile ]; then
             sed -i 's/^RPI_VERSION :=.*/RPI_VERSION = 3/' Makefile
@@ -100,106 +168,46 @@ install_client() {
             log WARN "Makefile not found in src! Cannot patch."
             exit 1
         fi
-
     fi
 
     make clean
     make
     log INFO "Installed PiFmRds"
-
     cd "$INSTALL_DIR"
-
-    log INFO "Downloading client.py, requirements and binary..."
-
-    mkdir -p "$INSTALL_DIR/client"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/client/client.py?t=$(date +%s)" -o "$INSTALL_DIR/client/client.py"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-client?t=$(date +%s)" -o "$BIN_DIR/bw-client"
-
-    chmod +x "$BIN_DIR/bw-client"
-    create_symlink "$BIN_DIR/bw-client" "bw-client"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/client/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/client/requirements.txt"
-    ./venv/bin/pip install -r "$INSTALL_DIR/client/requirements.txt"
-
-
-    log INFO "Installed client.py, requirements and bw-client."
-
-    log INFO "Downloading local.py, recquirements and binary..."
-
-    mkdir -p "$INSTALL_DIR/local"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/local/local.py?t=$(date +%s)" -o "$INSTALL_DIR/local/local.py"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-local?t=$(date +%s)" -o "$BIN_DIR/bw-local"
-
-    chmod +x "$BIN_DIR/bw-local"
-    create_symlink "$BIN_DIR/bw-local" "bw-local"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/local/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/local/requirements.txt"
-    ./venv/bin/pip install -r "$INSTALL_DIR/local/requirements.txt"
-
-    log INFO "Installed local.py, requirements and bw-local."
 }
 
-install_server() {
-    log INFO "Downloading server.py, requirements and binary..."
+# what to install
+SECTIONS_TO_INSTALL=()
 
-    mkdir -p "$INSTALL_DIR/server"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/server/server.py?t=$(date +%s)" -o "$INSTALL_DIR/server/server.py"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-server?t=$(date +%s)" -o "$BIN_DIR/bw-server"
-
-    chmod +x "$BIN_DIR/bw-server"
-    create_symlink "$BIN_DIR/bw-server" "bw-server"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/server/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/server/requirements.txt"
-    ./venv/bin/pip install -r "$INSTALL_DIR/server/requirements.txt"
-
-    log INFO "Installed server.py, requirements and bw-server."
-}
-
-install_autorun() {
-    log INFO "Downloading autorun.py and binary..."
-    mkdir -p "$INSTALL_DIR/autorun"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/autorun/autorun.py?t=$(date +%s)" -o "$INSTALL_DIR/autorun/autorun.py"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-autorun?t=$(date +%s)" -o "$BIN_DIR/bw-autorun"
-    chmod +x "$BIN_DIR/bw-autorun"
-    create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
-    log INFO "Installed autorun.py and bw-autorun."
-}
-
-install_binaries() {
-    log INFO "Downloading general binaries..."
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-update?t=$(date +%s)" -o "$BIN_DIR/bw-update"
-    chmod +x "$BIN_DIR/bw-update"
-    create_symlink "$BIN_DIR/bw-update" "bw-update"
-    log INFO "Installed bw-update."
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/bin/bw-nandl?t=$(date +%s)" -o "$BIN_DIR/bw-nandl"
-    chmod +x "$BIN_DIR/bw-nandl"
-    create_symlink "$BIN_DIR/bw-nandl" "bw-nandl"
-    log INFO "Installed bw-nandl."
-
-}
-
-if [[ "$MODE" == "client" ]]; then
-    install_client
-    install_autorun
-    install_binaries
-elif [[ "$MODE" == "server" ]]; then
-    install_server
-    install_autorun
-    install_binaries
-elif [[ "$MODE" == "both" ]]; then
-    install_client
-    install_server
-    install_autorun
-    install_binaries
+if [[ "$MODE" == "both" ]]; then
+    log INFO "Installing both client and server"
+    SECTIONS_TO_INSTALL+=("client" "server")
+else
+    SECTIONS_TO_INSTALL+=("$MODE")
 fi
 
-log INFO "Retrieving last commit"
+# add 'always' section
+SECTIONS_TO_INSTALL+=("always")
+
+# install client-specific components if needed
+if [[ "$MODE" == "client" || "$MODE" == "both" ]]; then
+    install_client_specific
+fi
+
+for section in "${SECTIONS_TO_INSTALL[@]}"; do
+    log INFO "Processing : $section"
+    download_files "$section"
+    install_requirements "$section"
+    install_binaries "$section"
+done
+
+log INFO "Retrieving last commit..."
 curl -s https://api.github.com/repos/dpipstudio/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
 
 log INFO "Installation complete."
+log INFO "Installed components:"
+[[ "$MODE" == "client" || "$MODE" == "both" ]] && log INFO "  - Client mode"
+[[ "$MODE" == "server" || "$MODE" == "both" ]] && log INFO "  - Server mode"
+log INFO "  - Common utilities"
 
 cd "$START_PWD"

@@ -17,6 +17,11 @@ GRN='\033[0;32m'
 YEL='\033[1;33m'
 NC='\033[0m'
 
+GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
+INSTALL_DIR="/opt/BotWave"
+BIN_DIR="$INSTALL_DIR/bin"
+SYMLINK_DIR="/usr/local/bin"
+
 log() {
     local level="$1"
     shift
@@ -36,19 +41,20 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-INSTALL_DIR="/opt/BotWave"
-BIN_DIR="$INSTALL_DIR/bin"
-SYMLINK_DIR="/usr/local/bin"
+# check OS
+if [[ "$(uname)" != "Linux" && "$(uname)" != "Darwin" ]]; then
+    log ERROR "This script must be run on a Unix-like system (Linux/macOS)."
+    exit 1
+fi
 
 create_symlink() {
-    local target="$1"
-    local link_name="$2"
+    local link_name="$1"
     if [[ -e "$SYMLINK_DIR/$link_name" ]]; then
         log WARN "Removing existing symlink or file: $SYMLINK_DIR/$link_name"
         rm -f "$SYMLINK_DIR/$link_name"
     fi
-    ln -s "$target" "$SYMLINK_DIR/$link_name"
-    log INFO "Symlink created: $SYMLINK_DIR/$link_name -> $target"
+    ln -s "$BIN_DIR/$link_name" "$SYMLINK_DIR/$link_name"
+    log INFO "Symlink created: $SYMLINK_DIR/$link_name -> $BIN_DIR/$link_name"
 }
 
 cd "$INSTALL_DIR"
@@ -60,91 +66,112 @@ CURRENT_COMMIT=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
 
 if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
     log INFO "New version available. Updating now..."
-
-    # create handlers dir
-    mkdir -p handlers
-
-    # update client
-    if [[ -d "$INSTALL_DIR/client" ]]; then
-        log INFO "Updating client files..."
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/client/client.py?t=$(date +%s)" -o "$INSTALL_DIR/client/client.py"
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-client?t=$(date +%s)" -o "$BIN_DIR/bw-client"
-
-        chmod +x "$BIN_DIR/bw-client"
-        create_symlink "$BIN_DIR/bw-client" "bw-client"
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/client/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/client/requirements.txt"
-        ./venv/bin/pip install -r "$INSTALL_DIR/client/requirements.txt"
-
-        log INFO "Client updated."
-
-        log INFO "Updating local client files..."
-        mkdir -p local
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/local/local.py?t=$(date +%s)" -o "$INSTALL_DIR/local/local.py"
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-local?t=$(date +%s)" -o "$BIN_DIR/bw-local"
-
-        chmod +x "$BIN_DIR/bw-local"
-        create_symlink "$BIN_DIR/bw-local" "bw-local"
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/local/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/local/requirements.txt"
-        ./venv/bin/pip install -r "$INSTALL_DIR/local/requirements.txt"
-
-        log INFO "Local client updated."
-
-        log INFO "Updating PiFmRds..."
-
-        rm -rf PiFmRds
-
-        git clone https://github.com/ChristopheJacquet/PiFmRds || true
-        cd PiFmRds/src
-        make clean
-        make
-
-        cd "$INSTALL_DIR"
-        log INFO "PiFmRds updated."
+    
+    # fetch install.json from the latest commit
+    log INFO "Fetching installation configuration..."
+    INSTALL_JSON=$(curl -sSL "${GITHUB_RAW_URL}/${LATEST_COMMIT}/assets/installation.json?t=$(date +%s)")
+    if [[ -z "$INSTALL_JSON" ]]; then
+        log ERROR "Failed to fetch installation.json"
+        exit 1
     fi
 
-    # update server
+    download_files() {
+        local section="$1"
+        local file_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.files[]" 2>/dev/null)
+        
+        if [[ -n "$file_list" ]]; then
+            log INFO "Updating files for section: $section"
+            while IFS= read -r file; do
+                [[ -z "$file" ]] && continue
+                local target_path="$INSTALL_DIR/$file"
+                local target_dir=$(dirname "$target_path")
+                
+                mkdir -p "$target_dir"
+                log INFO "  - Updating $file..."
+                curl -sSL "${GITHUB_RAW_URL}/${LATEST_COMMIT}/${file}?t=$(date +%s)" -o "$target_path"
+            done <<< "$file_list"
+        fi
+    }
+
+    install_requirements() {
+        local section="$1"
+        local req_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.requirements[]" 2>/dev/null)
+        
+        if [[ -n "$req_list" ]]; then
+            log INFO "Installing Python requirements for section: $section"
+            while IFS= read -r req; do
+                [[ -z "$req" ]] && continue
+                log INFO "  - Installing $req..."
+                ./venv/bin/pip install "$req"
+            done <<< "$req_list"
+        fi
+    }
+
+    update_binaries() {
+        local section="$1"
+        local bin_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.binaries[]" 2>/dev/null)
+        
+        if [[ -n "$bin_list" ]]; then
+            log INFO "Updating binaries for section: $section"
+            while IFS= read -r binary; do
+                [[ -z "$binary" ]] && continue
+                local bin_name=$(basename "$binary")
+                local target_path="$INSTALL_DIR/$binary"
+                
+                mkdir -p "$(dirname "$target_path")"
+                log INFO "  - Updating $binary..."
+                curl -sSL "${GITHUB_RAW_URL}/${LATEST_COMMIT}/${binary}?t=$(date +%s)" -o "$target_path"
+                chmod +x "$target_path"
+                create_symlink "$bin_name"
+            done <<< "$bin_list"
+        fi
+    }
+
+    update_client_specific() {
+        log INFO "Updating PiFmRds..."
+        rm -rf PiFmRds
+        git clone https://github.com/ChristopheJacquet/PiFmRds || true
+        cd PiFmRds/src
+        
+        if [[ $(tr -d '\0' < /proc/device-tree/model 2>/dev/null) == *"Zero 2 W"* ]]; then
+            log INFO "Detected Raspberry Pi Zero 2 W. Patching Makefile..."
+            if [ -f Makefile ]; then
+                sed -i 's/^RPI_VERSION :=.*/RPI_VERSION = 3/' Makefile
+                log INFO "Makefile patched for Raspberry Pi Zero 2 W."
+            fi
+        fi
+        
+        make clean
+        make
+        cd "$INSTALL_DIR"
+        log INFO "PiFmRds updated."
+    }
+
+    # update client if it exists
+    if [[ -d "$INSTALL_DIR/client" ]]; then
+        log INFO "Updating client components..."
+        update_client_specific
+        download_files "client"
+        install_requirements "client"
+        update_binaries "client"
+        log INFO "Client updated."
+    fi
+
+    # update server if it exists
     if [[ -d "$INSTALL_DIR/server" ]]; then
-        log INFO "Updating server files..."
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/server/server.py?t=$(date +%s)" -o "$INSTALL_DIR/server/server.py"
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-server?t=$(date +%s)" -o "$BIN_DIR/bw-server"
-
-        chmod +x "$BIN_DIR/bw-server"
-        create_symlink "$BIN_DIR/bw-server" "bw-server"
-
-        curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/main/server/requirements.txt?t=$(date +%s)" -o "$INSTALL_DIR/server/requirements.txt"
-        ./venv/bin/pip install -r "$INSTALL_DIR/server/requirements.txt"
-
+        log INFO "Updating server components..."
+        download_files "server"
+        install_requirements "server"
+        update_binaries "server"
         log INFO "Server updated."
     fi
 
-    # update autorun
-    log INFO "Updating autorunner..."
-    mkdir -p autorun
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/autorun/autorun.py?t=$(date +%s)" -o "$INSTALL_DIR/autorun/autorun.py"
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-autorun?t=$(date +%s)" -o "$BIN_DIR/bw-autorun"
-
-    chmod +x "$BIN_DIR/bw-autorun"
-    create_symlink "$BIN_DIR/bw-autorun" "bw-autorun"
-
-    log INFO "AutoRunner updated."
-
-    # update binaries -> for binaries not related to client/server
-    log INFO "Updating general binaries..."
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-update?t=$(date +%s)" -o "$BIN_DIR/bw-update"
-    chmod +x "$BIN_DIR/bw-update"
-    create_symlink "$BIN_DIR/bw-update" "bw-update"
-
-    curl -sSL "https://raw.githubusercontent.com/dpipstudio/botwave/$LATEST_COMMIT/bin/bw-nandl?t=$(date +%s)" -o "$BIN_DIR/bw-nandl"
-    chmod +x "$BIN_DIR/bw-nandl"
-    create_symlink "$BIN_DIR/bw-nandl" "bw-nandl"
-
-    log INFO "General binaries updated."
+    # always update common components
+    log INFO "Updating common components..."
+    download_files "always"
+    install_requirements "always"
+    update_binaries "always"
+    log INFO "Common components updated."
 
     echo "$LATEST_COMMIT" > "$INSTALL_DIR/last_commit"
     log INFO "Update complete."
