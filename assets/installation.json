@@ -23,7 +23,9 @@
     },
     "always": {
         "files": [],
-        "requirements": [],
+        "requirements": [
+            "websockets=11.0.3"
+        ],
         "binaries": [
             "bin/bw-autorun",
             "bin/bw-nandl",
