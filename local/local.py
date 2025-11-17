@@ -14,8 +14,6 @@ import os
 import sys
 import signal
 import argparse
-from typing import Optional
-from pathlib import Path
 import subprocess
 import time
 import urllib.request
@@ -24,27 +22,18 @@ import websockets
 import json
 import threading
 
-try:
-    from pysstv.color import MODES
-    MODE_MAP = { cls.__name__.lower(): cls for cls in MODES }
-except ImportError:
-    MODE_MAP = None
-
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.handlers import HandlerExecutor
 from shared.logger import Log
+from shared.sstv import make_sstv_wav
+from shared.syscheck import check_requirements
 
 try:
     from piwave import PiWave
 except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
-
-def parse_version(version_str: str) -> tuple:
-    try:
-        return tuple(map(int, version_str.split('.')))
-    except (ValueError, AttributeError):
-        return (0, 0, 0)
 
 class BotWaveCLI:
     def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers", ws_port: int = None, passkey: str = None):
@@ -58,6 +47,7 @@ class BotWaveCLI:
         self.history_index = 0
         self.upload_dir = upload_dir
         self.handlers_dir = handlers_dir
+        self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
         self.ws_port = ws_port
         self.ws_server = None
         self.ws_clients = set()
@@ -175,7 +165,7 @@ class BotWaveCLI:
                     return True
 
                 Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
-                success = self.make_sstv_wav(img_path, output_wav, mode)
+                success = make_sstv_wav(img_path, output_wav, mode)
                 if success:
                     Log.sstv(f"Broadcasting {output_wav} on {frequency} MHz...")
                     self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
@@ -209,9 +199,9 @@ class BotWaveCLI:
             elif cmd == 'handlers':
                 if len(cmd_parts) > 1:
                     filename = cmd_parts[1]
-                    self.list_handler_commands(filename)
+                    self.handlers_executor.list_handler_commands(filename)
                 else:
-                    self.list_handlers()
+                    self.handlers_executor.list_handlers()
 
                 return True
             
@@ -253,46 +243,13 @@ class BotWaveCLI:
             return True
 
     def onready_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("l_onready"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("l_onready"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("l_onready", dir_path)
 
     def onstart_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("l_onstart"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("l_onstart"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("l_onstart", dir_path)
 
     def onstop_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("l_onstop"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("l_onstop"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("l_onstop", dir_path)
 
     def _execute_handler(self, file_path: str, silent: bool = False):
         try:
@@ -412,83 +369,6 @@ class BotWaveCLI:
         self.current_file = None
         return True
 
-    def make_sstv_wav(self, img_path, wav_path, mode_name=None):
-        # deps check
-        try:
-            from PIL import Image
-            import numpy as np
-            import wave
-        except ImportError:
-            parent_parent = Path(__file__).parent.parent
-            pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv("Please install required modules:")
-            Log.sstv(f"{pip_path} install pysstv numpy pillow")
-            return False
-        
-
-        if MODE_MAP is None:
-            parent_parent = Path(__file__).parent.parent
-            pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv("Please install required modules:")
-            Log.sstv(f"{pip_path} install pysstv")
-            return False
-
-        try:
-            img = Image.open(img_path).convert("RGB")
-        except Exception as e:
-            Log.sstv(f"Cannot open image: {e}")
-            return False
-
-        # select mode
-        if mode_name and mode_name.lower() in MODE_MAP:
-            cls = MODE_MAP[mode_name.lower()]
-        else:
-            cls = self._sstv_best_mode_for(*img.size)
-            if cls is None:
-                return False
-
-        # resize so SSTV encoder is :)
-        img = img.resize((cls.WIDTH, cls.HEIGHT))
-
-        try:
-            sstv = cls(img, 44100, 16)
-            samples = np.array(list(sstv.gen_samples())).astype(np.int16)
-
-            with wave.open(wav_path, "wb") as f:
-                f.setnchannels(1)
-                f.setsampwidth(2)
-                f.setframerate(44100)
-                f.writeframes(samples.tobytes())
-
-            Log.sstv(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
-            return True
-        except Exception as e:
-            Log.sstv(f"SSTV encode error: {e}")
-            return False
-
-
-    def _sstv_best_mode_for(self, w, h):
-        if MODE_MAP is None:
-            print("Install pysstv:  pip install pysstv")
-            return None
-
-        best = None
-        best_score = 999999999
-
-        for cls in MODES:
-            try:
-                dw = abs(cls.WIDTH  - w)
-                dh = abs(cls.HEIGHT - h)
-            except:
-                continue
-
-            score = dw + dh
-            if score < best_score:
-                best_score = score
-                best = cls
-
-        return best
-
 
     def list_files(self, directory: str = None):
         target_dir = directory if directory else self.upload_dir
@@ -539,36 +419,6 @@ class BotWaveCLI:
             except Exception as e:
                 Log.error(f"Error removing file {filename}: {str(e)}")
 
-
-    def list_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        try:
-            handlers = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-            if not handlers:
-                Log.info(f"No handlers found in the directory {dir_path}")
-                return
-            Log.info(f"Handlers in directory {dir_path}:")
-            for handler in handlers:
-                Log.print(f"  {handler}", 'white')
-        except Exception as e:
-            Log.error(f"Error listing handlers: {e}")
-
-    def list_handler_commands(self, filename: str, dir_path: str = "/opt/BotWave/handlers"):
-        file_path = os.path.join(dir_path, filename)
-        if not os.path.exists(file_path):
-            Log.error(f"Handler file {filename} not found")
-            return False
-        try:
-            Log.info(f"Commands in handler file {filename}:")
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        Log.print(f"  {line}", 'white')
-        except Exception as e:
-            Log.error(f"Error listing commands from {filename}: {e}")
 
     def display_help(self):
         Log.header("BotWave Local Client - Help")
@@ -632,80 +482,6 @@ class BotWaveCLI:
         if self.original_sigterm_handler:
             signal.signal(signal.SIGTERM, self.original_sigterm_handler)
         Log.info("Client stopped")
-
-def _is_valid_executable(path: str) -> bool:
-    return os.path.isfile(path) and os.access(path, os.X_OK)
-
-def find_pi_fm_rds_path() -> Optional[str]:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    path_file = os.path.join(current_dir, "pi_fm_rds_path")
-    if os.path.isfile(path_file):
-        try:
-            with open(path_file, "r") as file:
-                path = file.read().strip()
-                if _is_valid_executable(path):
-                    return path
-                else:
-                    Log.error("[Launcher] The path in pi_fm_rds_path is invalid.")
-                    Log.info("[Launcher] Please relaunch this program.")
-                    Log.info("[Launcher] This won't happen every time.")
-                    os.remove(path_file)
-        except Exception as e:
-            Log.error(f"Error reading {path_file}: {e}")
-            os.remove(path_file)
-    search_paths = ["/opt/BotWave", "/home", "/bin", "/usr/local/bin", "/usr/bin", "/sbin", "/usr/sbin", "/"]
-    found = False
-    for directory in search_paths:
-        if not os.path.isdir(directory):
-            continue
-        try:
-            for root, _, files in os.walk(directory):
-                if "pi_fm_rds" in files:
-                    path = os.path.join(root, "pi_fm_rds")
-                    if _is_valid_executable(path):
-                        with open(path_file, "w") as file:
-                            file.write(path)
-                        found = True
-                        return path
-        except Exception as e:
-            pass
-    if not found:
-        Log.warning("Could not automatically find `pi_fm_rds`. Please enter the full path manually.")
-        user_path = input("Enter the path to `pi_fm_rds`: ").strip()
-        if _is_valid_executable(user_path):
-            with open(path_file, "w") as file:
-                file.write(user_path)
-            return user_path
-        Log.error("The path you provided is not valid or `pi_fm_rds` is not executable.")
-        Log.info("Please make sure `pi_fm_rds` is installed and accessible, then restart the program.")
-        exit(1)
-    return None
-
-def is_raspberry_pi() -> bool:
-    try:
-        with open('/proc/cpuinfo', 'r') as f:
-            cpuinfo = f.read()
-        return 'Raspberry' in cpuinfo
-    except:
-        return False
-
-def check_requirements(skip_checks: bool = False):
-    if skip_checks:
-        return
-    if not is_raspberry_pi():
-        Log.warning("This doesn't appear to be a Raspberry Pi")
-        response = input("Continue anyway? (y/N): ").lower()
-        if response != 'y':
-            sys.exit(1)
-    if os.geteuid() != 0:
-        Log.error("This client must be run as root for GPIO access")
-        sys.exit(1)
-    pi_fm_rds_path = find_pi_fm_rds_path()
-    if not pi_fm_rds_path:
-        Log.error("pi_fm_rds not found. Please install PiFmRds first.")
-        sys.exit(1)
-    else:
-        Log.success(f"Found pi_fm_rds at: {pi_fm_rds_path}")
 
 def main():
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')

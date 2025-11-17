@@ -19,7 +19,11 @@
     },
     "always": {
         "files": [
-            "shared/logger.py"
+            "shared/handlers.py",
+            "shared/logger.py",
+            "shared/sstv.py",
+            "shared/syscheck.py",
+            "shared/version.py"
         ],
         "requirements": [
             "websockets==11.0.3",

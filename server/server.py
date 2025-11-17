@@ -15,57 +15,19 @@ import os
 import sys
 import argparse
 import time
-import urllib.request
-import urllib.error
 import asyncio
 import websockets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from pathlib import Path
 import subprocess
 import tempfile
 
-try:
-    from pysstv.color import MODES
-    MODE_MAP = { cls.__name__.lower(): cls for cls in MODES }
-except ImportError:
-    MODE_MAP = None
-
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.handlers import HandlerExecutor
 from shared.logger import Log
-
-
-PROTOCOL_VERSION = "1.1.2" # if mismatch of 1th or 2th part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
-
-
-
-def parse_version(version_str: str) -> tuple:
-    try:
-        return tuple(map(int, version_str.split('.')))
-    except (ValueError, AttributeError):
-        return (0, 0, 0)
-
-def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
-    try:
-        with urllib.request.urlopen(check_url, timeout=10) as response:
-            remote_version = response.read().decode('utf-8').strip()
-
-        current_tuple = parse_version(current_version)
-        remote_tuple = parse_version(remote_version)
-
-        if remote_tuple > current_tuple:
-            return remote_version
-
-        return None
-    except (urllib.error.URLError, urllib.error.HTTPError, Exception):
-        return None
-
-def versions_compatible(server_version: str, client_version: str) -> bool:
-    server_tuple = parse_version(server_version)
-    client_tuple = parse_version(client_version)
-    return server_tuple[:2] == client_tuple[:2]
+from shared.version import PROTOCOL_VERSION, check_for_updates, versions_compatible
+from shared.sstv import make_sstv_wav
 
 class BotWaveClient:
     def __init__(self, conn: socket.socket, addr: tuple, machine_info: dict,
@@ -125,6 +87,7 @@ class BotWaveServer:
         self.ws_loop = None
         self.daemon_mode = daemon_mode
         self.handlers_dir = handlers_dir
+        self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
 
     def start(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -159,7 +122,7 @@ class BotWaveServer:
         Log.info("Checking for protocol updates...")
 
         try:
-            latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
+            latest_version = check_for_updates()
 
             if latest_version:
                 Log.update(f"Update available! Latest version: {latest_version}")
@@ -368,9 +331,9 @@ class BotWaveServer:
                         elif command == 'handlers':
                             if len(cmd) > 1:
                                 filename = cmd[1]
-                                self.list_handler_commands(filename)
+                                self.handlers_executor.list_handler_commands(filename)
                             else:
-                                self.list_handlers()
+                                self.handlers_executor.list_handlers()
 
                         elif command == 'lf':
                             if len(cmd) < 2:
@@ -522,7 +485,7 @@ class BotWaveServer:
 
                 Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
 
-                success = self.make_sstv_wav(img_path, output_wav, mode)
+                success = make_sstv_wav(img_path, output_wav, mode)
 
                 if success:
                     Log.sstv(f"Uploading {output_wav} to {targets}...")
@@ -555,9 +518,9 @@ class BotWaveServer:
             elif command == 'handlers':
                 if len(cmd) > 1:
                     filename = cmd[1]
-                    self.list_handler_commands(filename)
+                    self.handlers_executor.list_handler_commands(filename)
                 else:
-                    self.list_handlers()
+                    self.handlers_executor.list_handlers()
                 return True
             
             elif command == '<':
@@ -617,118 +580,25 @@ class BotWaveServer:
             return True
 
     def onready_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onready"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onready"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_onready", dir_path)
 
     def onstart_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onstart"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onstart"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_onstart", dir_path)
 
     def onstop_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onstop"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onstop"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_onstop", dir_path)
 
     def onconnect_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onconnect"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onconnect"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_onconnect", dir_path)
 
     def ondisconnect_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_ondisconnect"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_ondisconnect"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_ondisconnect", dir_path)
 
     def onwsjoin_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onwsjoin"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onwsjoin"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
+        self.handlers_executor.run_handlers("s_onwsjoin", dir_path)
 
     def onwsleave_handlers(self, dir_path: str = None):
-        if dir_path is None:
-            dir_path = self.handlers_dir
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-        for filename in os.listdir(dir_path):
-            if filename.endswith(".hdl") and filename.startswith("s_onwsleave"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=False)
-            elif filename.endswith(".shdl") and filename.startswith("s_onwsleave"):
-                file_path = os.path.join(dir_path, filename)
-                self._execute_handler(file_path, silent=True)
-
-    def _execute_handler(self, file_path: str, silent: bool = False):
-        try:
-            if not silent:
-                Log.handler(f"Running handler on {file_path}")
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-
-                    if line:
-                        if line[0] != "#":
-                            if not silent:
-                                Log.handler(f"Executing command: {line}")
-                            self._execute_command(line)
-        except Exception as e:
-            Log.error(f"Error executing command from {file_path}: {e}")
+        self.handlers_executor.run_handlers("s_onwsleave", dir_path)
 
     def run_shell_command(self, command: str):
         try:
@@ -1332,83 +1202,6 @@ class BotWaveServer:
         Log.broadcast(f"Broadcast stop completed: {success_count}/{total_count} successful")
         self.onstop_handlers()
         return success_count > 0
-    
-    def make_sstv_wav(self, img_path, wav_path, mode_name=None):
-        # deps check
-        try:
-            from PIL import Image
-            import numpy as np
-            import wave
-        except ImportError:
-            parent_parent = Path(__file__).parent.parent
-            pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv("Please install required modules:")
-            Log.sstv(f"{pip_path} install pysstv numpy pillow")
-            return False
-        
-
-        if MODE_MAP is None:
-            parent_parent = Path(__file__).parent.parent
-            pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv("Please install required modules:")
-            Log.sstv(f"{pip_path} install pysstv")
-            return False
-
-        try:
-            img = Image.open(img_path).convert("RGB")
-        except Exception as e:
-            Log.sstv(f"Cannot open image: {e}")
-            return False
-
-        # select mode
-        if mode_name and mode_name.lower() in MODE_MAP:
-            cls = MODE_MAP[mode_name.lower()]
-        else:
-            cls = self._sstv_best_mode_for(*img.size)
-            if cls is None:
-                return False
-
-        # resize so SSTV encoder is :)
-        img = img.resize((cls.WIDTH, cls.HEIGHT))
-
-        try:
-            sstv = cls(img, 44100, 16)
-            samples = np.array(list(sstv.gen_samples())).astype(np.int16)
-
-            with wave.open(wav_path, "wb") as f:
-                f.setnchannels(1)
-                f.setsampwidth(2)
-                f.setframerate(44100)
-                f.writeframes(samples.tobytes())
-
-            Log.sstv(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
-            return True
-        except Exception as e:
-            Log.sstv(f"SSTV encode error: {e}")
-            return False
-
-
-    def _sstv_best_mode_for(self, w, h):
-        if MODE_MAP is None:
-            print("Install pysstv:  pip install pysstv")
-            return None
-
-        best = None
-        best_score = 999999999
-
-        for cls in MODES:
-            try:
-                dw = abs(cls.WIDTH  - w)
-                dh = abs(cls.HEIGHT - h)
-            except:
-                continue
-
-            score = dw + dh
-            if score < best_score:
-                best_score = score
-                best = cls
-
-        return best
 
     def kick_client(self, client_targets: str, reason: str = "Kicked by administrator"):
         target_clients = self._parse_client_targets(client_targets)
@@ -1511,44 +1304,6 @@ class BotWaveServer:
             self.server_socket.close()
 
         Log.server("Server stopped")
-
-    def list_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
-        if not os.path.exists(dir_path):
-            Log.error(f"Directory {dir_path} not found")
-            return False
-
-        try:
-            handlers = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-
-            if not handlers:
-                Log.info(f"No handlers found in the directory {dir_path}")
-                return
-
-            Log.info(f"Handlers in directory {dir_path}:")
-
-            for handler in handlers:
-                Log.print(f"  {handler}", 'white')
-        except Exception as e:
-            Log.error(f"Error listing handlers: {e}")
-
-    def list_handler_commands(self, filename: str, dir_path: str = "/opt/BotWave/handlers"):
-        file_path = os.path.join(dir_path, filename)
-
-        if not os.path.exists(file_path):
-            Log.error(f"Handler file {filename} not found")
-            return False
-
-        try:
-            Log.info(f"Commands in handler file {filename}:")
-
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-
-                    if line:
-                        Log.print(f"  {line}", 'white')
-        except Exception as e:
-            Log.error(f"Error listing commands from {filename}: {e}")
 
     def list_files(self, client_targets: str): #broadcastable files (WAVS) listing
         target_clients = self._parse_client_targets(client_targets)

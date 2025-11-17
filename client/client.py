@@ -23,7 +23,6 @@ import platform
 import queue
 import signal
 import urllib.request
-import urllib.error
 from typing import Optional, Dict
 from datetime import datetime, timezone
 import getpass
@@ -31,8 +30,8 @@ import getpass
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.logger import Log
-
-
+from shared.syscheck import check_requirements
+from shared.version import PROTOCOL_VERSION, check_for_updates
 
 try:
     from piwave import PiWave
@@ -40,32 +39,6 @@ except ImportError:
     Log.error("PiWave module not found. Please install it first.")
     sys.exit(1)
 
-PROTOCOL_VERSION = "1.1.2" # if mismatch of 1st or 2nd part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
-
-
-def parse_version(version_str: str) -> tuple:
-    #Parse version string into tuple of integers for comparison
-    try:
-        return tuple(map(int, version_str.split('.')))
-    except (ValueError, AttributeError):
-        return (0, 0, 0)
-
-def check_for_updates(current_version: str, check_url: str) -> Optional[str]:
-    #Check for protocol updates from remote URL
-    try:
-        with urllib.request.urlopen(check_url, timeout=10) as response:
-            remote_version = response.read().decode('utf-8').strip()
-
-        current_tuple = parse_version(current_version)
-        remote_tuple = parse_version(remote_version)
-
-        if remote_tuple > current_tuple:
-            return remote_version
-        return None
-    except (urllib.error.URLError, urllib.error.HTTPError, Exception):
-        # don't interrupt startup for client updates, we do not care
-        return None
 
 class BotWaveClient:
     def __init__(self, server_host: str, server_port: int, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
@@ -735,84 +708,6 @@ class BotWaveClient:
                 pass
         Log.client("Client stopped")
 
-def _is_valid_executable(path: str) -> bool:
-    return os.path.isfile(path) and os.access(path, os.X_OK)
-
-def find_pi_fm_rds_path() -> Optional[str]:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    path_file = os.path.join(current_dir, "pi_fm_rds_path")
-    if os.path.isfile(path_file):
-        try:
-            with open(path_file, "r") as file:
-                path = file.read().strip()
-                if _is_valid_executable(path):
-                    return path
-                else:
-                    Log.error("[Launcher] The path in pi_fm_rds_path is invalid.")
-                    Log.info("[Launcher] Please relaunch this program.")
-                    Log.info("[Launcher] This won't happen every time.")
-                    os.remove(path_file)
-        except Exception as e:
-            Log.error(f"Error reading {path_file}: {e}")
-            os.remove(path_file)
-
-    search_paths = ["/opt/BotWave", "/home", "/bin", "/usr/local/bin", "/usr/bin", "/sbin", "/usr/sbin", "/"]
-    found = False
-    for directory in search_paths:
-        if not os.path.isdir(directory):
-            continue
-        try:
-            for root, _, files in os.walk(directory):
-                if "pi_fm_rds" in files:
-                    path = os.path.join(root, "pi_fm_rds")
-                    if _is_valid_executable(path):
-                        with open(path_file, "w") as file:
-                            file.write(path)
-                        found = True
-                        return path
-        except Exception as e:
-            pass
-
-    if not found:
-        Log.warning("Could not automatically find `pi_fm_rds`. Please enter the full path manually.")
-        user_path = input("Enter the path to `pi_fm_rds`: ").strip()
-        if _is_valid_executable(user_path):
-            with open(path_file, "w") as file:
-                file.write(user_path)
-            return user_path
-        Log.error("The path you provided is not valid or `pi_fm_rds` is not executable.")
-        Log.info("Please make sure `pi_fm_rds` is installed and accessible, then restart the program.")
-        exit(1)
-    return None
-
-def is_raspberry_pi() -> bool:
-    try:
-        with open('/proc/cpuinfo', 'r') as f:
-            cpuinfo = f.read()
-        return 'Raspberry' in cpuinfo
-    except:
-        return False
-
-def check_requirements():
-    # checking if it's running on a raspberry pi, if we are root, and if we have pifmrds
-    if not is_raspberry_pi():
-        Log.warning("This doesn't appear to be a Raspberry Pi")
-        response = input("Continue anyway? (y/N): ").lower()
-        if response != 'y':
-            sys.exit(1)
-
-    # Check if running as root
-    if os.geteuid() != 0:
-        Log.error("This client must be run as root for GPIO access")
-        sys.exit(1)
-
-    pi_fm_rds_path = find_pi_fm_rds_path()
-    if not pi_fm_rds_path:
-        Log.error("pi_fm_rds not found. Please install PiFmRds first.")
-        sys.exit(1)
-    else:
-        Log.success(f"Found pi_fm_rds at: {pi_fm_rds_path}")
-
 
 def main():
     Log.header("BotWave - Client")
@@ -845,7 +740,7 @@ def main():
 
         Log.info("Checking for protocol updates...")
         try:
-            latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
+            latest_version = check_for_updates()
             if latest_version:
                 Log.update(f"Update available! Latest version: {latest_version}")
                 Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
