@@ -2,8 +2,7 @@
     "client": {
         "files": [
             "client/client.py",
-            "local/local.py",
-            "shared/logger.py"
+            "local/local.py"
         ],
         "requirements": [
             "piwave==2.0.9"
@@ -14,15 +13,14 @@
         ]
     },
     "server": {
-        "files": [
-            "server/server.py",
-            "shared/logger.py"
-        ],
+        "files": ["server/server.py"],
         "requirements": [],
         "binaries": ["bin/bw-server"]
     },
     "always": {
-        "files": [],
+        "files": [
+            "shared/logger.py"
+        ],
         "requirements": [
             "websockets=11.0.3"
         ],
