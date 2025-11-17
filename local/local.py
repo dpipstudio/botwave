@@ -741,9 +741,9 @@ class BotWaveCLI:
         Log.print("  Example: list /opt/BotWave/uploads", 'cyan')
         Log.print("")
 
-        Log.print("rm <targets> <filename|all>", 'bright_green')
-        Log.print("  Remove a file from client(s)", 'white')
-        Log.print("  Example: rm all broadcast.wav", 'cyan')
+        Log.print("rm <filename|all>", 'bright_green')
+        Log.print("  Remove a file", 'white')
+        Log.print("  Example: rm broadcast.wav", 'cyan')
         Log.print("")
 
         Log.print("upload <source> [destination]", 'bright_green')
