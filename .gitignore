@@ -16,8 +16,6 @@
 !/scripts/**
 !/server/
 !/server/**
-!/website/
-!/website/**
 !/LICENSE
 !/README.md
 !/.gitignore
