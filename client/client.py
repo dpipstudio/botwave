@@ -28,140 +28,20 @@ from typing import Optional, Dict
 from datetime import datetime, timezone
 import getpass
 
+# using this to access to the shared dir files
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.logger import Log
+
+
+
 try:
     from piwave import PiWave
 except ImportError:
-    print("Error: PiWave module not found. Please install it first.")
+    Log.error("PiWave module not found. Please install it first.")
     sys.exit(1)
 
 PROTOCOL_VERSION = "1.1.2" # if mismatch of 1st or 2nd part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest version
-
-class Log:
-    COLORS = { # absolutely not taken from stackoverflow trust
-        'reset': '\033[0m',
-        'bold': '\033[1m',
-        'underline': '\033[4m',
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'yellow': '\033[33m',
-        'blue': '\033[34m',
-        'magenta': '\033[35m',
-        'cyan': '\033[36m',
-        'white': '\033[37m',
-        'bright_red': '\033[91m',
-        'bright_green': '\033[92m',
-        'bright_yellow': '\033[93m',
-        'bright_blue': '\033[94m',
-        'bright_magenta': '\033[95m',
-        'bright_cyan': '\033[96m',
-        'bright_white': '\033[97m',
-    }
-
-    ICONS = {
-        'success': 'OK',
-        'error': 'ERR',
-        'warning': 'WARN',
-        'info': 'INFO',
-        'client': 'CLIENT',
-        'server': 'SERVER',
-        'file': 'FILE',
-        'broadcast': 'BCAST',
-        'version': 'VER',
-        'update': 'UPD',
-    }
-
-    @classmethod
-    def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-        if icon_char:
-            if color:
-                print(f"{color}[{icon_char}]\033[0m {message}", end=end)
-            else:
-                print(f"[{icon_char}] {message}", end=end)
-        else:
-            if color:
-                print(f"{color}{message}\033[0m", end=end)
-            else:
-                print(f"{message}", end=end)
-        sys.stdout.flush()
-
-    @classmethod
-    def header(cls, text: str):
-        cls.print(text, 'bright_blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def section(cls, text: str):
-        cls.print(f" {text} ", 'bright_blue', end='')
-        cls.print("─" * (len(text) + 2), 'blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def success(cls, message: str):
-        cls.print(message, 'bright_green', 'success')
-
-    @classmethod
-    def error(cls, message: str):
-        cls.print(message, 'bright_red', 'error')
-
-    @classmethod
-    def warning(cls, message: str):
-        cls.print(message, 'bright_yellow', 'warning')
-
-    @classmethod
-    def info(cls, message: str):
-        cls.print(message, 'bright_cyan', 'info')
-
-    @classmethod
-    def client_message(cls, message: str):
-        cls.print(message, 'magenta', 'client')
-
-    @classmethod
-    def server_message(cls, message: str):
-        cls.print(message, 'cyan', 'server')
-
-    @classmethod
-    def file_message(cls, message: str):
-        cls.print(message, 'yellow', 'file')
-
-    @classmethod
-    def broadcast_message(cls, message: str):
-        cls.print(message, 'bright_magenta', 'broadcast')
-
-    @classmethod
-    def version_message(cls, message: str):
-        cls.print(message, 'bright_cyan', 'version')
-
-    @classmethod
-    def update_message(cls, message: str):
-        cls.print(message, 'bright_yellow', 'update')
-
-    @classmethod
-    def progress_bar(cls, iteration, total, prefix='', suffix='', length=30, fill='#', style='bright_cyan', icon=''):
-        percent = ("{0:.1f}").format(100 * (iteration / float(total)))
-        filled_length = int(length * iteration // total)
-        bar = fill * filled_length + '-' * (length - filled_length)
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-        if icon_char:
-            if color:
-                sys.stdout.write(f"\r{color}[{icon_char}]\033[0m {prefix} [{bar}] {percent}% {suffix}")
-            else:
-                sys.stdout.write(f"\r[{icon_char}] {prefix} [{bar}] {percent}% {suffix}")
-        else:
-            if color:
-                sys.stdout.write(f"\r{color}{prefix} [{bar}] {percent}% {suffix}\033[0m")
-            else:
-                sys.stdout.write(f"\r{prefix} [{bar}] {percent}% {suffix}")
-        sys.stdout.flush()
-
-    @classmethod
-    def clear_progress_bar(cls):
-        sys.stdout.write('\n')
-        sys.stdout.flush()
-
 
 
 def parse_version(version_str: str) -> tuple:
@@ -259,8 +139,8 @@ class BotWaveClient:
             if reg_response.get('type') == 'register_ok':
                 Log.success(f"Successfully registered with server as {reg_response.get('client_id')}")
                 server_version = reg_response.get('server_protocol_version', 'unknown')
-                Log.version_message(f"Server protocol version: {server_version}")
-                Log.version_message(f"Client protocol version: {PROTOCOL_VERSION}")
+                Log.version(f"Server protocol version: {server_version}")
+                Log.version(f"Client protocol version: {PROTOCOL_VERSION}")
                 return True
             
             elif reg_response.get('type') == 'auth_failed':
@@ -459,13 +339,13 @@ class BotWaveClient:
 
             file_path = os.path.join(self.upload_dir, filename)
 
-            Log.file_message(f"Preparing to receive file: {filename} ({file_size} bytes)")
+            Log.file(f"Preparing to receive file: {filename} ({file_size} bytes)")
 
             ready_response = {"status": "ready", "message": "Ready to receive file"}
 
             self.socket.sendall((json.dumps(ready_response) + '\n').encode('utf-8'))
 
-            Log.file_message(f"Receiving file data...")
+            Log.file(f"Receiving file data...")
             received_data = b''
             
             # dynamic buffer sizing based on file size
@@ -478,7 +358,7 @@ class BotWaveClient:
             else:  # >= 100MB
                 chunk_size = 1048576  # 1MB
 
-            Log.file_message(f"Using chunk size: {chunk_size / 1024:.0f}KB")
+            Log.file(f"Using chunk size: {chunk_size / 1024:.0f}KB")
 
             while len(received_data) < file_size:
                 try:
@@ -493,7 +373,7 @@ class BotWaveClient:
                     received_data += chunk
 
                     if file_size > 1024 * 1024:  # files > 1MB
-                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='file')
+                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
 
                 except socket.timeout:
                     Log.error("Timeout while receiving file data")
@@ -504,9 +384,7 @@ class BotWaveClient:
                     break
 
             if file_size > 1024 * 1024:
-                Log.progress_bar(file_size, file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='file')
-                Log.clear_progress_bar()
-
+                Log.progress_bar(file_size, file_size, prefix='Uploaded!', suffix='Complete', style='yellow', icon='FILE')
             if len(received_data) != file_size:
                 Log.error(f"File upload incomplete: received {len(received_data)}/{file_size} bytes")
                 self.socket.settimeout(original_timeout)
@@ -551,7 +429,7 @@ class BotWaveClient:
             
             file_size = os.path.getsize(file_path)
             
-            Log.file_message(f"Preparing to send file: {filename} ({file_size} bytes)")
+            Log.file(f"Preparing to send file: {filename} ({file_size} bytes)")
             
             # Send ready response
             ready_response = {"status": "ready", "size": file_size, "message": "Ready to send file"}
@@ -567,7 +445,7 @@ class BotWaveClient:
             else:  # >= 100MB
                 chunk_size = 1048576  # 1MB
             
-            Log.file_message(f"Sending file data... (chunk size: {chunk_size / 1024:.0f}KB)")
+            Log.file(f"Sending file data... (chunk size: {chunk_size / 1024:.0f}KB)")
             
             # Send file data
             with open(file_path, 'rb') as f:
@@ -580,11 +458,10 @@ class BotWaveClient:
                     bytes_sent += len(chunk)
                     
                     if file_size > 1024 * 1024:  # Progress bar for files > 1MB
-                        Log.progress_bar(bytes_sent, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='file')
+                        Log.progress_bar(bytes_sent, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
             
             if file_size > 1024 * 1024:
-                Log.progress_bar(file_size, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='file')
-                Log.clear_progress_bar()
+                Log.progress_bar(file_size, file_size, prefix=f'Sent {filename}!', suffix='Complete', style='yellow', icon='FILE')
             
             # Wait for confirmation from server
             confirm_buffer = ""
@@ -620,7 +497,10 @@ class BotWaveClient:
     def _handle_download_file(self, url: str) -> dict:
         def _download_reporthook(block_num, block_size, total_size):
             if total_size > 0:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='file')
+                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+
+            if block_num * block_num >= total_size:
+                Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
 
 
 
@@ -632,9 +512,8 @@ class BotWaveClient:
 
             file_path = os.path.join(self.upload_dir, filename)
 
-            Log.file_message(f"Downloading file from {url}...")
+            Log.file(f"Downloading file from {url}...")
             urllib.request.urlretrieve(url, file_path, reporthook=_download_reporthook)
-            Log.clear_progress_bar()
 
             Log.success(f"File {filename} downloaded successfully")
             return {"status": "success", "message": "File downloaded successfully"}
@@ -673,7 +552,7 @@ class BotWaveClient:
                 # sort by name bcs why not
                 wav_files.sort(key=lambda x: x['name'])
                 
-                Log.file_message(f"Listed {len(wav_files)} broadcastable WAV files")
+                Log.file(f"Listed {len(wav_files)} broadcastable WAV files")
                 
                 return {
                     "status": "success",
@@ -771,7 +650,7 @@ class BotWaveClient:
                 current_time = datetime.now(timezone.utc).timestamp()
                 if start_at > current_time:
                     delay = start_at - current_time
-                    Log.broadcast_message(f"Waiting {delay:.2f} seconds before starting broadcast...")
+                    Log.broadcast(f"Waiting {delay:.2f} seconds before starting broadcast...")
                     broadcast_thread = threading.Thread(target=self._start_broadcast_after_delay, args=(delay,))
                     broadcast_thread.daemon = True
                     broadcast_thread.start()
@@ -810,7 +689,7 @@ class BotWaveClient:
             self.broadcasting = True
             self.broadcast_requested = False
             self.piwave.play(params['file_path'])
-            Log.broadcast_message(f"PiWave broadcast started for {params['filename']}")
+            Log.broadcast(f"PiWave broadcast started for {params['filename']}")
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")
             self.broadcasting = False
@@ -822,7 +701,7 @@ class BotWaveClient:
             if not self.broadcasting:
                 return {"status": "error", "message": "No broadcast running"}
             self.stop_broadcast_requested = True
-            Log.broadcast_message("Stopping broadcast...")
+            Log.broadcast("Stopping broadcast...")
             return {"status": "success", "message": "Stopping broadcast"}
         except Exception as e:
             Log.error(f"Stop error: {str(e)}")
@@ -832,7 +711,7 @@ class BotWaveClient:
         if self.piwave:
             try:
                 self.piwave.stop()
-                Log.broadcast_message("PiWave stopped")
+                Log.broadcast("PiWave stopped")
             except Exception as e:
                 Log.error(f"Error stopping PiWave: {e}")
             finally:
@@ -854,7 +733,7 @@ class BotWaveClient:
                 self.socket.close()
             except:
                 pass
-        Log.server_message("Client stopped")
+        Log.client("Client stopped")
 
 def _is_valid_executable(path: str) -> bool:
     return os.path.isfile(path) and os.access(path, os.X_OK)
@@ -968,8 +847,8 @@ def main():
         try:
             latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
             if latest_version:
-                Log.update_message(f"Update available! Latest version: {latest_version}")
-                Log.update_message("Consider updating to the latest version by running 'bw-update' in your shell.")
+                Log.update(f"Update available! Latest version: {latest_version}")
+                Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
             else:
                 Log.success("You are using the latest protocol version")
         except Exception as e:

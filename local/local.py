@@ -30,168 +30,15 @@ try:
 except ImportError:
     MODE_MAP = None
 
+# using this to access to the shared dir files
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.logger import Log
+
 try:
     from piwave import PiWave
 except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
-
-class Log:
-    COLORS = {
-        'reset': '\033[0m',
-        'bold': '\033[1m',
-        'underline': '\033[4m',
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'yellow': '\033[33m',
-        'blue': '\033[34m',
-        'magenta': '\033[35m',
-        'cyan': '\033[36m',
-        'white': '\033[37m',
-        'bright_red': '\033[91m',
-        'bright_green': '\033[92m',
-        'bright_yellow': '\033[93m',
-        'bright_blue': '\033[94m',
-        'bright_magenta': '\033[95m',
-        'bright_cyan': '\033[96m',
-        'bright_white': '\033[97m',
-    }
-
-    ICONS = {
-        'success': 'OK',
-        'error': 'ERR',
-        'warning': 'WARN',
-        'info': 'INFO',
-        'client': 'CLIENT',
-        'server': 'SERVER',
-        'file': 'FILE',
-        'broadcast': 'BCAST',
-        'version': 'VER',
-        'update': 'UPD',
-        'handler': 'HNDL',
-        'sstv': 'SSTV'
-    }
-
-    ws_clients = set()
-    ws_loop = None
-
-    @classmethod
-    def set_ws_clients(cls, clients):
-        cls.ws_clients = clients
-
-    @classmethod
-    def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-
-
-        if icon_char:
-            if color:
-                print(f"{color}[{icon_char}]\033[0m {message}", end=end)
-            else:
-                print(f"[{icon_char}] {message}", end=end)
-        else:
-            if color:
-                print(f"{color}{message}\033[0m", end=end)
-            else:
-                print(f"{message}", end=end)
-
-        sys.stdout.flush()
-
-        ws_message = f"[{icon_char}] {message}" if icon_char else message
-
-        for ws in list(cls.ws_clients):
-            try:
-                if cls.ws_loop:
-                    asyncio.run_coroutine_threadsafe(ws.send(ws_message), cls.ws_loop)
-            except Exception as e:
-                print(f"Error sending to WebSocket client: {e}")
-                try:
-                    cls.ws_clients.discard(ws)
-                except Exception:
-                    pass
-
-    @classmethod
-    def header(cls, text: str):
-        cls.print(text, 'bright_blue', end='\n\n')
-
-    @classmethod
-    def section(cls, text: str):
-        cls.print(f" {text} ", 'bright_blue', end='')
-        cls.print("─" * (len(text) + 2), 'blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def success(cls, message: str):
-        cls.print(message, 'bright_green', 'success')
-
-    @classmethod
-    def error(cls, message: str):
-        cls.print(message, 'bright_red', 'error')
-
-    @classmethod
-    def warning(cls, message: str):
-        cls.print(message, 'bright_yellow', 'warning')
-
-    @classmethod
-    def info(cls, message: str):
-        cls.print(message, 'bright_cyan', 'info')
-
-    @classmethod
-    def client_message(cls, message: str):
-        cls.print(message, 'magenta', 'client')
-
-    @classmethod
-    def server_message(cls, message: str):
-        cls.print(message, 'cyan', 'server')
-
-    @classmethod
-    def file_message(cls, message: str):
-        cls.print(message, 'yellow', 'file')
-
-    @classmethod
-    def broadcast_message(cls, message: str):
-        cls.print(message, 'bright_magenta', 'broadcast')
-
-    @classmethod
-    def version_message(cls, message: str):
-        cls.print(message, 'bright_cyan', 'version')
-
-    @classmethod
-    def update_message(cls, message: str):
-        cls.print(message, 'bright_yellow', 'update')
-
-    @classmethod
-    def handler_message(cls, message: str):
-        cls.print(message, 'magenta', 'handler')
-
-    @classmethod
-    def sstv_message(cls, message: str):
-        cls.print(message, 'bright_blue', 'sstv')
-
-    @classmethod
-    def progress_bar(cls, iteration, total, prefix='', suffix='', length=30, fill='#', style='bright_cyan', icon=''):
-        percent = ("{0:.1f}").format(100 * (iteration / float(total)))
-        filled_length = int(length * iteration // total)
-        bar = fill * filled_length + '-' * (length - filled_length)
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-        if icon_char:
-            if color:
-                sys.stdout.write(f"\r{color}[{icon_char}]\033[0m {prefix} [{bar}] {percent}% {suffix}")
-            else:
-                sys.stdout.write(f"\r[{icon_char}] {prefix} [{bar}] {percent}% {suffix}")
-        else:
-            if color:
-                sys.stdout.write(f"\r{color}{prefix} [{bar}] {percent}% {suffix}\033[0m")
-            else:
-                sys.stdout.write(f"\r{prefix} [{bar}] {percent}% {suffix}")
-        sys.stdout.flush()
-
-    @classmethod
-    def clear_progress_bar(cls):
-        sys.stdout.write('\n')
-        sys.stdout.flush()
 
 def parse_version(version_str: str) -> tuple:
     try:
@@ -245,10 +92,10 @@ class BotWaveCLI:
 
                 await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
                 self.ws_clients.add(websocket)
-                Log.set_ws_clients(self.ws_clients)
+                Log.ws_clients = self.ws_clients
 
                 async for message in websocket:
-                    Log.client_message(f"WebSocket CMD: {message}")
+                    Log.client(f"WebSocket CMD: {message}")
                     def inject_cmd():
                         self.command_history.append(message)
                         self.history_index = len(self.command_history)
@@ -259,11 +106,11 @@ class BotWaveCLI:
                 await websocket.close()
             finally:
                 self.ws_clients.discard(websocket)
-                Log.set_ws_clients(self.ws_clients)
+                Log.ws_clients = self.ws_clients
 
         async def start_server():
             async with websockets.serve(handler, "0.0.0.0", self.ws_port):
-                Log.server_message(f"WebSocket server started on 0.0.0.0:{self.ws_port}")
+                Log.server(f"WebSocket server started on 0.0.0.0:{self.ws_port}")
                 await asyncio.Future()
 
         def run_server():
@@ -327,10 +174,10 @@ class BotWaveCLI:
                     Log.error(f"Image file {img_path} not found")
                     return True
 
-                Log.sstv_message(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
+                Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
                 success = self.make_sstv_wav(img_path, output_wav, mode)
                 if success:
-                    Log.sstv_message(f"Broadcasting {output_wav} on {frequency} MHz...")
+                    Log.sstv(f"Broadcasting {output_wav} on {frequency} MHz...")
                     self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
                 return True
 
@@ -450,7 +297,7 @@ class BotWaveCLI:
     def _execute_handler(self, file_path: str, silent: bool = False):
         try:
             if not silent:
-                Log.handler_message(f"Running handler on {file_path}")
+                Log.handler(f"Running handler on {file_path}")
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -458,7 +305,7 @@ class BotWaveCLI:
                     if line:
                         if line[0] != "#":
                             if not silent:
-                                Log.handler_message(f"Executing command: {line}")
+                                Log.handler(f"Executing command: {line}")
                             self._execute_command(line)
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
@@ -497,7 +344,10 @@ class BotWaveCLI:
     def download_file(self, url: str, dest_name: str):
         def _download_reporthook(block_num, block_size, total_size):
             if total_size > 0:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='file')
+                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+
+            if block_num * block_num >= total_size:
+                Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
 
 
         try:
@@ -509,9 +359,8 @@ class BotWaveCLI:
                 return False
             
             dest_path = os.path.join(self.upload_dir, dest_name)
-            Log.file_message(f"Downloading file from {url}...")
+            Log.file(f"Downloading file from {url}...")
             urllib.request.urlretrieve(url, dest_path, reporthook=_download_reporthook)
-            Log.clear_progress_bar()
 
             Log.success(f"File {dest_name} downloaded successfully to {dest_path}")
             return True
@@ -572,22 +421,22 @@ class BotWaveCLI:
         except ImportError:
             parent_parent = Path(__file__).parent.parent
             pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv_message("Please install required modules:")
-            Log.sstv_message(f"{pip_path} install pysstv numpy pillow")
+            Log.sstv("Please install required modules:")
+            Log.sstv(f"{pip_path} install pysstv numpy pillow")
             return False
         
 
         if MODE_MAP is None:
             parent_parent = Path(__file__).parent.parent
             pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv_message("Please install required modules:")
-            Log.sstv_message(f"{pip_path} install pysstv")
+            Log.sstv("Please install required modules:")
+            Log.sstv(f"{pip_path} install pysstv")
             return False
 
         try:
             img = Image.open(img_path).convert("RGB")
         except Exception as e:
-            Log.sstv_message(f"Cannot open image: {e}")
+            Log.sstv(f"Cannot open image: {e}")
             return False
 
         # select mode
@@ -611,10 +460,10 @@ class BotWaveCLI:
                 f.setframerate(44100)
                 f.writeframes(samples.tobytes())
 
-            Log.sstv_message(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
+            Log.sstv(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
             return True
         except Exception as e:
-            Log.sstv_message(f"SSTV encode error: {e}")
+            Log.sstv(f"SSTV encode error: {e}")
             return False
 
 

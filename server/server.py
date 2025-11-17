@@ -31,166 +31,15 @@ try:
 except ImportError:
     MODE_MAP = None
 
+# using this to access to the shared dir files
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.logger import Log
+
+
 PROTOCOL_VERSION = "1.1.2" # if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
-class Log:
-    COLORS = { # absolutely not taken from stackoverflow trust
-        'reset': '\033[0m',
-        'bold': '\033[1m',
-        'underline': '\033[4m',
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'yellow': '\033[33m',
-        'blue': '\033[34m',
-        'magenta': '\033[35m',
-        'cyan': '\033[36m',
-        'white': '\033[37m',
-        'bright_red': '\033[91m',
-        'bright_green': '\033[92m',
-        'bright_yellow': '\033[93m',
-        'bright_blue': '\033[94m',
-        'bright_magenta': '\033[95m',
-        'bright_cyan': '\033[96m',
-        'bright_white': '\033[97m',
-    }
 
-    ICONS = {
-        'success': 'OK',
-        'error': 'ERR',
-        'warning': 'WARN',
-        'info': 'INFO',
-        'client': 'CLIENT',
-        'server': 'SERVER',
-        'file': 'FILE',
-        'broadcast': 'BCAST',
-        'version': 'VER',
-        'update': 'UPD',
-        'handler': 'HNDL',
-        'sstv': 'SSTV'
-    }
-
-    ws_clients = set()
-    ws_loop = None
-
-    @classmethod
-    def set_ws_clients(cls, clients):
-        cls.ws_clients = clients
-
-    @classmethod
-    def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-
-        if icon_char:
-            if color:
-                print(f"{color}[{icon_char}]\033[0m {message}", end=end)
-            else:
-                print(f"[{icon_char}] {message}", end=end)
-        else:
-            if color:
-                print(f"{color}{message}\033[0m", end=end)
-            else:
-                print(f"{message}", end=end)
-
-        sys.stdout.flush()
-
-        ws_message = f"[{icon_char}] {message}" if icon_char else message
-
-        for ws in list(cls.ws_clients):
-            try:
-                if cls.ws_loop:
-                    asyncio.run_coroutine_threadsafe(ws.send(ws_message), cls.ws_loop)
-            except Exception as e:
-                print(f"Error sending to WebSocket client: {e}")
-                try:
-                    cls.ws_clients.discard(ws)
-                except Exception:
-                    pass
-
-    @classmethod
-    def header(cls, text: str):
-        cls.print(text, 'bright_blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def section(cls, text: str):
-        cls.print(f" {text} ", 'bright_blue', end='')
-        cls.print("─" * (len(text) + 2), 'blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def success(cls, message: str):
-        cls.print(message, 'bright_green', 'success')
-
-    @classmethod
-    def error(cls, message: str):
-        cls.print(message, 'bright_red', 'error')
-
-    @classmethod
-    def warning(cls, message: str):
-        cls.print(message, 'bright_yellow', 'warning')
-
-    @classmethod
-    def info(cls, message: str):
-        cls.print(message, 'bright_cyan', 'info')
-
-    @classmethod
-    def client_message(cls, message: str):
-        cls.print(message, 'magenta', 'client')
-
-    @classmethod
-    def server_message(cls, message: str):
-        cls.print(message, 'cyan', 'server')
-
-    @classmethod
-    def file_message(cls, message: str):
-        cls.print(message, 'yellow', 'file')
-
-    @classmethod
-    def broadcast_message(cls, message: str):
-        cls.print(message, 'bright_magenta', 'broadcast')
-
-    @classmethod
-    def version_message(cls, message: str):
-        cls.print(message, 'bright_cyan', 'version')
-
-    @classmethod
-    def update_message(cls, message: str):
-        cls.print(message, 'bright_yellow', 'update')
-
-    @classmethod
-    def handler_message(cls, message: str):
-        cls.print(message, 'magenta', 'handler')
-
-    @classmethod
-    def sstv_message(cls, message: str):
-        cls.print(message, 'bright_blue', 'sstv')
-
-
-    @classmethod
-    def progress_bar(cls, iteration, total, prefix='', suffix='', length=30, fill='#', style='bright_cyan', icon=''):
-        percent = ("{0:.1f}").format(100 * (iteration / float(total)))
-        filled_length = int(length * iteration // total)
-        bar = fill * filled_length + '-' * (length - filled_length)
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-        if icon_char:
-            if color:
-                sys.stdout.write(f"\r{color}[{icon_char}]\033[0m {prefix} [{bar}] {percent}% {suffix}")
-            else:
-                sys.stdout.write(f"\r[{icon_char}] {prefix} [{bar}] {percent}% {suffix}")
-        else:
-            if color:
-                sys.stdout.write(f"\r{color}{prefix} [{bar}] {percent}% {suffix}\033[0m")
-            else:
-                sys.stdout.write(f"\r{prefix} [{bar}] {percent}% {suffix}")
-        sys.stdout.flush()
-
-    @classmethod
-    def clear_progress_bar(cls):
-        sys.stdout.write('\n')
-        sys.stdout.flush()
 
 def parse_version(version_str: str) -> tuple:
     try:
@@ -287,8 +136,8 @@ class BotWaveServer:
             self.server_socket.listen(10)
             self.running = True
 
-            Log.server_message(f"BotWave Server started on {self.host}:{self.port}")
-            Log.version_message(f"Protocol Version: {PROTOCOL_VERSION}")
+            Log.server(f"BotWave Server started on {self.host}:{self.port}")
+            Log.version(f"Protocol Version: {PROTOCOL_VERSION}")
 
             if self.passkey:
                 Log.info("Server is using authentication with a passkey")
@@ -313,8 +162,8 @@ class BotWaveServer:
             latest_version = check_for_updates(PROTOCOL_VERSION, VERSION_CHECK_URL)
 
             if latest_version:
-                Log.update_message(f"Update available! Latest version: {latest_version}")
-                Log.update_message("Consider updating to the latest version by running 'bw-update' in your shell.")
+                Log.update(f"Update available! Latest version: {latest_version}")
+                Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
             else:
                 Log.success("You are using the latest protocol version")
         except Exception as e:
@@ -324,7 +173,7 @@ class BotWaveServer:
         while self.running:
             try:
                 conn, addr = self.server_socket.accept()
-                Log.client_message(f"New connection from {addr[0]}:{addr[1]}")
+                Log.client(f"New connection from {addr[0]}:{addr[1]}")
                 threading.Thread(target=self._handle_client, args=(conn, addr), daemon=True).start()
             except Exception as e:
                 if self.running:
@@ -386,7 +235,7 @@ class BotWaveServer:
 
                 conn.send((json.dumps(response) + '\n').encode('utf-8'))
                 Log.success(f"Client registered: {client.get_display_name()}")
-                Log.version_message(f"  Client protocol version: {client_protocol_version}")
+                Log.version(f"  Client protocol version: {client_protocol_version}")
 
                 self.onconnect_handlers()
                 self._keep_client_alive(client_id)
@@ -430,7 +279,7 @@ class BotWaveServer:
     def _start_websocket_server(self):
         async def handler(websocket):
             self.ws_clients.add(websocket)
-            Log.set_ws_clients(self.ws_clients)
+            Log.ws_clients = self.ws_clients
 
             try:
                 auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
@@ -451,7 +300,7 @@ class BotWaveServer:
                 self.onwsjoin_handlers()
 
                 async for message in websocket:
-                    Log.client_message(f"WebSocket CMD: {message}")
+                    Log.client(f"WebSocket CMD: {message}")
 
                     def inject_cmd():
                         self.command_history.append(message)
@@ -578,11 +427,11 @@ class BotWaveServer:
             finally:
                 self.ws_clients.discard(websocket)
                 self.onwsleave_handlers()
-                Log.set_ws_clients(self.ws_clients)
+                Log.ws_clients = self.ws_clients
 
         async def start_server():
             async with websockets.serve(handler, self.host, self.ws_port):
-                Log.server_message(f"WebSocket server started on {self.host}:{self.ws_port}")
+                Log.server(f"WebSocket server started on {self.host}:{self.ws_port}")
                 await asyncio.Future()
 
         def run_server():
@@ -671,15 +520,15 @@ class BotWaveServer:
                     Log.error(f"Image file {img_path} not found")
                     return True
 
-                Log.sstv_message(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
+                Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
 
                 success = self.make_sstv_wav(img_path, output_wav, mode)
 
                 if success:
-                    Log.sstv_message(f"Uploading {output_wav} to {targets}...")
+                    Log.sstv(f"Uploading {output_wav} to {targets}...")
                     self.upload_file(targets, output_wav)
 
-                    Log.sstv_message(f"Broadcasting {os.path.basename(output_wav)} on {frequency} MHz to {targets}...")
+                    Log.sstv(f"Broadcasting {os.path.basename(output_wav)} on {frequency} MHz to {targets}...")
                     self.start_broadcast(targets, output_wav, frequency, ps, rt, pi, loop)
                 return True
 
@@ -868,7 +717,7 @@ class BotWaveServer:
     def _execute_handler(self, file_path: str, silent: bool = False):
         try:
             if not silent:
-                Log.handler_message(f"Running handler on {file_path}")
+                Log.handler(f"Running handler on {file_path}")
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -876,7 +725,7 @@ class BotWaveServer:
                     if line:
                         if line[0] != "#":
                             if not silent:
-                                Log.handler_message(f"Executing command: {line}")
+                                Log.handler(f"Executing command: {line}")
                             self._execute_command(line)
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
@@ -951,7 +800,7 @@ class BotWaveServer:
         else:  # >= 100MB
             chunk_size = 1048576  # 1MB
 
-        Log.broadcast_message(f"Uploading {os.path.basename(file_path)} to {total_count} client(s)... (chunk size: {chunk_size / 1024:.0f}KB)")
+        Log.broadcast(f"Uploading {os.path.basename(file_path)} to {total_count} client(s)... (chunk size: {chunk_size / 1024:.0f}KB)")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -978,10 +827,9 @@ class BotWaveServer:
                         chunk = file_data[bytes_sent:bytes_sent + chunk_size]
                         client.conn.sendall(chunk)
                         bytes_sent += len(chunk)
-                        Log.progress_bar(bytes_sent, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
+                        Log.progress_bar(bytes_sent, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}:", suffix="Complete", style="yellow", icon='FILE', auto_clear=False)
 
-                    Log.progress_bar(file_size, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}:", suffix="Complete", style="yellow", icon="file")
-                    Log.clear_progress_bar()
+                    Log.progress_bar(file_size, file_size, prefix=f"{os.path.basename(file_path)} {client.get_display_name()}", suffix="Complete", style="yellow", icon='FILE')
 
                     try:
                         confirm_buffer = ""
@@ -1026,7 +874,7 @@ class BotWaveServer:
             except Exception as e:
                 Log.error(f"  {client.get_display_name()}: Error - {e}")
 
-        Log.broadcast_message(f"Upload completed: {success_count}/{total_count} successful")
+        Log.broadcast(f"Upload completed: {success_count}/{total_count} successful")
         return success_count > 0
     
     def _upload_folder_contents(self, client_targets: str, folder_path: str):
@@ -1050,14 +898,14 @@ class BotWaveServer:
             Log.warning(f"No WAV files found in {folder_path}")
             return False
         
-        Log.broadcast_message(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
+        Log.broadcast(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
         
         overall_success = 0
         total_files = len(wav_files)
         
         for idx, filename in enumerate(wav_files, 1):
             full_path = os.path.join(folder_path, filename)
-            Log.file_message(f"[{idx}/{total_files}] Processing {filename}...")
+            Log.file(f"[{idx}/{total_files}] Processing {filename}...")
             
             if self.upload_file(client_targets, full_path):
                 overall_success += 1
@@ -1066,7 +914,7 @@ class BotWaveServer:
             if idx < total_files:
                 time.sleep(0.5)
         
-        Log.broadcast_message(f"Folder upload completed: {overall_success}/{total_files} files uploaded successfully")
+        Log.broadcast(f"Folder upload completed: {overall_success}/{total_files} files uploaded successfully")
         return overall_success > 0
     
     
@@ -1082,7 +930,7 @@ class BotWaveServer:
 
         success_count = 0
         total_count = len(target_clients)
-        Log.broadcast_message(f"Requesting download from {total_count} client(s)...")
+        Log.broadcast(f"Requesting download from {total_count} client(s)...")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1098,7 +946,7 @@ class BotWaveServer:
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
-        Log.broadcast_message(f"Download request completed: {success_count}/{total_count} successful")
+        Log.broadcast(f"Download request completed: {success_count}/{total_count} successful")
         return success_count > 0
     
 
@@ -1116,7 +964,7 @@ class BotWaveServer:
         success_count = 0
         total_count = len(target_clients)
 
-        Log.broadcast_message(f"Removing file '{filename}' from {total_count} client(s)...")
+        Log.broadcast(f"Removing file '{filename}' from {total_count} client(s)...")
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
@@ -1132,7 +980,7 @@ class BotWaveServer:
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
-        Log.broadcast_message(f"File removal completed: {success_count}/{total_count} successful")
+        Log.broadcast(f"File removal completed: {success_count}/{total_count} successful")
         return success_count > 0
     
     def sync_files(self, client_targets: str, source: str):
@@ -1175,7 +1023,7 @@ class BotWaveServer:
                 Log.warning(f"No WAV files found in {source_dir}")
                 return False
             
-            Log.broadcast_message(f"Syncing from local folder: {source_dir} ({len(wav_files)} files)")
+            Log.broadcast(f"Syncing from local folder: {source_dir} ({len(wav_files)} files)")
         else:
             # client - fetch files to a temp dir
             source_clients = self._parse_client_targets(source)
@@ -1193,7 +1041,7 @@ class BotWaveServer:
             temp_dir = tempfile.mkdtemp(prefix='botwave_sync_')
             source_dir = temp_dir
             
-            Log.broadcast_message(f"Fetching files from source client: {source_client_id}")
+            Log.broadcast(f"Fetching files from source client: {source_client_id}")
             
             source_client = self.clients[source_client_id]
             if not self._download_files_from_client(source_client, temp_dir):
@@ -1201,7 +1049,7 @@ class BotWaveServer:
                     self._remove_temp_dir(temp_dir)
                 return False
         
-        Log.broadcast_message(f"Clearing files from {len(target_clients)} target client(s)...")
+        Log.broadcast(f"Clearing files from {len(target_clients)} target client(s)...")
         
         for client_id in target_clients:
             if client_id == source_client_id:
@@ -1222,7 +1070,7 @@ class BotWaveServer:
             else:
                 Log.warning(f"  {self.clients[client_id].get_display_name()}: Clear failed")
         
-        Log.broadcast_message(f"Uploading synchronized files to targets...")
+        Log.broadcast(f"Uploading synchronized files to targets...")
         
         sync_targets = [cid for cid in target_clients if cid != source_client_id]
         
@@ -1239,7 +1087,7 @@ class BotWaveServer:
             Log.info("Cleaned up temporary files")
         
         if success:
-            Log.broadcast_message(f"Sync completed successfully!")
+            Log.broadcast(f"Sync completed successfully!")
         else:
             Log.error("Sync completed with errors")
         
@@ -1269,12 +1117,12 @@ class BotWaveServer:
         
         source_client = self.clients[source_client_id]
         
-        Log.broadcast_message(f"Syncing from {source_client.get_display_name()} to local folder: {target_dir}")
+        Log.broadcast(f"Syncing from {source_client.get_display_name()} to local folder: {target_dir}")
         
         success = self._download_files_from_client(source_client, target_dir)
         
         if success:
-            Log.broadcast_message(f"Sync to local folder completed successfully!")
+            Log.broadcast(f"Sync to local folder completed successfully!")
         else:
             Log.error("Sync to local folder completed with errors")
         
@@ -1297,14 +1145,14 @@ class BotWaveServer:
             Log.warning(f"{client.get_display_name()} has no files to download")
             return False
         
-        Log.broadcast_message(f"Downloading {len(files)} file(s) from {client.get_display_name()}...")
+        Log.broadcast(f"Downloading {len(files)} file(s) from {client.get_display_name()}...")
         
         success_count = 0
         
         for file_info in files:
             filename = file_info.get('name')
             
-            Log.file_message(f"  Requesting {filename}...")
+            Log.file(f"  Requesting {filename}...")
             
             client.uploading = True
             
@@ -1330,7 +1178,7 @@ class BotWaveServer:
                     else:
                         chunk_size = 1048576
                     
-                    Log.file_message(f"  Receiving {filename}... (chunk size: {chunk_size / 1024:.0f}KB)")
+                    Log.file(f"  Receiving {filename}... (chunk size: {chunk_size / 1024:.0f}KB)")
                     
                     original_timeout = client.conn.gettimeout()
                     transfer_timeout = max(60, file_size / 100000)
@@ -1353,7 +1201,7 @@ class BotWaveServer:
                             if file_size > 1024 * 1024:
                                 Log.progress_bar(len(received_data), file_size, 
                                             prefix=f'{filename}', suffix='Complete', 
-                                            style='yellow', icon='file')
+                                            style='yellow', icon='FILE', auto_clear=False)
                         
                         except socket.timeout:
                             Log.error("Timeout while receiving file data")
@@ -1364,8 +1212,7 @@ class BotWaveServer:
                     
                     if file_size > 1024 * 1024:
                         Log.progress_bar(file_size, file_size, prefix=f'{filename}:', 
-                                    suffix='Complete', style='yellow', icon='file')
-                        Log.clear_progress_bar()
+                                    suffix='Complete', style='yellow', icon='FILE')
                     
                     if len(received_data) != file_size:
                         Log.error(f"  Incomplete transfer: received {len(received_data)}/{file_size} bytes")
@@ -1417,10 +1264,10 @@ class BotWaveServer:
 
         if self.wait_start and len(target_clients) > 1:
             start_at = datetime.now(timezone.utc).timestamp() + 20 * (len(target_clients) - 1)
-            Log.broadcast_message(f"Starting broadcast at {datetime.fromtimestamp(start_at)}")
+            Log.broadcast(f"Starting broadcast at {datetime.fromtimestamp(start_at)}")
         else:
             start_at = 0
-            Log.broadcast_message(f"Starting broadcast as soon as possible.")
+            Log.broadcast(f"Starting broadcast as soon as possible.")
 
         command = {
             "type": "start_broadcast",
@@ -1436,7 +1283,7 @@ class BotWaveServer:
         success_count = 0
         total_count = len(target_clients)
 
-        Log.broadcast_message(f"Starting broadcast on {total_count} client(s)...")
+        Log.broadcast(f"Starting broadcast on {total_count} client(s)...")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1452,7 +1299,7 @@ class BotWaveServer:
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
-        Log.broadcast_message(f"Broadcast start completed: {success_count}/{total_count} successful")
+        Log.broadcast(f"Broadcast start completed: {success_count}/{total_count} successful")
         self.onstart_handlers()
         return success_count > 0
 
@@ -1466,7 +1313,7 @@ class BotWaveServer:
         success_count = 0
         total_count = len(target_clients)
 
-        Log.broadcast_message(f"Stopping broadcast on {total_count} client(s)...")
+        Log.broadcast(f"Stopping broadcast on {total_count} client(s)...")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1482,7 +1329,7 @@ class BotWaveServer:
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
-        Log.broadcast_message(f"Broadcast stop completed: {success_count}/{total_count} successful")
+        Log.broadcast(f"Broadcast stop completed: {success_count}/{total_count} successful")
         self.onstop_handlers()
         return success_count > 0
     
@@ -1495,22 +1342,22 @@ class BotWaveServer:
         except ImportError:
             parent_parent = Path(__file__).parent.parent
             pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv_message("Please install required modules:")
-            Log.sstv_message(f"{pip_path} install pysstv numpy pillow")
+            Log.sstv("Please install required modules:")
+            Log.sstv(f"{pip_path} install pysstv numpy pillow")
             return False
         
 
         if MODE_MAP is None:
             parent_parent = Path(__file__).parent.parent
             pip_path = parent_parent / "venv" / "bin" / "pip"
-            Log.sstv_message("Please install required modules:")
-            Log.sstv_message(f"{pip_path} install pysstv")
+            Log.sstv("Please install required modules:")
+            Log.sstv(f"{pip_path} install pysstv")
             return False
 
         try:
             img = Image.open(img_path).convert("RGB")
         except Exception as e:
-            Log.sstv_message(f"Cannot open image: {e}")
+            Log.sstv(f"Cannot open image: {e}")
             return False
 
         # select mode
@@ -1534,10 +1381,10 @@ class BotWaveServer:
                 f.setframerate(44100)
                 f.writeframes(samples.tobytes())
 
-            Log.sstv_message(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
+            Log.sstv(f"SSTV wav created {wav_path}  (auto mode: {cls.__name__})")
             return True
         except Exception as e:
-            Log.sstv_message(f"SSTV encode error: {e}")
+            Log.sstv(f"SSTV encode error: {e}")
             return False
 
 
@@ -1572,7 +1419,7 @@ class BotWaveServer:
         success_count = 0
         total_count = len(target_clients)
 
-        Log.client_message(f"Kicking {total_count} client(s)...")
+        Log.client(f"Kicking {total_count} client(s)...")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1596,7 +1443,7 @@ class BotWaveServer:
             except Exception as e:
                 Log.error(f"  {client.get_display_name()}: Error kicking - {e}")
 
-        Log.client_message(f"Kick completed: {success_count}/{total_count} successful")
+        Log.client(f"Kick completed: {success_count}/{total_count} successful")
         self.ondisconnect_handlers()
         return success_count > 0
 
@@ -1610,7 +1457,7 @@ class BotWaveServer:
         success_count = 0
         total_count = len(target_clients)
 
-        Log.client_message(f"Requesting restart from {total_count} client(s)...")
+        Log.client(f"Requesting restart from {total_count} client(s)...")
 
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1626,7 +1473,7 @@ class BotWaveServer:
             else:
                 Log.error(f"  {client.get_display_name()}: {response.get('message', 'Unknown error')}")
 
-        Log.client_message(f"Restart request completed: {success_count}/{total_count} successful")
+        Log.client(f"Restart request completed: {success_count}/{total_count} successful")
         return success_count > 0
 
     def _parse_client_targets(self, targets: str) -> List[str]:
@@ -1663,7 +1510,7 @@ class BotWaveServer:
         if self.server_socket:
             self.server_socket.close()
 
-        Log.server_message("Server stopped")
+        Log.server("Server stopped")
 
     def list_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
         if not os.path.exists(dir_path):
@@ -1888,7 +1735,7 @@ def main():
                 except KeyboardInterrupt:
                     Log.warning("Use 'exit' to exit")
                 except EOFError:
-                    Log.server_message("Exiting...")
+                    Log.server("Exiting...")
                     break
                 except Exception as e:
                     Log.error(f"Error: {e}")
