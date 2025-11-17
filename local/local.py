@@ -346,6 +346,7 @@ class BotWaveCLI:
                     return True
                 
                 self.remove_file(cmd_parts[1])
+                return True
             
             elif cmd == 'upload':
                 if len(cmd_parts) < 3:
@@ -680,6 +681,7 @@ class BotWaveCLI:
 
             if not os.path.exists(file_path):
                 Log.error(f"File {filename} not found")
+                return
             
             try:
                 os.remove(file_path)
