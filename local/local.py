@@ -339,6 +339,13 @@ class BotWaveCLI:
                 directory = cmd_parts[1] if len(cmd_parts) > 1 else None
                 self.list_files(directory)
                 return True
+
+            elif cmd == 'rm':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: rm <filename|all>")
+                    return True
+                
+                self.remove_file(cmd_parts[1])
             
             elif cmd == 'upload':
                 if len(cmd_parts) < 3:
@@ -646,6 +653,42 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error listing files: {e}")
 
+    def remove_file(self, filename):
+
+        if not filename:
+            Log.info("No filename provided.")
+            return
+        
+        if filename.lower() == 'all':
+            # Remove all WAV files
+            try:
+                removed_count = 0
+
+                for f in os.listdir(self.upload_dir):
+                    if f.lower().endswith('.wav'):
+                        os.remove(os.path.join(self.upload_dir, f))
+                        removed_count += 1
+
+                Log.success(f"Removed {removed_count} WAV files from {self.upload_dir}")
+            
+            except Exception as e:
+                Log.error(f"Error removing WAV files: {str(e)}")
+            
+        else:
+
+            file_path = os.path.join(self.upload_dir, filename)
+
+            if not os.path.exists(file_path):
+                Log.error(f"File {filename} not found")
+            
+            try:
+                os.remove(file_path)
+                Log.success(f"Removed file {filename}")
+            
+            except Exception as e:
+                Log.error(f"Error removing file {filename}: {str(e)}")
+
+
     def list_handlers(self, dir_path: str = "/opt/BotWave/handlers"):
         if not os.path.exists(dir_path):
             Log.error(f"Directory {dir_path} not found")
@@ -677,41 +720,55 @@ class BotWaveCLI:
             Log.error(f"Error listing commands from {filename}: {e}")
 
     def display_help(self):
-        Log.header("BotWave Standalone CLI - Help")
+        Log.header("BotWave Local Client - Help")
         Log.section("Available Commands")
         Log.print("start <file> [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Start broadcasting a WAV file", 'white')
         Log.print("  Example: start broadcast.wav 100.5 true MyRadio \"My Radio Text\" FFFF", 'cyan')
         Log.print("")
+
         Log.print("stop", 'bright_green')
         Log.print("  Stop the current broadcast", 'white')
         Log.print("")
+
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
         Log.print("")
+
         Log.print("list [directory]", 'bright_green')
         Log.print("  List files in the specified directory (default: upload directory)", 'white')
         Log.print("  Example: list /opt/BotWave/uploads", 'cyan')
         Log.print("")
+
+        Log.print("rm <targets> <filename|all>", 'bright_green')
+        Log.print("  Remove a file from client(s)", 'white')
+        Log.print("  Example: rm all broadcast.wav", 'cyan')
+        Log.print("")
+
         Log.print("upload <source> [destination]", 'bright_green')
         Log.print("  Upload a file to the upload directory", 'white')
         Log.print("  Example: upload /path/to/myfile.wav broadcast.wav", 'cyan')
         Log.print("")
+
         Log.print("dl <url> [destination]", 'bright_green')
         Log.print("  Download a WAV file from a URL", 'white')
         Log.print("  Example: download http://example.com/file.wav myfile.wav", 'cyan')
         Log.print("")
+
         Log.print("handlers [filename]", 'bright_green')
         Log.print("  List all handlers or commands in a specific handler file", 'white')
         Log.print("")
+
         Log.print("< <command>", 'bright_green')
         Log.print("  Run a shell command on the main OS", 'white')
         Log.print("  Example: < df -h", 'cyan')
         Log.print("")
+
         Log.print("help", 'bright_green')
         Log.print("  Display this help message", 'white')
         Log.print("")
+
         Log.print("exit", 'bright_green')
         Log.print("  Exit the application", 'white')
 
