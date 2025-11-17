@@ -98,7 +98,7 @@ download_files() {
     local file_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.files[]" 2>/dev/null)
     
     if [[ -n "$file_list" ]]; then
-        log INFO "Downloading files for section: $section"
+        log INFO "Downloading files for : $section"
         while IFS= read -r file; do
             [[ -z "$file" ]] && continue
             local target_path="$INSTALL_DIR/$file"
@@ -116,7 +116,7 @@ install_requirements() {
     local req_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.requirements[]" 2>/dev/null)
     
     if [[ -n "$req_list" ]]; then
-        log INFO "Installing Python requirements for section: $section"
+        log INFO "Installing Python requirements for : $section"
         while IFS= read -r req; do
             [[ -z "$req" ]] && continue
             log INFO "  - Installing $req..."
@@ -130,7 +130,7 @@ install_binaries() {
     local bin_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.binaries[]" 2>/dev/null)
     
     if [[ -n "$bin_list" ]]; then
-        log INFO "Installing binaries for section: $section"
+        log INFO "Installing binaries for : $section"
         while IFS= read -r binary; do
             [[ -z "$binary" ]] && continue
             local bin_name=$(basename "$binary")
