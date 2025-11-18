@@ -24,6 +24,7 @@ import threading
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.bw_custom import BWCustom
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
 from shared.sstv import make_sstv_wav
@@ -31,6 +32,7 @@ from shared.syscheck import check_requirements
 
 try:
     from piwave import PiWave
+    from piwave.backends import backend_classes
 except ImportError:
     print("Error: PiWave module not found. Please install it first.")
     sys.exit(1)
@@ -54,6 +56,9 @@ class BotWaveCLI:
         self.ws_loop = None
         self.passkey = passkey
         os.makedirs(upload_dir, exist_ok=True)
+
+        # load custom piwave backend
+        backend_classes["bw_custom"] = BWCustom
 
     def _setup_signal_handlers(self):
         self.original_sigint_handler = signal.signal(signal.SIGINT, self._signal_handler)
@@ -339,6 +344,7 @@ class BotWaveCLI:
                 rt=rt,
                 pi=pi,
                 loop=loop,
+                backend="bw_custom",
                 debug=False
             )
             self.current_file = file_path
@@ -359,8 +365,7 @@ class BotWaveCLI:
             return False
         if self.piwave:
             try:
-                self.piwave.stop()
-                Log.success("Broadcast stopped")
+                self.piwave.cleanup()
             except Exception as e:
                 Log.error(f"Error stopping broadcast: {e}")
             finally:

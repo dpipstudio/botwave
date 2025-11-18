@@ -20,6 +20,7 @@ NC='\033[0m'
 GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
 INSTALL_DIR="/opt/BotWave"
 BIN_DIR="$INSTALL_DIR/bin"
+BACKENDS_DIR="$INSTALL_DIR/backends"
 SYMLINK_DIR="/usr/local/bin"
 
 log() {
@@ -127,30 +128,97 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
         fi
     }
 
-    update_client_specific() {
-        log INFO "Updating PiFmRds..."
-        rm -rf PiFmRds
-        git clone https://github.com/ChristopheJacquet/PiFmRds || true
-        cd PiFmRds/src
+    update_backends() {
+        local backend_list=$(echo "$INSTALL_JSON" | jq -r ".backends[]" 2>/dev/null)
         
-        if [[ $(tr -d '\0' < /proc/device-tree/model 2>/dev/null) == *"Zero 2 W"* ]]; then
-            log INFO "Detected Raspberry Pi Zero 2 W. Patching Makefile..."
-            if [ -f Makefile ]; then
-                sed -i 's/^RPI_VERSION :=.*/RPI_VERSION = 3/' Makefile
-                log INFO "Makefile patched for Raspberry Pi Zero 2 W."
-            fi
+        if [[ -z "$backend_list" ]]; then
+            log WARN "No backends found in installation.json"
+            return
         fi
         
-        make clean
-        make
+        log INFO "Updating backends..."
+        mkdir -p "$BACKENDS_DIR"
+        cd "$BACKENDS_DIR"
+        
+        while IFS= read -r repo_url; do
+            [[ -z "$repo_url" ]] && continue
+            
+            local repo_name=$(basename "$repo_url" .git)
+            log INFO "  - Processing backend: $repo_name"
+            
+            if [[ -d "$repo_name" ]]; then
+                log INFO "    Backend $repo_name exists, checking for updates..."
+                cd "$repo_name"
+                
+                local before_commit=$(git rev-parse HEAD 2>/dev/null || echo "")
+                
+                git pull || {
+                    log ERROR "    Failed to pull updates for $repo_name"
+                    cd "$BACKENDS_DIR"
+                    continue
+                }
+                
+                local after_commit=$(git rev-parse HEAD 2>/dev/null || echo "")
+                
+                # orebuild if changes were made
+                if [[ "$before_commit" != "$after_commit" ]]; then
+                    log INFO "    Changes detected in $repo_name, rebuilding..."
+                    
+                    if [[ -d "src" ]]; then
+                        cd src
+                        
+                        make clean
+                        make || {
+                            log ERROR "    Failed to build $repo_name"
+                            cd "$BACKENDS_DIR"
+                            continue
+                        }
+                        log INFO "    Successfully rebuilt $repo_name"
+                        cd ..
+                    else
+                        log WARN "    No src directory found in $repo_name, skipping build"
+                    fi
+                else
+                    log INFO "    No changes in $repo_name, skipping rebuild"
+                fi
+                
+                cd "$BACKENDS_DIR"
+            else
+                log INFO "    Backend $repo_name not found, cloning..."
+                git clone "$repo_url" || {
+                    log ERROR "    Failed to clone $repo_name"
+                    continue
+                }
+                
+                cd "$repo_name"
+                
+                if [[ -d "src" ]]; then
+                    log INFO "    Building $repo_name..."
+                    cd src
+                    
+                    make clean
+                    make || {
+                        log ERROR "    Failed to build $repo_name"
+                        cd "$BACKENDS_DIR"
+                        continue
+                    }
+                    log INFO "    Successfully built $repo_name"
+                    cd ..
+                else
+                    log WARN "    No src directory found in $repo_name, skipping build"
+                fi
+                
+                cd "$BACKENDS_DIR"
+            fi
+        done <<< "$backend_list"
+        
         cd "$INSTALL_DIR"
-        log INFO "PiFmRds updated."
     }
 
     # update client if it exists
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client components..."
-        update_client_specific
+        update_backends
         download_files "client"
         install_requirements "client"
         update_binaries "client"

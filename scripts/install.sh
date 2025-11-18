@@ -20,6 +20,7 @@ NC='\033[0m'
 GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
 INSTALL_DIR="/opt/BotWave"
 BIN_DIR="$INSTALL_DIR/bin"
+BACKENDS_DIR="$INSTALL_DIR/backends"
 SYMLINK_DIR="/usr/local/bin"
 
 log() {
@@ -64,6 +65,7 @@ log INFO "Creating install directories..."
 mkdir -p "$INSTALL_DIR/uploads"
 mkdir -p "$INSTALL_DIR/handlers"
 mkdir -p "$BIN_DIR"
+mkdir -p "$BACKENDS_DIR"
 cd "$INSTALL_DIR"
 
 umask 002
@@ -145,34 +147,54 @@ install_binaries() {
     fi
 }
 
-install_client_specific() {
-    log INFO "Cloning PiFmRds..."
-    if [[ -d PiFmRds ]]; then
-        log INFO "PiFmRds already exists, pulling latest..."
-        cd PiFmRds
-        git pull || true
-        cd ..
-    else
-        git clone https://github.com/ChristopheJacquet/PiFmRds || true
+install_backends() {
+    local backend_list=$(echo "$INSTALL_JSON" | jq -r ".backends[]" 2>/dev/null)
+    
+    if [[ -z "$backend_list" ]]; then
+        log WARN "No backends found in installation.json"
+        return
     fi
     
-    cd PiFmRds/src
-    log INFO "Building PiFmRds..."
-
-    if [[ $(tr -d '\0' < /proc/device-tree/model 2>/dev/null) == *"Zero 2 W"* ]]; then
-        log INFO "Detected Raspberry Pi Zero 2 W. Patching Makefile..."
-        if [ -f Makefile ]; then
-            sed -i 's/^RPI_VERSION :=.*/RPI_VERSION = 3/' Makefile
-            log INFO "Makefile patched for Raspberry Pi Zero 2 W."
+    log INFO "Installing backends..."
+    cd "$BACKENDS_DIR"
+    
+    while IFS= read -r repo_url; do
+        [[ -z "$repo_url" ]] && continue
+        
+        local repo_name=$(basename "$repo_url" .git)
+        log INFO "  - Processing backend: $repo_name"
+        
+        if [[ -d "$repo_name" ]]; then
+            log INFO "    Backend $repo_name already exists, skipping clone" # shoudltn happen
         else
-            log WARN "Makefile not found in src! Cannot patch."
-            exit 1
+            log INFO "    Cloning $repo_name..."
+            git clone "$repo_url" || {
+                log ERROR "    Failed to clone $repo_name"
+                continue
+            }
         fi
-    fi
+        
+        cd "$repo_name"
+        
+        if [[ -d "src" ]]; then
+            log INFO "    Building $repo_name..."
+            cd src
 
-    make clean
-    make
-    log INFO "Installed PiFmRds"
+            make clean
+            make || {
+                log ERROR "    Failed to build $repo_name"
+                cd "$BACKENDS_DIR"
+                continue
+            }
+            log INFO "    Successfully built $repo_name"
+            cd ..
+        else
+            log WARN "    No src directory found in $repo_name, skipping build"
+        fi
+        
+        cd "$BACKENDS_DIR"
+    done <<< "$backend_list"
+    
     cd "$INSTALL_DIR"
 }
 
@@ -189,9 +211,9 @@ fi
 # add 'always' section
 SECTIONS_TO_INSTALL+=("always")
 
-# install client-specific components if needed
+# install backends if client mode is selected
 if [[ "$MODE" == "client" || "$MODE" == "both" ]]; then
-    install_client_specific
+    install_backends
 fi
 
 for section in "${SECTIONS_TO_INSTALL[@]}"; do

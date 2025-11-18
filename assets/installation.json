@@ -2,10 +2,11 @@
     "client": {
         "files": [
             "client/client.py",
-            "local/local.py"
+            "local/local.py",
+            "shared/bw_custom.py"
         ],
         "requirements": [
-            "piwave==2.0.9"
+            "piwave==2.1.5"
         ],
         "binaries": [
             "bin/bw-client",
@@ -35,5 +36,8 @@
             "bin/bw-nandl",
             "bin/bw-update"
         ]
-    }
+    },
+    "backends": [
+        "https://github.com/dpipstudio/bw_custom.git"
+    ]
 }
