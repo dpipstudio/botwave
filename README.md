@@ -6,7 +6,8 @@
 <h4> <a href="https://botwave.dpip.lol">botwave.dpip.lol btw</a></h4>   
 </div>
 
-BotWave is a system for broadcasting audio files over FM radio using Raspberry Pi devices. It consists of a server and client application that work together to manage and broadcast audio files.
+BotWave is a system for broadcasting audio files over FM radio using Raspberry Pi devices. It consists of a server and client application that work together to manage and broadcast audio files.  
+It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based on [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds).
 
 ## Features
 
@@ -26,7 +27,6 @@ BotWave is a system for broadcasting audio files over FM radio using Raspberry P
 ### Client
 - Raspberry Pi
 - Root access
-- PiFmRds installed
 - Python 3.x
 - PiWave module
 
