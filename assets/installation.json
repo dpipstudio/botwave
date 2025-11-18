@@ -19,6 +19,7 @@
     },
     "always": {
         "files": [
+            "autorun/autorun.py",
             "shared/handlers.py",
             "shared/logger.py",
             "shared/sstv.py",
