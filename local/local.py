@@ -216,7 +216,7 @@ class BotWaveCLI:
             
             elif cmd == '<':
                 if len(cmd_parts) < 2:
-                    Log.error("Usage: > <shell command>")
+                    Log.error("Usage: < <shell command>")
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])

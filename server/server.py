@@ -525,7 +525,7 @@ class BotWaveServer:
             
             elif command == '<':
                 if len(cmd) < 2:
-                    Log.error("Usage: > <shell command>")
+                    Log.error("Usage: < <shell command>")
                     return True
                 shell_command = ' '.join(cmd[1:])
                 self.run_shell_command(shell_command)
