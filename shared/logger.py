@@ -44,7 +44,7 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
-        super().print(message, style, icon, end)
+        super().print(message=message, style=style, icon=icon, end=end)
 
         ws_message = f"[{icon}] {message}" if icon else message
 
