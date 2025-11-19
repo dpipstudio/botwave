@@ -612,7 +612,7 @@ class BotWaveServer:
             if return_code != 0:
                 for line in process.stderr:
                     Log.error(line, end='')
-                Log.error(f"Command failed with return code {return_code}")
+                Log.print(f"Command failed with return code {return_code}", "bright_red", "ERR", end='')
             
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
