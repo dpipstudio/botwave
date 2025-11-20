@@ -1457,7 +1457,7 @@ def main():
     parser.add_argument('--host', default='0.0.0.0', help='Server host')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
     parser.add_argument('--pk', help='Optional passkey for authentication')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive l_ handlers from')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive s_ handlers from')
     parser.add_argument('--skip-update-check', action='store_true', help='Skip checking for protocol updates')
     parser.add_argument('--start-asap', action='store_false', help='Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.')
     parser.add_argument('--ws', type=int, help='WebSocket port')
