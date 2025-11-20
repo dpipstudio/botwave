@@ -10,17 +10,18 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-import os
-import sys
-import signal
 import argparse
+import asyncio
+import json
+import os
+import signal
 import subprocess
+import shlex
+import sys
+import threading
 import time
 import urllib.request
-import asyncio
 import websockets
-import json
-import threading
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -126,7 +127,7 @@ class BotWaveCLI:
             if not command:
                 return True
 
-            cmd_parts = command.split()
+            cmd_parts = shlex.split(command)
             if not cmd_parts:
                 return True
             

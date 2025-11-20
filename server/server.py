@@ -8,19 +8,21 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-import socket
-import threading
+import argparse
+import asyncio
+from datetime import datetime, timezone
 import json
 import os
-import sys
-import argparse
-import time
-import asyncio
-import websockets
-from datetime import datetime, timezone
-from typing import Dict, List, Optional
+import socket
 import subprocess
+import shlex
+import sys
 import tempfile
+import threading
+import time
+from typing import Dict, List, Optional
+import websockets
+
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -268,7 +270,7 @@ class BotWaveServer:
                     def inject_cmd():
                         self.command_history.append(message)
                         self.history_index = len(self.command_history)
-                        cmd = message.strip().split()
+                        cmd = shlex.split(message)
 
                         if not cmd:
                             return
@@ -415,7 +417,7 @@ class BotWaveServer:
             if not command:
                 return True
             
-            cmd = command.split()
+            cmd = shlex.split(command)
             command = cmd[0].lower()
 
             if command == 'exit':
@@ -1457,7 +1459,7 @@ def main():
     parser.add_argument('--host', default='0.0.0.0', help='Server host')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
     parser.add_argument('--pk', help='Optional passkey for authentication')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive l_ handlers from')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrive s_ handlers from')
     parser.add_argument('--skip-update-check', action='store_true', help='Skip checking for protocol updates')
     parser.add_argument('--start-asap', action='store_false', help='Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.')
     parser.add_argument('--ws', type=int, help='WebSocket port')
