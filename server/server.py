@@ -8,19 +8,20 @@
 # A DPIP Studios project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-import socket
-import threading
+import argparse
+import asyncio
 import json
 import os
+import socket
+import subprocess
 import sys
-import argparse
+import tempfile
+import threading
 import time
-import asyncio
-import websockets
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-import subprocess
-import tempfile
+import websockets
+
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

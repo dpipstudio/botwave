@@ -12,20 +12,20 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 
-import socket
+import argparse
+import getpass
 import json
 import os
-import sys
-import argparse
-import threading
-import time
 import platform
 import queue
 import signal
+import socket
+import sys
+import threading
+import time
 import urllib.request
-from typing import Optional, Dict
 from datetime import datetime, timezone
-import getpass
+from typing import Dict, Optional
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
