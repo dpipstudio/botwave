@@ -13,6 +13,7 @@
 
 
 import argparse
+from datetime import datetime, timezone
 import getpass
 import json
 import os
@@ -24,7 +25,6 @@ import sys
 import threading
 import time
 import urllib.request
-from datetime import datetime, timezone
 from typing import Dict, Optional
 
 # using this to access to the shared dir files
