@@ -16,6 +16,7 @@ import json
 import os
 import signal
 import subprocess
+import shlex
 import sys
 import threading
 import time
@@ -126,7 +127,7 @@ class BotWaveCLI:
             if not command:
                 return True
 
-            cmd_parts = command.split()
+            cmd_parts = shlex.split(command)
             if not cmd_parts:
                 return True
             

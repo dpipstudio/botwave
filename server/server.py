@@ -10,15 +10,16 @@
 
 import argparse
 import asyncio
+from datetime import datetime, timezone
 import json
 import os
 import socket
 import subprocess
+import shlex
 import sys
 import tempfile
 import threading
 import time
-from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import websockets
 
@@ -269,7 +270,7 @@ class BotWaveServer:
                     def inject_cmd():
                         self.command_history.append(message)
                         self.history_index = len(self.command_history)
-                        cmd = message.strip().split()
+                        cmd = shlex.split(message)
 
                         if not cmd:
                             return
@@ -416,7 +417,7 @@ class BotWaveServer:
             if not command:
                 return True
             
-            cmd = command.split()
+            cmd = shlex.split(command)
             command = cmd[0].lower()
 
             if command == 'exit':
