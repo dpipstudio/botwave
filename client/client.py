@@ -177,6 +177,12 @@ class BotWaveClient:
                 Log.error(f"Error in main loop: {e}")
                 time.sleep(1)
 
+        if self.socket:
+            try:
+                self.socket.close()
+            except:
+                pass
+
     def _handle_network_commands(self):
         buffer = ""
         command_id = 0
@@ -275,7 +281,7 @@ class BotWaveClient:
         elif cmd_type == 'kick':
             reason = command.get('reason', 'Kicked by administrator')
             Log.warning(f"Kicked from server: {reason}")
-            self.running = False
+            self.stop()
             return {"status": "success", "message": "Client kicked"}
         
         elif cmd_type == 'restart':
@@ -701,17 +707,16 @@ class BotWaveClient:
 
     def stop(self):
         self.running = False
+
         if self.broadcasting:
             self._stop_broadcast_main_thread()
+
         if self.original_sigint_handler:
             signal.signal(signal.SIGINT, self.original_sigint_handler)
+
         if self.original_sigterm_handler:
             signal.signal(signal.SIGTERM, self.original_sigterm_handler)
-        if self.socket:
-            try:
-                self.socket.close()
-            except:
-                pass
+
         Log.client("Client stopped")
 
 
