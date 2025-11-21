@@ -17,7 +17,7 @@ GRN='\033[0;32m'
 YEL='\033[1;33m'
 NC='\033[0m'
 
-GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
 INSTALL_DIR="/opt/BotWave"
 BIN_DIR="$INSTALL_DIR/bin"
 BACKENDS_DIR="$INSTALL_DIR/backends"
