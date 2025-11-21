@@ -243,9 +243,10 @@ class BotWaveCLI:
             return_code = process.wait()
 
             if return_code != 0:
+                Log.info(f"STDERR (err {return_code}):")
                 for line in process.stderr:
-                    Log.error(line, end='')
-                    
+                    Log.print(line, end='')
+
                 Log.error(f"Command failed with return code {return_code}")
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
