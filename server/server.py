@@ -30,6 +30,7 @@ from shared.handlers import HandlerExecutor
 from shared.logger import Log
 from shared.version import PROTOCOL_VERSION, check_for_updates, versions_compatible
 from shared.sstv import make_sstv_wav
+from shared.ws_cmd import WSCMDH
 
 class BotWaveClient:
     def __init__(self, conn: socket.socket, addr: tuple, machine_info: dict,
@@ -242,170 +243,16 @@ class BotWaveServer:
                 break
 
     def _start_websocket_server(self):
-        async def handler(websocket):
-            self.ws_clients.add(websocket)
-            Log.ws_clients = self.ws_clients
-
-            try:
-                auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
-
-                try:
-                    auth_data = json.loads(auth_message)
-                except json.JSONDecodeError:
-                    await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
-                    await websocket.close()
-                    return
-
-                if auth_data.get("type") != "auth" or (self.passkey and auth_data.get("passkey") != self.passkey):
-                    await websocket.send(json.dumps({"type": "auth_failed", "message": "Invalid passkey"}))
-                    await websocket.close()
-                    return
-
-                await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
-                self.onwsjoin_handlers()
-
-                async for message in websocket:
-                    Log.client(f"WebSocket CMD: {message}")
-
-                    def inject_cmd():
-                        self.command_history.append(message)
-                        self.history_index = len(self.command_history)
-                        cmd = shlex.split(message)
-
-                        if not cmd:
-                            return
-
-                        command = cmd[0].lower()
-
-                        if command == 'list':
-                            self.list_clients()
-
-                        elif command == 'help':
-                            self.display_help()
-
-                        elif command == 'upload':
-                            if len(cmd) < 3:
-                                Log.error("Usage: upload <targets> <file>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.upload_file(cmd[1], cmd[2])
-
-                        elif command == 'start':
-                            if len(cmd) < 3:
-                                Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
-                            loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
-                            ps = cmd[5] if len(cmd) > 5 else "BotWave"
-                            rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
-                            pi = cmd[7] if len(cmd) > 7 else "FFFF"
-
-                            self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
-
-                        elif command == 'stop':
-                            if len(cmd) < 2:
-                                Log.error("Usage: stop <targets>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.stop_broadcast(cmd[1])
-
-                        elif command == 'kick':
-                            if len(cmd) < 2:
-                                Log.error("Usage: kick <targets> [reason]")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
-                            self.kick_client(cmd[1], reason)
-
-                        elif command == 'restart':
-                            if len(cmd) < 2:
-                                Log.error("Usage: restart <targets>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.restart_client(cmd[1])
-
-                        elif command == 'handlers':
-                            if len(cmd) > 1:
-                                filename = cmd[1]
-                                self.handlers_executor.list_handler_commands(filename)
-                            else:
-                                self.handlers_executor.list_handlers()
-
-                        elif command == 'lf':
-                            if len(cmd) < 2:
-                                Log.error("Usage: lf <targets>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.list_files(cmd[1])
-
-                        elif command == '<':
-                            Log.warning("Hmmm, you can't do that. ;)")
-
-                        elif command == 'dl':
-                            if len(cmd) < 3:
-                                Log.error("Usage: dl <targets> <url>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.download_file(cmd[1], cmd[2])
-
-                        elif command == 'rm':
-                            if len(cmd) < 3:
-                                Log.error("Usage: rm <targets> <filename|all>")
-                                Log.info("Targets: 'all', client_id, hostname, or comma-separated list")
-                                return
-                            
-                            self.remove_file(cmd[1], cmd[2])
-
-                        elif command == 'sync':
-                            if len(cmd) < 3:
-                                Log.error("Usage: sync <targets|folder/path/> <source_target|folder/path/>")
-                                Log.info("Targets: 'all', client_id, hostname, comma-separated list, or local folder ending with /")
-                                Log.info("Source: client_id, hostname, or local folder path ending with /")
-                                return
-
-                            self.sync_files(cmd[1], cmd[2])
-
-                        elif command == 'exit':
-                            Log.warning("Hmmm, you can't do that. ;)")
-
-                        elif command == '#':
-                            # ignore comments
-                            pass
-
-                        else:
-                            Log.error(f"Unknown WebSocket command: {command}")
-                            Log.info("Type 'help' for a list of available commands")
-
-                    asyncio.get_event_loop().call_soon_threadsafe(inject_cmd)
-            except asyncio.TimeoutError:
-                await websocket.send(json.dumps({"type": "error", "message": "Authentication timeout"}))
-                await websocket.close()
-                self.onwsleave_handlers()
-            finally:
-                self.ws_clients.discard(websocket)
-                self.onwsleave_handlers()
-                Log.ws_clients = self.ws_clients
-
-        async def start_server():
-            async with websockets.serve(handler, self.host, self.ws_port):
-                Log.server(f"WebSocket server started on {self.host}:{self.ws_port}")
-                await asyncio.Future()
-
-        def run_server():
-            self.ws_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.ws_loop)
-            Log.ws_loop = self.ws_loop
-            self.ws_loop.run_until_complete(start_server())
-
-        threading.Thread(target=run_server, daemon=True).start()
+        self.ws_handler = WSCMDH(
+            host=self.host,
+            port=self.ws_port,
+            passkey=self.passkey,
+            command_executor=self._execute_command,
+            is_server=True,
+            onwsjoin_callback=self.onwsjoin_handlers,
+            onwsleave_callback=self.onwsleave_handlers
+        )
+        self.ws_handler.start()
 
     def _execute_command(self, command: str):
         try:

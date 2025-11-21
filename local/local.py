@@ -11,17 +11,13 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import argparse
-import asyncio
-import json
 import os
 import signal
 import subprocess
 import shlex
 import sys
-import threading
 import time
 import urllib.request
-import websockets
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -30,6 +26,8 @@ from shared.handlers import HandlerExecutor
 from shared.logger import Log
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
+from shared.ws_cmd import WSCMDH
+
 
 try:
     from piwave import PiWave
@@ -71,51 +69,14 @@ class BotWaveCLI:
         sys.exit(0)
 
     def _start_websocket_server(self):
-        async def handler(websocket):
-            try:
-                auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
-                try:
-                    auth_data = json.loads(auth_message)
-                except json.JSONDecodeError:
-                    await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
-                    await websocket.close()
-                    return
-
-                if auth_data.get("type") != "auth" or (self.passkey and auth_data.get("passkey") != self.passkey):
-                    await websocket.send(json.dumps({"type": "auth_failed", "message": "Invalid passkey"}))
-                    await websocket.close()
-                    return
-
-                await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
-                self.ws_clients.add(websocket)
-                Log.ws_clients = self.ws_clients
-
-                async for message in websocket:
-                    Log.client(f"WebSocket CMD: {message}")
-                    def inject_cmd():
-                        self.command_history.append(message)
-                        self.history_index = len(self.command_history)
-                        self._execute_command(message)
-                    asyncio.get_event_loop().call_soon_threadsafe(inject_cmd)
-            except asyncio.TimeoutError:
-                await websocket.send(json.dumps({"type": "error", "message": "Authentication timeout"}))
-                await websocket.close()
-            finally:
-                self.ws_clients.discard(websocket)
-                Log.ws_clients = self.ws_clients
-
-        async def start_server():
-            async with websockets.serve(handler, "0.0.0.0", self.ws_port):
-                Log.server(f"WebSocket server started on 0.0.0.0:{self.ws_port}")
-                await asyncio.Future()
-
-        def run_server():
-            self.ws_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.ws_loop)
-            Log.ws_loop = self.ws_loop
-            self.ws_loop.run_until_complete(start_server())
-
-        threading.Thread(target=run_server, daemon=True).start()
+        self.ws_handler = WSCMDH(
+            host="0.0.0.0",
+            port=self.ws_port,
+            passkey=self.passkey,
+            command_executor=self._execute_command,
+            is_server=False
+        )
+        self.ws_handler.start()
 
     def _execute_command(self, command: str):
         try:
@@ -278,10 +239,13 @@ class BotWaveCLI:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             for line in process.stdout:
                 Log.print(line, end='')
+
             return_code = process.wait()
+
             if return_code != 0:
                 for line in process.stderr:
                     Log.error(line, end='')
+                    
                 Log.error(f"Command failed with return code {return_code}")
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")

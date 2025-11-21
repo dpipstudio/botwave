@@ -25,7 +25,8 @@
             "shared/logger.py",
             "shared/sstv.py",
             "shared/syscheck.py",
-            "shared/version.py"
+            "shared/version.py",
+            "shared/ws_cmd.py"
         ],
         "requirements": [
             "websockets==11.0.3",
