@@ -14,15 +14,21 @@
         ]
     },
     "server": {
-        "files": ["server/server.py"],
-        "requirements": [],
+        "files": [
+            "server/server.py",
+            "shared/tls.py"
+        ],
+        "requirements": ["cryptography==36.0.2"],
         "binaries": ["bin/bw-server"]
     },
     "always": {
         "files": [
             "autorun/autorun.py",
             "shared/handlers.py",
+            "shared/http.py",
             "shared/logger.py",
+            "shared/protocol.py",
+            "shared/socket.py",
             "shared/sstv.py",
             "shared/syscheck.py",
             "shared/version.py",
@@ -30,7 +36,9 @@
         ],
         "requirements": [
             "websockets==11.0.3",
-            "dlogger==1.0.2"
+            "dlogger==1.0.2",
+            "aiofiles==0.8.0",
+            "aiohttp"
         ],
         "binaries": [
             "bin/bw-autorun",
