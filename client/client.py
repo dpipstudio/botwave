@@ -14,17 +14,11 @@
 
 import argparse
 from datetime import datetime, timezone
-import getpass
 import json
 import os
 import platform
-import signal
-import socket
 import sys
-import threading
-import time
 import urllib.request
-from typing import Optional
 import asyncio
 import ssl
 import sys
@@ -40,7 +34,6 @@ from shared.version import check_for_updates
 from shared.socket import BWWebSocketClient
 from shared.http import BWHTTPFileClient
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
-from shared.tls import gen_cert, save_cert
 
 try:
     from piwave import PiWave
@@ -126,7 +119,6 @@ class BotWaveClient:
 
     async def start(self):
         try:
-
             ssl_context = self._create_ssl_context()
             
             self.ws_client = BWWebSocketClient(
@@ -157,10 +149,9 @@ class BotWaveClient:
         try:
             parsed = ProtocolParser.parse_command(message)
             command = parsed['command']
-            args = parsed['args']
             kwargs = parsed['kwargs']
             
-            Log.info(f"Received: {command}")
+            #Log.info(f"Received: {command}")
             
             # registrations
             if command == Commands.REGISTER_OK:
@@ -203,6 +194,10 @@ class BotWaveClient:
                 await self._handle_download_token(kwargs)
                 return
             
+            if command == Commands.DOWNLOAD_URL:
+                await self._handle_download_url(kwargs)
+                return
+            
             # files managment
             if command == Commands.LIST_FILES:
                 await self._handle_list_files()
@@ -241,14 +236,11 @@ class BotWaveClient:
             await self.ws_client.send(error)
             return
         
-        Log.file(f"Received upload token for: {filename} ({size} bytes)")
+        Log.file(f"Received upload token for: {filename} ({size if size > 0 else '?'} bytes)")
         
         def progress(bytes_sent, total):
-            if total > 1024 * 1024:  # only for files greater than 1mb
-                Log.progress_bar(bytes_sent, total, prefix=f'Uploading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
-
-                if bytes_sent == total:
-                    Log.progress_bar(bytes_sent, total, prefix=f'Uploaded {filename}!', suffix='Complete', style='yellow', icon='FILE', auto_clear=True)
+            if total > 0:
+                Log.progress_bar(bytes_sent, total, prefix=f'Uploading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=(bytes_sent == total))
         
         success = await self.http_client.upload_file(
             server_host=self.server_host,
@@ -286,7 +278,7 @@ class BotWaveClient:
                 Log.progress_bar(bytes_received, total, prefix=f'Downloading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
                 
             if bytes_received == total:
-                Log.progress_bar(bytes_received, total, prefix=f'Downloading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+                Log.progress_bar(bytes_received, total, prefix=f'Downloaded {filename} !', suffix='Complete', style='yellow', icon='FILE', auto_clear=True)
         
         success = await self.http_client.download_file(
             server_host=self.server_host,
@@ -302,6 +294,44 @@ class BotWaveClient:
         else:
             Log.error(f"Download failed: {filename}")
             response = ProtocolParser.build_response(Commands.ERROR, "Download failed")
+        
+        await self.ws_client.send(response)
+
+    async def _handle_download_url(self, kwargs: dict):
+        url = kwargs.get('url')
+        filename = kwargs.get('filename')
+        
+        if not url or not filename:
+            error = ProtocolParser.build_response(Commands.ERROR, "Missing URL or filename")
+            await self.ws_client.send(error)
+            return
+        
+        filepath = os.path.join(self.upload_dir, filename)
+        
+        try:
+            Log.file(f"Downloading from URL: {url}")
+            
+            def download_with_progress():
+                urllib.request.urlretrieve(url, filepath)
+            
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, download_with_progress)
+            
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes)")
+                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}")
+
+            else:
+                Log.error(f"Download failed: file not created")
+                response = ProtocolParser.build_response(Commands.ERROR, "File not created")
+                
+        except urllib.error.URLError as e:
+            Log.error(f"Network error: {e}")
+            response = ProtocolParser.build_response(Commands.ERROR, f"Network error: {str(e)}")
+        except Exception as e:
+            Log.error(f"Download failed: {e}")
+            response = ProtocolParser.build_response(Commands.ERROR, str(e))
         
         await self.ws_client.send(response)
         
@@ -410,7 +440,7 @@ class BotWaveClient:
             response = ProtocolParser.build_command(
                 Commands.OK,
                 message=f"Found {len(wav_files)} files",
-                files=str(wav_files)
+                files=json.dumps(wav_files)
             )
             
             await self.ws_client.send(response)
@@ -489,7 +519,7 @@ def main():
     parser = argparse.ArgumentParser(description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
-    parser.add_argument('--fport', type=int, default=8443, help='File transfer (HTTP) port')
+    parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads')
     parser.add_argument('--pk', help='Passkey for authentication')
     parser.add_argument('--skip-checks', action='store_true')
@@ -500,6 +530,16 @@ def main():
     
     if not args.skip_checks:
         check_requirements()
+        Log.info("Checking for protocol updates...")
+        try:
+            latest_version = check_for_updates()
+            if latest_version:
+                Log.update(f"Update available! Latest version: {latest_version}")
+                Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
+            else:
+                Log.success("You are using the latest protocol version")
+        except Exception as e:
+            Log.warning("Unable to check for updates (continuing anyway)")
     
     client = BotWaveClient(
         server_host=args.server_host,

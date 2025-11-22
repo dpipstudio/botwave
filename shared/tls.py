@@ -1,4 +1,5 @@
 import datetime
+import ipaddress
 import tempfile
 from cryptography import x509
 from cryptography.x509.oid import NameOID
@@ -38,7 +39,7 @@ def gen_cert():
     ).add_extension(
         x509.SubjectAlternativeName([
             x509.DNSName(u"localhost"),
-            x509.IPAddress(u"127.0.0.1"),
+            x509.IPAddress(ipaddress.IPv4Address("127.0.0.1")),
         ]),
         critical=False,
     ).sign(private_key, hashes.SHA256())

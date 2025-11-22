@@ -106,7 +106,7 @@ class BWHTTPFileServer:
             
             actual_size = os.path.getsize(filepath)
             
-            if actual_size != expected_size:
+            if expected_size > 0 and actual_size != expected_size:
                 os.remove(filepath)
                 return web.Response(
                     status=400,
@@ -242,14 +242,7 @@ class BWHTTPFileClient:
             Log.error(f"Upload error: {e}")
             return False
     
-    async def download_file(
-        self,
-        server_host: str,
-        server_port: int,
-        token: str,
-        save_path: str,
-        progress_callback: Optional[callable] = None
-    ) -> bool:
+    async def download_file(self, server_host: str, server_port: int, token: str, save_path: str, progress_callback: Optional[callable] = None) -> bool:
         url = f"https://{server_host}:{server_port}/download/{token}"
         
         try:

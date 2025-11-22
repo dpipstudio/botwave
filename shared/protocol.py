@@ -22,6 +22,7 @@ class Commands:
     # files
     UPLOAD_TOKEN = 'UPLOAD_TOKEN'
     DOWNLOAD_TOKEN = 'DOWNLOAD_TOKEN'
+    DOWNLOAD_URL = 'DOWNLOAD_URL'
     
     # client managment
     KICK = 'KICK'
