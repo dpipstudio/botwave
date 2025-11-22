@@ -18,14 +18,13 @@ import getpass
 import json
 import os
 import platform
-import queue
 import signal
 import socket
 import sys
 import threading
 import time
 import urllib.request
-from typing import Dict, Optional
+from typing import Optional
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -54,12 +53,7 @@ class BotWaveClient:
         self.broadcasting = False
         self.uploading = False
         self.passkey = passkey
-        # command queue for main thread processing -> PiWave doesn't support being in a subthread
-        self.command_queue = queue.Queue()
-        self.response_queue = queue.Queue()
-        self.broadcast_params = None
-        self.broadcast_requested = False
-        self.stop_broadcast_requested = False
+        self.broadcast_lock = threading.Lock()
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
         os.makedirs(upload_dir, exist_ok=True)
@@ -101,7 +95,6 @@ class BotWaveClient:
             message = json.dumps(registration)
             self.socket.send((message + '\n').encode('utf-8'))
 
-
             buffer = ""
             while '\n' not in buffer:
                 data = self.socket.recv(1024).decode('utf-8')
@@ -112,7 +105,6 @@ class BotWaveClient:
             # process only registration response
             first_line = buffer.split('\n', 1)[0].strip()
             reg_response = json.loads(first_line)
-
 
             if reg_response.get('type') == 'register_ok':
                 Log.success(f"Successfully registered with server as {reg_response.get('client_id')}")
@@ -148,44 +140,11 @@ class BotWaveClient:
         
         self.running = True
         self._setup_signal_handlers()
-        threading.Thread(target=self._handle_network_commands, daemon=True).start()
-        self._main_loop()
+        self._handle_network_commands()
         return True
-
-    def _main_loop(self): # a messy method to run all on main thread
-        while self.running:
-            try:
-                if self.broadcast_requested and not self.broadcasting:
-                    self._start_broadcast_main_thread()
-                if self.stop_broadcast_requested and self.broadcasting:
-                    self._stop_broadcast_main_thread()
-
-                try:
-                    command_data = self.command_queue.get_nowait()
-                    command = command_data['command']
-                    response = self._process_command(command)
-                    self.response_queue.put({
-                        'id': command_data['id'],
-                        'response': response
-                    })
-                except queue.Empty:
-                    pass
-                time.sleep(0.1)
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                Log.error(f"Error in main loop: {e}")
-                time.sleep(1)
-
-        if self.socket:
-            try:
-                self.socket.close()
-            except:
-                pass
 
     def _handle_network_commands(self):
         buffer = ""
-        command_id = 0
         while self.running:
             try:
                 self.socket.settimeout(1.0)
@@ -209,7 +168,6 @@ class BotWaveClient:
 
                                 if command.get('type') == 'upload_file':
                                     try:
-                                        # Handle file upload - this method manages its own responses
                                         self._handle_upload_file(command)
                                     except Exception as e:
                                         Log.error(f"File upload error: {e}")
@@ -219,7 +177,6 @@ class BotWaveClient:
 
                                 if command.get('type') == 'send_file':
                                     try:
-                                        # Handle file sending - this method manages its own responses
                                         self._handle_send_file(command)
                                     except Exception as e:
                                         Log.error(f"Send file error: {e}")
@@ -227,47 +184,27 @@ class BotWaveClient:
                                         self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
                                     continue
 
-                                # For other commands, use the queue system
-                                command_id += 1
-                                self.command_queue.put({
-                                    'id': command_id,
-                                    'command': command
-                                })
-                                timeout = 30
-                                response = self._wait_for_response(command_id, timeout=timeout)
+                                # Process other commands directly
+                                response = self._process_command(command)
                                 if response:
                                     self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
-                                else:
-                                    error_response = {"status": "error", "message": "Command timeout"}
-                                    self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
+
                             except json.JSONDecodeError as e:
                                 Log.error(f"Invalid JSON received: {message} - Error: {e}")
                             except Exception as e:
                                 Log.error(f"Error processing message: {e}")
                 except socket.timeout:
-                    try:
-                        self.response_queue.get_nowait()
-                    except queue.Empty:
-                        pass
                     continue
             except Exception as e:
                 Log.error(f"Error handling network command: {e}")
                 break
+        
         self.running = False
-
-    def _wait_for_response(self, command_id: int, timeout: int = 30) -> Optional[Dict]:
-        start_time = time.time()
-        while time.time() - start_time < timeout:
+        if self.socket:
             try:
-                response_data = self.response_queue.get_nowait()
-                if response_data['id'] == command_id:
-                    return response_data['response']
-                else:
-                    self.response_queue.put(response_data)
-            except queue.Empty:
+                self.socket.close()
+            except:
                 pass
-            time.sleep(0.1)
-        return None
 
     def _process_command(self, command: dict) -> Optional[dict]:
         cmd_type = command.get('type')
@@ -276,7 +213,7 @@ class BotWaveClient:
             return self._handle_start_broadcast_request(command)
         
         elif cmd_type == 'stop_broadcast':
-            return self._handle_stop_broadcast_request()
+            return self._handle_stop_broadcast()
         
         elif cmd_type == 'kick':
             reason = command.get('reason', 'Kicked by administrator')
@@ -286,7 +223,7 @@ class BotWaveClient:
         
         elif cmd_type == 'restart':
             Log.info("Restart requested by server")
-            self._stop_broadcast_main_thread()
+            self._stop_broadcast()
             return {"status": "success", "message": "Restart acknowledged"}
         
         elif cmd_type == 'download_file':
@@ -483,10 +420,8 @@ class BotWaveClient:
             if total_size > 0:
                 Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
 
-            if block_num * block_num >= total_size:
+            if block_num * block_size >= total_size:
                 Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
-
-
 
         try:
             filename = url.split('/')[-1]
@@ -588,7 +523,6 @@ class BotWaveClient:
                 return {"status": "error", "message": f"Error removing WAV files: {str(e)}"}
             
         else:
-
             file_path = os.path.join(self.upload_dir, filename)
 
             if not os.path.exists(file_path):
@@ -603,25 +537,24 @@ class BotWaveClient:
                 Log.error(f"Error removing file {filename}: {str(e)}")
                 return {"status": "error", "message": f"Error removing file {filename}: {str(e)}"}
 
-
-
     def _handle_start_broadcast_request(self, command: dict) -> dict:
         try:
             filename = command.get('filename')
             if not filename:
                 return {"status": "error", "message": "Missing filename"}
+            
             file_path = os.path.join(self.upload_dir, filename)
             if not os.path.exists(file_path):
                 return {"status": "error", "message": f"File {filename} not found"}
+            
+            # Stop any existing broadcast
             if self.broadcasting:
-                self.stop_broadcast_requested = True
-                timeout = 0
-                while self.broadcasting and timeout < 100:  # 10 secs timeout
-                    time.sleep(0.1)
-                    timeout += 1
+                self._stop_broadcast()
+            
             # Get the timestamp start_at
             start_at = command.get('start_at', 0)
-            self.broadcast_params = {
+            
+            broadcast_params = {
                 'filename': filename,
                 'file_path': file_path,
                 'frequency': command.get('frequency', 90.0),
@@ -630,86 +563,92 @@ class BotWaveClient:
                 'pi': command.get('pi', 'FFFF'),
                 'loop': command.get('loop', False)
             }
+            
             if start_at > 0:
                 current_time = datetime.now(timezone.utc).timestamp()
                 if start_at > current_time:
                     delay = start_at - current_time
                     Log.broadcast(f"Waiting {delay:.2f} seconds before starting broadcast...")
-                    broadcast_thread = threading.Thread(target=self._start_broadcast_after_delay, args=(delay,))
+                    broadcast_thread = threading.Thread(
+                        target=self._start_broadcast_after_delay, 
+                        args=(broadcast_params, delay)
+                    )
                     broadcast_thread.daemon = True
                     broadcast_thread.start()
                     return {"status": "success", "message": f"Broadcast scheduled to start in {delay:.2f} seconds"}
                 else:
-                    self._start_broadcast_main_thread()
+                    self._start_broadcast(broadcast_params)
                     return {"status": "success", "message": "Broadcasting started"}
             else:
-                self._start_broadcast_main_thread()
+                self._start_broadcast(broadcast_params)
                 return {"status": "success", "message": "Broadcasting started"}
+                
         except Exception as e:
             Log.error(f"Broadcast error: {str(e)}")
             return {"status": "error", "message": f"Broadcast error: {str(e)}"}
 
-    def _start_broadcast_after_delay(self, delay: float):
+    def _start_broadcast_after_delay(self, params: dict, delay: float):
         try:
             time.sleep(delay)
-            self.broadcast_requested = True
+            self._start_broadcast(params)
         except Exception as e:
             Log.error(f"Error starting broadcast after delay: {str(e)}")
 
-    def _start_broadcast_main_thread(self):
-        if not self.broadcast_params:
-            return
-        try:
-            params = self.broadcast_params
-            self.piwave = PiWave(
-                frequency=params['frequency'],
-                ps=params['ps'],
-                rt=params['rt'],
-                pi=params['pi'],
-                loop=params['loop'],
-                backend="bw_custom",
-                debug=False
-            )
-            self.current_file = params['filename']
-            self.broadcasting = True
-            self.broadcast_requested = False
-            self.piwave.play(params['file_path'])
-            Log.broadcast(f"PiWave broadcast started for {params['filename']}")
-        except Exception as e:
-            Log.error(f"Error starting broadcast: {e}")
-            self.broadcasting = False
-            self.current_file = None
-            self.piwave = None
+    def _start_broadcast(self, params: dict):
+        with self.broadcast_lock:
+            try:
+                self.piwave = PiWave(
+                    frequency=params['frequency'],
+                    ps=params['ps'],
+                    rt=params['rt'],
+                    pi=params['pi'],
+                    loop=params['loop'],
+                    backend="bw_custom",
+                    debug=False
+                )
+                self.current_file = params['filename']
+                self.broadcasting = True
+                
+                self.piwave.play(params['file_path'])
+                
+                Log.broadcast(f"PiWave broadcast started for {params['filename']}")
+            except Exception as e:
+                Log.error(f"Error starting broadcast: {e}")
+                self.broadcasting = False
+                self.current_file = None
+                self.piwave = None
 
-    def _handle_stop_broadcast_request(self) -> dict:
+    def _handle_stop_broadcast(self) -> dict:
         try:
             if not self.broadcasting:
                 return {"status": "error", "message": "No broadcast running"}
-            self.stop_broadcast_requested = True
+            
+            self._stop_broadcast()
             Log.broadcast("Stopping broadcast...")
-            return {"status": "success", "message": "Stopping broadcast"}
+            return {"status": "success", "message": "Broadcast stopped"}
         except Exception as e:
             Log.error(f"Stop error: {str(e)}")
             return {"status": "error", "message": f"Stop error: {str(e)}"}
 
-    def _stop_broadcast_main_thread(self):
-        if self.piwave:
-            try:
-                self.piwave.cleanup() # both stops AND cleanups
-                Log.broadcast("PiWave stopped")
-            except Exception as e:
-                Log.error(f"Error stopping PiWave: {e}")
-            finally:
-                self.piwave = None
-        self.broadcasting = False
-        self.current_file = None
-        self.stop_broadcast_requested = False
+    def _stop_broadcast(self):
+        with self.broadcast_lock:
+            if self.piwave:
+                try:
+                    self.piwave.cleanup()  # both stops AND cleanups
+                    Log.broadcast("PiWave stopped")
+                except Exception as e:
+                    Log.error(f"Error stopping PiWave: {e}")
+                finally:
+                    self.piwave = None
+            
+            self.broadcasting = False
+            self.current_file = None
 
     def stop(self):
         self.running = False
 
         if self.broadcasting:
-            self._stop_broadcast_main_thread()
+            self._stop_broadcast()
 
         if self.original_sigint_handler:
             signal.signal(signal.SIGINT, self.original_sigint_handler)
