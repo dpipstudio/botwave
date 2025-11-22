@@ -1,8 +1,9 @@
 import urllib.request
 import urllib.error
 from typing import Optional
+from shared.protocol import PROTOCOL_VERSION
 
-PROTOCOL_VERSION = "1.1.2" # if mismatch of 1th or 2th part: error
+# if mismatch of 1th or 2th part: error
 VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
 
 def parse_version(version_str: str) -> tuple:
