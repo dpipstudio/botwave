@@ -131,7 +131,7 @@ class BotWaveClient:
             self.http_client = BWHTTPFileClient(ssl_context=ssl_context)
             
             if not await self.connect():
-                return False
+                await self.stop()
             
             self.running = True
             
