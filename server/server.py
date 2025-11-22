@@ -36,6 +36,12 @@ from shared.http import BWHTTPFileServer
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.tls import gen_cert, save_cert
 
+try:
+    import readline
+    HAS_READLINE = True
+except:
+    HAS_READLINE = False
+
 class BotWaveClient:
     def __init__(self, client_id: str, websocket, machine_info: dict, protocol_version: str):
         self.client_id = client_id
@@ -1435,6 +1441,17 @@ def main():
 
         if args.ws:
             server._start_websocket_server()
+
+        if HAS_READLINE:
+            readline.parse_and_bind('tab: complete')
+            readline.parse_and_bind('set editing-mode emacs')
+
+            try:
+                readline.read_history_file("/opt/BotWave/.history")
+            except FileNotFoundError:
+                pass
+
+            readline.set_history_length(1000)
         
         Log.print("Type 'help' for commands", 'bright_yellow')
         
@@ -1459,6 +1476,11 @@ def main():
                 except EOFError:
                     break
         finally:
+            if HAS_READLINE:
+                try:
+                    readline.write_history_file("/opt/BotWave/.history")
+                except:
+                    pass
             server.running = False
 
 if __name__ == "__main__":

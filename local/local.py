@@ -28,6 +28,11 @@ from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.ws_cmd import WSCMDH
 
+try:
+    import readline
+    HAS_READLINE = True
+except:
+    HAS_READLINE = False
 
 try:
     from piwave import PiWave
@@ -44,8 +49,6 @@ class BotWaveCLI:
         self.broadcasting = False
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
-        self.command_history = []
-        self.history_index = 0
         self.upload_dir = upload_dir
         self.handlers_dir = handlers_dir
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
@@ -480,14 +483,28 @@ def main():
     if not args.daemon:
         while cli.running:
             try:
+
                 cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+
                 if not cmd_input:
                     continue
-                cli.command_history.append(cmd_input)
-                cli.history_index = len(cli.command_history)
+
+                if HAS_READLINE:
+                    readline.parse_and_bind('tab: complete')
+                    readline.parse_and_bind('set editing-mode emacs')
+
+                    try:
+                        readline.read_history_file("/opt/BotWave/.history")
+                    except FileNotFoundError:
+                        pass
+
+                    readline.set_history_length(1000)
+
                 exit = cli._execute_command(cmd_input)
+
                 if not exit:
                     break
+
             except KeyboardInterrupt:
                 Log.warning("Use 'exit' to exit")
             except EOFError:
@@ -503,6 +520,12 @@ def main():
                 time.sleep(1)
         except KeyboardInterrupt:
             cli.stop()
+        finally:
+            if HAS_READLINE:
+                try:
+                    readline.write_history_file("/opt/BotWave/.history")
+                except:
+                    pass
 
 if __name__ == "__main__":
     main()
