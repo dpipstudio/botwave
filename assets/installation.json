@@ -7,7 +7,7 @@
             "shared/pw_monitor.py"
         ],
         "requirements": [
-            "piwave==2.1.5"
+            "piwave==2.1.8"
         ],
         "binaries": [
             "bin/bw-client",
