@@ -3,8 +3,11 @@
 <img src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave"/>
 
 <h1> BotWave - Your RPI FM Network </h1>
-<h4> <a href="https://botwave.dpip.lol">botwave.dpip.lol btw</a></h4>   
+<h4> <a href="https://botwave.dpip.lol">Website</a></h4>   
 </div>
+
+> [!WARNING]
+> The latest release of BotWave introduces a brand new protocol, and may not work as desired. Please open an issue if encountering any issue.
 
 BotWave is a system for broadcasting audio files over FM radio using Raspberry Pi devices. It consists of a server and client application that work together to manage and broadcast audio files.  
 It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based on [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds).
@@ -22,13 +25,13 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 > All requirements can be auto-installed with the automatic installer, see below.
 
 ### Server
-- Python 3.x
+- Python >= 3.6
 
 ### Client
 - Raspberry Pi
 - Root access
-- Python 3.x
-- PiWave module
+- Python >= 3.6
+- [bw_custom](https://github.com/dpipstudio/bw_custom)
 
 ## Installation
 

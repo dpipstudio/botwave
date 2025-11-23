@@ -14,25 +14,26 @@
 
 import argparse
 from datetime import datetime, timezone
-import getpass
 import json
 import os
 import platform
-import queue
-import signal
-import socket
 import sys
-import threading
-import time
 import urllib.request
-from typing import Dict, Optional
+import asyncio
+import ssl
+import sys
+import os
+from datetime import datetime, timezone
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
 from shared.logger import Log
 from shared.syscheck import check_requirements
-from shared.version import PROTOCOL_VERSION, check_for_updates
+from shared.version import check_for_updates
+from shared.socket import BWWebSocketClient
+from shared.http import BWHTTPFileClient
+from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 
 try:
     from piwave import PiWave
@@ -43,712 +44,498 @@ except ImportError:
 
 
 class BotWaveClient:
-    def __init__(self, server_host: str, server_port: int, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
+    def __init__(self, server_host: str, ws_port: int, http_port: int, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
         self.server_host = server_host
-        self.server_port = server_port
+        self.ws_port = ws_port
+        self.http_port = http_port
         self.upload_dir = upload_dir
-        self.socket = None
-        self.piwave = None
-        self.running = False
-        self.current_file = None
-        self.broadcasting = False
-        self.uploading = False
         self.passkey = passkey
-        # command queue for main thread processing -> PiWave doesn't support being in a subthread
-        self.command_queue = queue.Queue()
-        self.response_queue = queue.Queue()
-        self.broadcast_params = None
-        self.broadcast_requested = False
-        self.stop_broadcast_requested = False
-        self.original_sigint_handler = None
-        self.original_sigterm_handler = None
+        
+        # communications
+        self.ws_client = None
+        self.http_client = None
+        
+        self.piwave = None
+        self.broadcasting = False
+        self.current_file = None
+        self.broadcast_lock = asyncio.Lock() # using asyncio instead of thereading now
+        
+        # states
+        self.running = False
+        self.registered = False
+        self.client_id = None
+        
         os.makedirs(upload_dir, exist_ok=True)
-
-        # load custom piwave backend
         backend_classes["bw_custom"] = BWCustom
 
-    def _setup_signal_handlers(self):
-        self.original_sigint_handler = signal.signal(signal.SIGINT, self._signal_handler)
-        self.original_sigterm_handler = signal.signal(signal.SIGTERM, self._signal_handler)
+    def _create_ssl_context(self):
+        # Creates SSL context accepting self-signed certificates
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        return ssl_context
 
-    def _signal_handler(self, signum, frame):
-        Log.warning(f"Received signal {signum}, shutting down...")
-        self.stop()
-        sys.exit(0)
-
-    def connect(self):
-        # connect to the server, if it's an external ip, make sure to open the firewall
-        # if behind a NAT, make sure to do a port forwarding
-        try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            self.socket.settimeout(30)
-            Log.info(f"Attempting to connect to {self.server_host}:{self.server_port}...")
-            self.socket.connect((self.server_host, self.server_port))
-            # Send registration info with passkey and protocol version
-            machine_info = {
-                "hostname": platform.node(),
-                "machine": platform.machine(),
-                "system": platform.system(),
-                "release": platform.release()
-            }
-            registration = {
-                "type": "register",
-                "protocol_version": PROTOCOL_VERSION,
-                "machine_info": machine_info,
-                "passkey": self.passkey
-            }
-            message = json.dumps(registration)
-            self.socket.send((message + '\n').encode('utf-8'))
-
-
-            buffer = ""
-            while '\n' not in buffer:
-                data = self.socket.recv(1024).decode('utf-8')
-                if not data:
-                    raise Exception("Connection closed during registration")
-                buffer += data
-            
-            # process only registration response
-            first_line = buffer.split('\n', 1)[0].strip()
-            reg_response = json.loads(first_line)
-
-
-            if reg_response.get('type') == 'register_ok':
-                Log.success(f"Successfully registered with server as {reg_response.get('client_id')}")
-                server_version = reg_response.get('server_protocol_version', 'unknown')
-                Log.version(f"Server protocol version: {server_version}")
-                Log.version(f"Client protocol version: {PROTOCOL_VERSION}")
-                return True
-            
-            elif reg_response.get('type') == 'auth_failed':
-                Log.error("Authentication failed: Invalid passkey")
-                return False
-            
-            elif reg_response.get('type') == 'version_mismatch':
-                server_version = reg_response.get('server_version', 'unknown')
-                client_version = reg_response.get('client_version', PROTOCOL_VERSION)
-                Log.error(f"Protocol version mismatch!")
-                Log.error(f"Server version: {server_version}")
-                Log.error(f"Client version: {client_version}")
-                Log.error("Please update your client or server to match protocol versions")
-                return False
-            
-            else:
-                Log.error("Registration failed")
-                return False
-            
-        except Exception as e:
-            Log.error(f"Error connecting to server: {e}")
-            return False
-
-    def start(self):
-        if not self.connect():
+    async def connect(self) -> bool:
+        Log.client(f"Connecting to wss://{self.server_host}:{self.ws_port}...")
+        
+        if not await self.ws_client.connect():
             return False
         
-        self.running = True
-        self._setup_signal_handlers()
-        threading.Thread(target=self._handle_network_commands, daemon=True).start()
-        self._main_loop()
+        Log.success("WebSocket connected, registering...")
+        
+        # send register cmd
+        machine_info = {
+            "hostname": platform.node(),
+            "machine": platform.machine(),
+            "system": platform.system(),
+            "release": platform.release()
+        }
+        
+        register_cmd = ProtocolParser.build_command(
+            Commands.REGISTER,
+            hostname=machine_info['hostname'],
+            machine=machine_info['machine'],
+            system=machine_info['system'],
+            release=machine_info['release']
+        )
+        
+        await self.ws_client.send(register_cmd)
+        
+        # if passkey, sending auth cmd
+        if self.passkey:
+            auth_cmd = ProtocolParser.build_command(Commands.AUTH, self.passkey)
+            await self.ws_client.send(auth_cmd)
+        
+        ver_cmd = ProtocolParser.build_command(Commands.VER, PROTOCOL_VERSION)
+        await self.ws_client.send(ver_cmd)
+        
+        for _ in range(50):  # wait up to 5s
+            if self.registered:
+                return True
+            await asyncio.sleep(0.1)
+        
+        Log.error("Registration timeout")
+        return False
+
+    async def start(self):
+        try:
+            ssl_context = self._create_ssl_context()
+            
+            self.ws_client = BWWebSocketClient(
+                host=self.server_host,
+                port=self.ws_port,
+                ssl_context=ssl_context,
+                on_message_callback=self._handle_server_msg
+            )
+            
+            self.http_client = BWHTTPFileClient(ssl_context=ssl_context)
+            
+            if not await self.connect():
+                await self.stop()
+            
+            self.running = True
+            
+            # wait for disconnect (keeps client alive)
+            await self.ws_client.wait_for_disconnect()
+            
+        except KeyboardInterrupt:
+            Log.warning("Shutting down...")
+        finally:
+            await self.stop()
+        
         return True
 
-    def _main_loop(self): # a messy method to run all on main thread
-        while self.running:
-            try:
-                if self.broadcast_requested and not self.broadcasting:
-                    self._start_broadcast_main_thread()
-                if self.stop_broadcast_requested and self.broadcasting:
-                    self._stop_broadcast_main_thread()
+    async def _handle_server_msg(self, message: str):
+        try:
+            parsed = ProtocolParser.parse_command(message)
+            command = parsed['command']
+            kwargs = parsed['kwargs']
+            
+            #Log.info(f"Received: {command}")
+            
+            # registrations
+            if command == Commands.REGISTER_OK:
+                self.client_id = kwargs.get('client_id', 'unknown')
+                self.registered = True
+                Log.success(f"Registered as: {self.client_id}")
+                return
+            
+            if command == Commands.AUTH_FAILED:
+                Log.error("Authentication failed: Invalid passkey")
+                await self.stop()
+                return
+            
+            if command == Commands.VERSION_MISMATCH:
+                server_ver = kwargs.get('server_version', 'unknown')
+                Log.error(f"Protocol version mismatch! Server: {server_ver}, Client: {PROTOCOL_VERSION}")
+                await self.stop()
+                return
+            
+            # ping pong
+            if command == Commands.PING:
+                await self.ws_client.send(Commands.PONG)
+                return
+            
+            # broadcast
+            if command == Commands.START:
+                await self._handle_start_broadcast(kwargs)
+                return
+            
+            if command == Commands.STOP:
+                await self._handle_stop_broadcast()
+                return
+            
+            # files
+            if command == Commands.UPLOAD_TOKEN:
+                await self._handle_upload_token(kwargs)
+                return
+            
+            if command == Commands.DOWNLOAD_TOKEN:
+                await self._handle_download_token(kwargs)
+                return
+            
+            if command == Commands.DOWNLOAD_URL:
+                await self._handle_download_url(kwargs)
+                return
+            
+            # files managment
+            if command == Commands.LIST_FILES:
+                await self._handle_list_files()
+                return
+            
+            if command == Commands.REMOVE_FILE:
+                await self._handle_remove_file(kwargs)
+                return
+            
+            # client managment
+            if command == Commands.KICK:
+                reason = kwargs.get('reason', 'Kicked by administrator')
+                Log.warning(f"Kicked: {reason}")
+                await self.stop()
+                return
+            
+            if command == Commands.RESTART:
+                Log.info("Restart requested")
+                await self._handle_stop_broadcast()
+                response = ProtocolParser.build_response(Commands.OK, "Restart acknowledged")
+                await self.ws_client.send(response)
+                return
+            
+            Log.warning(f"Unknown command: {command}")
+            
+        except Exception as e:
+            Log.error(f"Error handling message: {e}")
 
-                try:
-                    command_data = self.command_queue.get_nowait()
-                    command = command_data['command']
-                    response = self._process_command(command)
-                    self.response_queue.put({
-                        'id': command_data['id'],
-                        'response': response
-                    })
-                except queue.Empty:
-                    pass
-                time.sleep(0.1)
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                Log.error(f"Error in main loop: {e}")
-                time.sleep(1)
-
-        if self.socket:
-            try:
-                self.socket.close()
-            except:
-                pass
-
-    def _handle_network_commands(self):
-        buffer = ""
-        command_id = 0
-        while self.running:
-            try:
-                self.socket.settimeout(1.0)
-                try:
-                    data = self.socket.recv(4096)
-                    if not data:
-                        Log.warning("Server disconnected")
-                        break
-                    text_data = data.decode('utf-8')
-                    buffer += text_data
-                    while '\n' in buffer:
-                        message, buffer = buffer.split('\n', 1)
-                        if message.strip():
-                            try:
-                                command = json.loads(message.strip())
-
-                                if command.get('type') == 'ping' and not self.uploading:
-                                    response = {"type": "pong"}
-                                    self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
-                                    continue
-
-                                if command.get('type') == 'upload_file':
-                                    try:
-                                        # Handle file upload - this method manages its own responses
-                                        self._handle_upload_file(command)
-                                    except Exception as e:
-                                        Log.error(f"File upload error: {e}")
-                                        error_response = {"status": "error", "message": f"Upload error: {str(e)}"}
-                                        self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-                                    continue
-
-                                if command.get('type') == 'send_file':
-                                    try:
-                                        # Handle file sending - this method manages its own responses
-                                        self._handle_send_file(command)
-                                    except Exception as e:
-                                        Log.error(f"Send file error: {e}")
-                                        error_response = {"status": "error", "message": f"Send error: {str(e)}"}
-                                        self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-                                    continue
-
-                                # For other commands, use the queue system
-                                command_id += 1
-                                self.command_queue.put({
-                                    'id': command_id,
-                                    'command': command
-                                })
-                                timeout = 30
-                                response = self._wait_for_response(command_id, timeout=timeout)
-                                if response:
-                                    self.socket.send((json.dumps(response) + '\n').encode('utf-8'))
-                                else:
-                                    error_response = {"status": "error", "message": "Command timeout"}
-                                    self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-                            except json.JSONDecodeError as e:
-                                Log.error(f"Invalid JSON received: {message} - Error: {e}")
-                            except Exception as e:
-                                Log.error(f"Error processing message: {e}")
-                except socket.timeout:
-                    try:
-                        self.response_queue.get_nowait()
-                    except queue.Empty:
-                        pass
-                    continue
-            except Exception as e:
-                Log.error(f"Error handling network command: {e}")
-                break
-        self.running = False
-
-    def _wait_for_response(self, command_id: int, timeout: int = 30) -> Optional[Dict]:
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            try:
-                response_data = self.response_queue.get_nowait()
-                if response_data['id'] == command_id:
-                    return response_data['response']
-                else:
-                    self.response_queue.put(response_data)
-            except queue.Empty:
-                pass
-            time.sleep(0.1)
-        return None
-
-    def _process_command(self, command: dict) -> Optional[dict]:
-        cmd_type = command.get('type')
-
-        if cmd_type == 'start_broadcast':
-            return self._handle_start_broadcast_request(command)
+    async def _handle_upload_token(self, kwargs: dict):
+        token = kwargs.get('token')
+        filename = kwargs.get('filename')
+        size = int(kwargs.get('size', 0))
         
-        elif cmd_type == 'stop_broadcast':
-            return self._handle_stop_broadcast_request()
+        if not token or not filename:
+            error = ProtocolParser.build_response(Commands.ERROR, "Missing token or filename")
+            await self.ws_client.send(error)
+            return
         
-        elif cmd_type == 'kick':
-            reason = command.get('reason', 'Kicked by administrator')
-            Log.warning(f"Kicked from server: {reason}")
-            self.stop()
-            return {"status": "success", "message": "Client kicked"}
+        Log.file(f"Received upload token for: {filename} ({size if size > 0 else '?'} bytes)")
         
-        elif cmd_type == 'restart':
-            Log.info("Restart requested by server")
-            self._stop_broadcast_main_thread()
-            return {"status": "success", "message": "Restart acknowledged"}
+        def progress(bytes_sent, total):
+            if total > 0:
+                Log.progress_bar(bytes_sent, total, prefix=f'Uploading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=(bytes_sent == total))
         
-        elif cmd_type == 'download_file':
-            url = command.get('url')
-            if not url:
-                return {"status": "error", "message": "Missing URL"}
-            return self._handle_download_file(url)
+        success = await self.http_client.upload_file(
+            server_host=self.server_host,
+            server_port=self.http_port,
+            token=token,
+            filepath=os.path.join(self.upload_dir, filename),
+            progress_callback=progress
+        )
         
-        elif cmd_type == 'list_files':
-            return self._handle_list_files_request(command)
-        
-        elif cmd_type == 'remove_file':
-            return self._handle_remove_file(command)
-        
+        if success:
+            Log.success(f"Upload completed: {filename}")
+            response = ProtocolParser.build_response(Commands.OK, f"Uploaded {filename}")
         else:
-            return {"status": "error", "message": f"Unknown command type: {cmd_type}"}
-
-    def _handle_upload_file(self, command: dict) -> dict:
-        try:
-            filename = command.get('filename')
-            file_size = command.get('size')
-
-            self.uploading = True
-
-            if not filename or not file_size:
-                return {"status": "error", "message": "Missing filename or size"}
-            
-            if not filename.endswith('.wav'):
-                return {"status": "error", "message": "Only WAV files are supported"}
-            
-            original_timeout = self.socket.gettimeout()
-            transfer_timeout = max(60, file_size / 100000)
-            self.socket.settimeout(transfer_timeout)
-
-            file_path = os.path.join(self.upload_dir, filename)
-
-            Log.file(f"Preparing to receive file: {filename} ({file_size} bytes)")
-
-            ready_response = {"status": "ready", "message": "Ready to receive file"}
-
-            self.socket.sendall((json.dumps(ready_response) + '\n').encode('utf-8'))
-
-            Log.file(f"Receiving file data...")
-            received_data = b''
-            
-            # dynamic buffer sizing based on file size
-            if file_size < 1024 * 1024:  # < 1MB
-                chunk_size = 32768  # 32KB
-            elif file_size < 10 * 1024 * 1024:  # < 10MB
-                chunk_size = 131072  # 128KB
-            elif file_size < 100 * 1024 * 1024:  # < 100MB
-                chunk_size = 524288  # 512KB
-            else:  # >= 100MB
-                chunk_size = 1048576  # 1MB
-
-            Log.file(f"Using chunk size: {chunk_size / 1024:.0f}KB")
-
-            while len(received_data) < file_size:
-                try:
-                    remaining = file_size - len(received_data)
-                    current_chunk_size = min(chunk_size, remaining)  # Don't read more than needed
-                    
-                    chunk = self.socket.recv(current_chunk_size)
-                    if not chunk:
-                        Log.error("Connection closed during file transfer")
-                        break
-
-                    received_data += chunk
-
-                    if file_size > 1024 * 1024:  # files > 1MB
-                        Log.progress_bar(len(received_data), file_size, prefix='Uploading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
-
-                except socket.timeout:
-                    Log.error("Timeout while receiving file data")
-                    break
-
-                except Exception as e:
-                    Log.error(f"Error receiving file chunk: {e}")
-                    break
-
-            if file_size > 1024 * 1024:
-                Log.progress_bar(file_size, file_size, prefix='Uploaded!', suffix='Complete', style='yellow', icon='FILE')
-            if len(received_data) != file_size:
-                Log.error(f"File upload incomplete: received {len(received_data)}/{file_size} bytes")
-                self.socket.settimeout(original_timeout)
-                return {"status": "error", "message": f"Incomplete file transfer"}
-            
-            # Write the file
-            with open(file_path, 'wb') as f:
-                f.write(received_data)
-
-            Log.success(f"File {filename} uploaded successfully ({len(received_data)} bytes)")
-
-            final_response = {"status": "uploaded", "message": "File uploaded successfully"}
-            self.socket.sendall((json.dumps(final_response) + '\n').encode('utf-8'))
-            self.socket.settimeout(original_timeout)
-
-            self.uploading = False
-            return final_response
-        except Exception as e:
-            Log.error(f"Upload error: {str(e)}")
-            return {"status": "error", "message": f"Upload error: {str(e)}"}
+            Log.error(f"Upload failed: {filename}")
+            response = ProtocolParser.build_response(Commands.ERROR, "Upload failed")
+        
+        await self.ws_client.send(response)
         
 
-    def _handle_send_file(self, command: dict):
-        self.uploading = True
+    async def _handle_download_token(self, kwargs: dict):
+        token = kwargs.get('token')
+        filename = kwargs.get('filename')
+        
+        if not token or not filename:
+            error = ProtocolParser.build_response(Commands.ERROR, "Missing token or filename")
+            await self.ws_client.send(error)
+            return
+        
+        Log.file(f"Received download token for: {filename}")
+        
+        save_path = os.path.join(self.upload_dir, filename)
+        
+        def progress(bytes_received, total):
+            if total > 1024 * 1024:
+                Log.progress_bar(bytes_received, total, prefix=f'Downloading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+                
+            if bytes_received == total:
+                Log.progress_bar(bytes_received, total, prefix=f'Downloaded {filename} !', suffix='Complete', style='yellow', icon='FILE', auto_clear=True)
+        
+        success = await self.http_client.download_file(
+            server_host=self.server_host,
+            server_port=self.http_port,
+            token=token,
+            save_path=save_path,
+            progress_callback=progress
+        )
+        
+        if success:
+            Log.success(f"Download completed: {filename}")
+            response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}")
+        else:
+            Log.error(f"Download failed: {filename}")
+            response = ProtocolParser.build_response(Commands.ERROR, "Download failed")
+        
+        await self.ws_client.send(response)
+
+    async def _handle_download_url(self, kwargs: dict):
+        url = kwargs.get('url')
+        filename = kwargs.get('filename')
+        
+        if not url or not filename:
+            error = ProtocolParser.build_response(Commands.ERROR, "Missing URL or filename")
+            await self.ws_client.send(error)
+            return
+        
+        filepath = os.path.join(self.upload_dir, filename)
         
         try:
-            filename = command.get('filename')
+            Log.file(f"Downloading from URL: {url}")
             
-            if not filename:
-                error_response = {"status": "error", "message": "Missing filename"}
-                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-                self.uploading = False
-                return
+            def download_with_progress():
+                urllib.request.urlretrieve(url, filepath)
             
-            file_path = os.path.join(self.upload_dir, filename)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, download_with_progress)
             
-            if not os.path.exists(file_path):
-                error_response = {"status": "error", "message": f"File {filename} not found"}
-                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-                self.uploading = False
-                return
-            
-            file_size = os.path.getsize(file_path)
-            
-            Log.file(f"Preparing to send file: {filename} ({file_size} bytes)")
-            
-            # Send ready response
-            ready_response = {"status": "ready", "size": file_size, "message": "Ready to send file"}
-            self.socket.send((json.dumps(ready_response) + '\n').encode('utf-8'))
-            
-            # Dynamic chunk sizing based on file size
-            if file_size < 1024 * 1024:  # < 1MB
-                chunk_size = 32768  # 32KB
-            elif file_size < 10 * 1024 * 1024:  # < 10MB
-                chunk_size = 131072  # 128KB
-            elif file_size < 100 * 1024 * 1024:  # < 100MB
-                chunk_size = 524288  # 512KB
-            else:  # >= 100MB
-                chunk_size = 1048576  # 1MB
-            
-            Log.file(f"Sending file data... (chunk size: {chunk_size / 1024:.0f}KB)")
-            
-            # Send file data
-            with open(file_path, 'rb') as f:
-                bytes_sent = 0
-                while bytes_sent < file_size:
-                    chunk = f.read(chunk_size)
-                    if not chunk:
-                        break
-                    self.socket.sendall(chunk)
-                    bytes_sent += len(chunk)
-                    
-                    if file_size > 1024 * 1024:  # Progress bar for files > 1MB
-                        Log.progress_bar(bytes_sent, file_size, prefix=f'Sending {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
-            
-            if file_size > 1024 * 1024:
-                Log.progress_bar(file_size, file_size, prefix=f'Sent {filename}!', suffix='Complete', style='yellow', icon='FILE')
-            
-            # Wait for confirmation from server
-            confirm_buffer = ""
-            original_timeout = self.socket.gettimeout()
-            self.socket.settimeout(10)
-            
-            while '\n' not in confirm_buffer:
-                data = self.socket.recv(1024).decode('utf-8')
-                if not data:
-                    raise Exception("Connection closed while waiting for confirmation")
-                confirm_buffer += data
-            
-            confirm_line = confirm_buffer.split('\n', 1)[0].strip()
-            confirm_json = json.loads(confirm_line)
-            
-            if confirm_json.get('status') == 'received':
-                Log.success(f"File {filename} sent successfully")
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes)")
+                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}")
+
             else:
-                Log.error(f"Server reported error: {confirm_json.get('message', 'Unknown error')}")
-            
-            self.socket.settimeout(original_timeout)
-            self.uploading = False
-            
+                Log.error(f"Download failed: file not created")
+                response = ProtocolParser.build_response(Commands.ERROR, "File not created")
+                
+        except urllib.error.URLError as e:
+            Log.error(f"Network error: {e}")
+            response = ProtocolParser.build_response(Commands.ERROR, f"Network error: {str(e)}")
         except Exception as e:
-            Log.error(f"Send file error: {e}")
-            self.uploading = False
+            Log.error(f"Download failed: {e}")
+            response = ProtocolParser.build_response(Commands.ERROR, str(e))
+        
+        await self.ws_client.send(response)
+        
+    async def _handle_start_broadcast(self, kwargs: dict):
+        filename = kwargs.get('filename')
+        if not filename:
+            response = ProtocolParser.build_response(Commands.ERROR, "Missing filename")
+            await self.ws_client.send(response)
+            return
+        
+        file_path = os.path.join(self.upload_dir, filename)
+        if not os.path.exists(file_path):
+            response = ProtocolParser.build_response(Commands.ERROR, f"File not found: {filename}")
+            await self.ws_client.send(response)
+            return
+        
+        # broadcast params
+        frequency = float(kwargs.get('freq', 90.0))
+        ps = kwargs.get('ps', 'BotWave')
+        rt = kwargs.get('rt', 'Broadcasting')
+        pi = kwargs.get('pi', 'FFFF')
+        loop = kwargs.get('loop', 'false').lower() == 'true'
+        start_at = float(kwargs.get('start_at', 0))
+        
+        # handle delayed start
+        if start_at > 0:
+            current_time = datetime.now(timezone.utc).timestamp()
+            if start_at > current_time:
+                delay = start_at - current_time
+                Log.broadcast(f"Scheduled start in {delay:.2f} seconds")
+                
+                asyncio.create_task(self._delayed_broadcast(
+                    file_path, filename, frequency, ps, rt, pi, loop, delay
+                ))
+                
+                response = ProtocolParser.build_response(Commands.OK, f"Scheduled in {delay:.2f}s")
+                await self.ws_client.send(response)
+                return
+        
+        # "start asap"
+        await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+        response = ProtocolParser.build_response(Commands.OK, "Broadcasting started")
+        await self.ws_client.send(response)
+
+    async def _delayed_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop, delay):
+        await asyncio.sleep(delay)
+        await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+
+    async def _start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
+        async with self.broadcast_lock:
+            if self.broadcasting:
+                await self._stop_broadcast()
+
             try:
-                error_response = {"status": "error", "message": f"Send error: {str(e)}"}
-                self.socket.send((json.dumps(error_response) + '\n').encode('utf-8'))
-            except:
-                pass
-        
-    def _handle_download_file(self, url: str) -> dict:
-        def _download_reporthook(block_num, block_size, total_size):
-            if total_size > 0:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+                self.piwave = PiWave(
+                    frequency=frequency,
+                    ps=ps,
+                    rt=rt,
+                    pi=pi,
+                    loop=loop,
+                    backend="bw_custom",
+                    debug=False
+                )
 
-            if block_num * block_num >= total_size:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
+                self.piwave.play(file_path, blocking=False)
 
+                self.broadcasting = True
+                self.current_file = filename
+                Log.broadcast(f"Broadcasting: {filename} on {frequency} MHz")
 
+            except Exception as e:
+                Log.error(f"Broadcast error: {e}")
+                self.broadcasting = False
 
-        try:
-            filename = url.split('/')[-1]
-
-            if not filename.lower().endswith('.wav'):
-                return {"status": "error", "message": "Only WAV files are supported"}
-
-            file_path = os.path.join(self.upload_dir, filename)
-
-            Log.file(f"Downloading file from {url}...")
-            urllib.request.urlretrieve(url, file_path, reporthook=_download_reporthook)
-
-            Log.success(f"File {filename} downloaded successfully")
-            return {"status": "success", "message": "File downloaded successfully"}
-        except Exception as e:
-            Log.error(f"Download error: {str(e)}")
-            return {"status": "error", "message": f"Download error: {str(e)}"}
-        
-
-    def _handle_list_files_request(self, command: dict) -> dict:
-        try:
-            directory = self.upload_dir
+    async def _stop_broadcast(self):
+        async with self.broadcast_lock:
+            if self.piwave:
+                try:
+                    self.piwave.cleanup() # stops AND cleanups
+                    Log.broadcast("PiWave stopped")
+                except Exception as e:
+                    Log.error(f"Error stopping PiWave: {e}")
+                finally:
+                    self.piwave = None
             
-            if not os.path.exists(directory): #should not be possible, but meh
-                return {
-                    "status": "error", 
-                    "message": f"Upload directory {directory} does not exist"
-                }
-            
+            self.broadcasting = False
+            self.current_file = None
+
+    async def _handle_list_files(self):
+        try:
             wav_files = []
             
-            try:
-                for filename in os.listdir(directory):
-                    if filename.lower().endswith('.wav'):
-                        file_path = os.path.join(directory, filename)
-                        
-                        if os.path.isfile(file_path):
-                            stat_info = os.stat(file_path)
-                            
-                            file_info = {
-                                'name': filename,
-                                'size': stat_info.st_size,
-                                'modified': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
-                            }
-                            wav_files.append(file_info)
-                
-                # sort by name bcs why not
-                wav_files.sort(key=lambda x: x['name'])
-                
-                Log.file(f"Listed {len(wav_files)} broadcastable WAV files")
-                
-                return {
-                    "status": "success",
-                    "message": f"Found {len(wav_files)} WAV files",
-                    "files": wav_files,
-                    "directory": directory
-                }
-                
-            except PermissionError:
-                return {
-                    "status": "error",
-                    "message": f"Permission denied accessing upload directory"
-                }
-            except Exception as e:
-                return {
-                    "status": "error",
-                    "message": f"Error listing upload directory: {str(e)}"
-                }
-                
+            for filename in os.listdir(self.upload_dir):
+                if filename.lower().endswith('.wav'):
+                    file_path = os.path.join(self.upload_dir, filename)
+                    if os.path.isfile(file_path):
+                        stat_info = os.stat(file_path)
+                        wav_files.append({
+                            'name': filename,
+                            'size': stat_info.st_size,
+                            'modified': datetime.fromtimestamp(stat_info.st_mtime).isoformat()
+                        })
+            
+            wav_files.sort(key=lambda x: x['name'])
+            
+            response = ProtocolParser.build_command(
+                Commands.OK,
+                message=f"Found {len(wav_files)} files",
+                files=json.dumps(wav_files)
+            )
+            
+            await self.ws_client.send(response)
+            Log.file(f"Listed {len(wav_files)} files")
+            
         except Exception as e:
-            Log.error(f"List files error: {str(e)}")
-            return {
-                "status": "error",
-                "message": f"List files error: {str(e)}"
-            }
-        
-    def _handle_remove_file(self, command: dict) -> dict:
-        filename = command.get('filename')
+            error = ProtocolParser.build_response(Commands.ERROR, str(e))
+            await self.ws_client.send(error)
 
+    async def _handle_remove_file(self, kwargs: dict):
+        filename = kwargs.get('filename')
+        
         if not filename:
-            return {"status": "error", "message": "Missing filename"}
+            response = ProtocolParser.build_response(Commands.ERROR, "Missing filename")
+            await self.ws_client.send(response)
+            return
         
-        if filename.lower() == 'all':
-            # Remove all WAV files
-            try:
-                removed_count = 0
-
+        try:
+            if filename.lower() == 'all':
+                removed = 0
                 for f in os.listdir(self.upload_dir):
                     if f.lower().endswith('.wav'):
                         os.remove(os.path.join(self.upload_dir, f))
-                        removed_count += 1
-
-                Log.success(f"Removed {removed_count} WAV files from {self.upload_dir}")
-
-                return {"status": "success", "message": f"Removed {removed_count} WAV files"}
-            
-            except Exception as e:
-                Log.error(f"Error removing WAV files: {str(e)}")
-                return {"status": "error", "message": f"Error removing WAV files: {str(e)}"}
-            
-        else:
-
-            file_path = os.path.join(self.upload_dir, filename)
-
-            if not os.path.exists(file_path):
-                return {"status": "error", "message": f"File {filename} not found"}
-            
-            try:
-                os.remove(file_path)
-                Log.success(f"Removed file {filename}")
-                return {"status": "success", "message": f"Removed file {filename}"}
-            
-            except Exception as e:
-                Log.error(f"Error removing file {filename}: {str(e)}")
-                return {"status": "error", "message": f"Error removing file {filename}: {str(e)}"}
-
-
-
-    def _handle_start_broadcast_request(self, command: dict) -> dict:
-        try:
-            filename = command.get('filename')
-            if not filename:
-                return {"status": "error", "message": "Missing filename"}
-            file_path = os.path.join(self.upload_dir, filename)
-            if not os.path.exists(file_path):
-                return {"status": "error", "message": f"File {filename} not found"}
-            if self.broadcasting:
-                self.stop_broadcast_requested = True
-                timeout = 0
-                while self.broadcasting and timeout < 100:  # 10 secs timeout
-                    time.sleep(0.1)
-                    timeout += 1
-            # Get the timestamp start_at
-            start_at = command.get('start_at', 0)
-            self.broadcast_params = {
-                'filename': filename,
-                'file_path': file_path,
-                'frequency': command.get('frequency', 90.0),
-                'ps': command.get('ps', 'RADIOOOO'),
-                'rt': command.get('rt', 'Broadcasting since 2025'),
-                'pi': command.get('pi', 'FFFF'),
-                'loop': command.get('loop', False)
-            }
-            if start_at > 0:
-                current_time = datetime.now(timezone.utc).timestamp()
-                if start_at > current_time:
-                    delay = start_at - current_time
-                    Log.broadcast(f"Waiting {delay:.2f} seconds before starting broadcast...")
-                    broadcast_thread = threading.Thread(target=self._start_broadcast_after_delay, args=(delay,))
-                    broadcast_thread.daemon = True
-                    broadcast_thread.start()
-                    return {"status": "success", "message": f"Broadcast scheduled to start in {delay:.2f} seconds"}
-                else:
-                    self._start_broadcast_main_thread()
-                    return {"status": "success", "message": "Broadcasting started"}
+                        removed += 1
+                
+                Log.success(f"Removed {removed} files")
+                response = ProtocolParser.build_response(Commands.OK, f"Removed {removed} files")
             else:
-                self._start_broadcast_main_thread()
-                return {"status": "success", "message": "Broadcasting started"}
+                file_path = os.path.join(self.upload_dir, filename)
+                if not os.path.exists(file_path):
+                    response = ProtocolParser.build_response(Commands.ERROR, "File not found")
+                else:
+                    os.remove(file_path)
+                    Log.success(f"Removed: {filename}")
+                    response = ProtocolParser.build_response(Commands.OK, f"Removed {filename}")
+            
+            await self.ws_client.send(response)
+            
         except Exception as e:
-            Log.error(f"Broadcast error: {str(e)}")
-            return {"status": "error", "message": f"Broadcast error: {str(e)}"}
+            error = ProtocolParser.build_response(Commands.ERROR, str(e))
+            await self.ws_client.send(error)
 
-    def _start_broadcast_after_delay(self, delay: float):
-        try:
-            time.sleep(delay)
-            self.broadcast_requested = True
-        except Exception as e:
-            Log.error(f"Error starting broadcast after delay: {str(e)}")
 
-    def _start_broadcast_main_thread(self):
-        if not self.broadcast_params:
-            return
-        try:
-            params = self.broadcast_params
-            self.piwave = PiWave(
-                frequency=params['frequency'],
-                ps=params['ps'],
-                rt=params['rt'],
-                pi=params['pi'],
-                loop=params['loop'],
-                backend="bw_custom",
-                debug=False
-            )
-            self.current_file = params['filename']
-            self.broadcasting = True
-            self.broadcast_requested = False
-            self.piwave.play(params['file_path'])
-            Log.broadcast(f"PiWave broadcast started for {params['filename']}")
-        except Exception as e:
-            Log.error(f"Error starting broadcast: {e}")
-            self.broadcasting = False
-            self.current_file = None
-            self.piwave = None
-
-    def _handle_stop_broadcast_request(self) -> dict:
+    async def _handle_stop_broadcast(self):
         try:
             if not self.broadcasting:
-                return {"status": "error", "message": "No broadcast running"}
-            self.stop_broadcast_requested = True
-            Log.broadcast("Stopping broadcast...")
-            return {"status": "success", "message": "Stopping broadcast"}
+                response = ProtocolParser.build_response(Commands.ERROR, "No broadcast running")
+                await self.ws_client.send(response)
+                return
+            
+            await self._stop_broadcast()
+            
+            response = ProtocolParser.build_response(Commands.OK, "Broadcast stopped")
+            await self.ws_client.send(response)
+            
         except Exception as e:
-            Log.error(f"Stop error: {str(e)}")
-            return {"status": "error", "message": f"Stop error: {str(e)}"}
+            Log.error(f"Stop error: {e}")
+            error = ProtocolParser.build_response(Commands.ERROR, str(e))
+            await self.ws_client.send(error)
 
-    def _stop_broadcast_main_thread(self):
-        if self.piwave:
-            try:
-                self.piwave.cleanup() # both stops AND cleanups
-                Log.broadcast("PiWave stopped")
-            except Exception as e:
-                Log.error(f"Error stopping PiWave: {e}")
-            finally:
-                self.piwave = None
-        self.broadcasting = False
-        self.current_file = None
-        self.stop_broadcast_requested = False
+    async def stop(self):
+        if not self.running:
+            return
 
-    def stop(self):
         self.running = False
-
+        
         if self.broadcasting:
-            self._stop_broadcast_main_thread()
+            await self._stop_broadcast()
 
-        if self.original_sigint_handler:
-            signal.signal(signal.SIGINT, self.original_sigint_handler)
-
-        if self.original_sigterm_handler:
-            signal.signal(signal.SIGTERM, self.original_sigterm_handler)
-
+        if self.piwave:
+            self.piwave.cleanup()
+        
+        if self.ws_client:
+            await self.ws_client.disconnect()
+        
         Log.client("Client stopped")
 
 
 def main():
     Log.header("BotWave - Client")
-
-    parser = argparse.ArgumentParser(description='BotWave - Client')
-    parser.add_argument('server_host', nargs='?', help='Server hostname or IP address')
+    
+    parser = argparse.ArgumentParser(description='BotWave Client')
+    parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads',
-                       help='Directory to store uploaded files')
-    parser.add_argument('--skip-checks', action='store_true',
-                       help='Skip system requirements checks')
-    parser.add_argument('--pk', nargs='?', const='', default=None, 
-                       help='Optional passkey for authentication')
-    parser.add_argument('--skip-update-check', action='store_true',
-                       help='Skip checking for protocol updates')
+    parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
+    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads')
+    parser.add_argument('--pk', help='Passkey for authentication')
+    parser.add_argument('--skip-checks', action='store_true')
     args = parser.parse_args()
-
+    
     if not args.server_host:
-        args.server_host = input("Enter server hostname or IP address: ").strip()
-        if not args.server_host:
-            Log.error("Server hostname/IP is required")
-            sys.exit(1)
-
-    if args.pk == '':
-        pk_input = getpass.getpass("Enter passkey: ").strip()
-        args.pk = pk_input or None
-
+        args.server_host = input("Server hostname/IP: ").strip()
+    
     if not args.skip_checks:
         check_requirements()
-
         Log.info("Checking for protocol updates...")
         try:
             latest_version = check_for_updates()
@@ -759,17 +546,19 @@ def main():
                 Log.success("You are using the latest protocol version")
         except Exception as e:
             Log.warning("Unable to check for updates (continuing anyway)")
-
-    client = BotWaveClient(args.server_host, args.port, args.upload_dir, args.pk)
-    Log.info(f"Starting BotWave client, connecting to {args.server_host}:{args.port}")
-    Log.info(f"Upload directory: {args.upload_dir}")
-    Log.info("Press Ctrl+C to stop")
-
+    
+    client = BotWaveClient(
+        server_host=args.server_host,
+        ws_port=args.port,
+        http_port=args.fport,
+        upload_dir=args.upload_dir,
+        passkey=args.pk
+    )
+    
     try:
-        client.start()
+        asyncio.run(client.start())
     except KeyboardInterrupt:
-        Log.warning("\nShutting down...")
-        client.stop()
+        Log.warning("Interrupted")
 
 if __name__ == "__main__":
     main()
