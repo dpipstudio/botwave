@@ -95,7 +95,7 @@ class BotWaveServer:
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             ssl_context.load_cert_chain(cert_path, key_path)
             
-            Log.success("TLS certificates generated")
+            Log.tls("Generated self-signed TLS certificate")
             
             self.ws_server = BWWebSocketServer(
                 host=self.host,
@@ -121,7 +121,7 @@ class BotWaveServer:
             Log.version(f"Protocol Version: {PROTOCOL_VERSION}")
             
             if self.passkey:
-                Log.info("Server is using authentication with a passkey")
+                Log.auth("Server is using authentication with a passkey")
             
             self.running = True
             
@@ -286,7 +286,7 @@ class BotWaveServer:
                 return
             
             if not args:
-                Log.error("AUTH command missing passkey")
+                Log.auth("AUTH command missing passkey")
                 error = ProtocolParser.build_response(
                     Commands.AUTH_FAILED,
                     "Missing passkey"
@@ -298,7 +298,7 @@ class BotWaveServer:
             client_passkey = args[0]
             
             if client_passkey != self.passkey:
-                Log.error(f"Authentication failed: Invalid passkey")
+                Log.auth(f"Authentication failed: Invalid passkey")
                 error = ProtocolParser.build_response(
                     Commands.AUTH_FAILED,
                     "Invalid passkey"
@@ -308,7 +308,7 @@ class BotWaveServer:
                 return
             
             websocket.reg_data['authenticated'] = True
-            Log.success("Client authenticated")
+            Log.auth("Client authenticated")
             return
         
         elif command == Commands.VER:

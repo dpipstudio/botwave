@@ -6,7 +6,6 @@ from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-from shared.logger import Log
 
 
 def gen_cert():
@@ -50,8 +49,6 @@ def gen_cert():
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
     ).decode('utf-8')
-
-    Log.success("Generated self-signed TLS certificate")
     
     return cert_pem, key_pem
 
