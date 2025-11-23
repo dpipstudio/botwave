@@ -3,7 +3,8 @@
         "files": [
             "client/client.py",
             "local/local.py",
-            "shared/bw_custom.py"
+            "shared/bw_custom.py",
+            "shared/pw_monitor.py"
         ],
         "requirements": [
             "piwave==2.1.6"
