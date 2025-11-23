@@ -156,7 +156,7 @@ class BWWebSocketClient:
             try:
                 await self.ws.send(message)
             except Exception as e:
-                print(f"Error sending message: {e}")
+                Log.warning(f"Error sending message: {e}")
                 self.connected = False
     
     async def _receive_loop(self):
@@ -166,11 +166,11 @@ class BWWebSocketClient:
                     message = await self.ws.recv()
                     await self.on_message(message)
                 except websockets.exceptions.ConnectionClosed:
-                    print("Connection closed by server")
+                    Log.warning("Connection closed by server")
                     self.connected = False
                     break
                 except Exception as e:
-                    print(f"Error receiving message: {e}")
+                    Log.warning(f"Error receiving message: {e}")
                     break
         except asyncio.CancelledError:
             pass

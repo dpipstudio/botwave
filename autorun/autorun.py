@@ -20,6 +20,7 @@ import pwd
 import grp
 from pathlib import Path
 from typing import List, Optional
+from dlogger import DLogger
 
 # Configuration
 BOTWAVE_BASE_DIR = "/opt/BotWave"
@@ -29,27 +30,8 @@ SERVER_SCRIPT = "/opt/BotWave/server/server.py"
 LOCAL_SCRIPT = "/opt/BotWave/local/local.py"
 SYSTEMD_DIR = "/etc/systemd/system"
 
-class Log:
-    COLORS = {
-        'reset': '\033[0m',
-        'bold': '\033[1m',
-        'underline': '\033[4m',
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'yellow': '\033[33m',
-        'blue': '\033[34m',
-        'magenta': '\033[35m',
-        'cyan': '\033[36m',
-        'white': '\033[37m',
-        'bright_red': '\033[91m',
-        'bright_green': '\033[92m',
-        'bright_yellow': '\033[93m',
-        'bright_blue': '\033[94m',
-        'bright_magenta': '\033[95m',
-        'bright_cyan': '\033[96m',
-        'bright_white': '\033[97m',
-    }
-    ICONS = {
+Log = DLogger(
+    icons={
         'success': 'OK',
         'error': 'ERR',
         'warning': 'WARN',
@@ -62,82 +44,22 @@ class Log:
         'stop': 'STOP',
         'status': 'STAT',
         'uninstall': 'UNINST',
+    },
+    styles={
+        'success': 'bright_green',
+        'error': 'bright_red',
+        'warning': 'bright_yellow',
+        'info': 'bright_cyan',
+        'service': 'magenta',
+        'system': 'cyan',
+        'file': 'yellow',
+        'install': 'bright_green',
+        'start': 'bright_green',
+        'stop': 'bright_red',
+        'status': 'bright_cyan',
+        'uninstall': 'bright_yellow',
     }
-
-    @classmethod
-    def print(cls, message: str, style: str = '', icon: str = '', end: str = '\n'):
-        color = cls.COLORS.get(style, '')
-        icon_char = cls.ICONS.get(icon, '')
-        if icon_char:
-            if color:
-                print(f"{color}[{icon_char}]\033[0m {message}", end=end)
-            else:
-                print(f"[{icon_char}] {message}", end=end)
-        else:
-            if color:
-                print(f"{color}{message}\033[0m", end=end)
-            else:
-                print(f"{message}", end=end)
-        sys.stdout.flush()
-
-    @classmethod
-    def header(cls, text: str):
-        cls.print(text, 'bright_blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def section(cls, text: str):
-        cls.print(f" {text} ", 'bright_blue', end='')
-        cls.print("─" * (len(text) + 2), 'blue', end='\n\n')
-        sys.stdout.flush()
-
-    @classmethod
-    def success(cls, message: str):
-        cls.print(message, 'bright_green', 'success')
-
-    @classmethod
-    def error(cls, message: str):
-        cls.print(message, 'bright_red', 'error')
-
-    @classmethod
-    def warning(cls, message: str):
-        cls.print(message, 'bright_yellow', 'warning')
-
-    @classmethod
-    def info(cls, message: str):
-        cls.print(message, 'bright_cyan', 'info')
-
-    @classmethod
-    def service_message(cls, message: str):
-        cls.print(message, 'magenta', 'service')
-
-    @classmethod
-    def system_message(cls, message: str):
-        cls.print(message, 'cyan', 'system')
-
-    @classmethod
-    def file_message(cls, message: str):
-        cls.print(message, 'yellow', 'file')
-
-    @classmethod
-    def install_message(cls, message: str):
-        cls.print(message, 'bright_green', 'install')
-
-    @classmethod
-    def start_message(cls, message: str):
-        cls.print(message, 'bright_green', 'start')
-
-    @classmethod
-    def stop_message(cls, message: str):
-        cls.print(message, 'bright_red', 'stop')
-
-    @classmethod
-    def status_message(cls, message: str):
-        cls.print(message, 'bright_cyan', 'status')
-
-    @classmethod
-    def uninstall_message(cls, message: str):
-        cls.print(message, 'bright_yellow', 'uninstall')
+)
 
 class SystemdService:
     def __init__(self, service_name: str, script_path: str, args: List[str], run_as_root: bool = False, user: Optional[str] = None):
@@ -207,7 +129,7 @@ WantedBy=multi-user.target
             os.chmod(service_file_path, 0o644)
             subprocess.run(['systemctl', 'daemon-reload'], check=True)
             subprocess.run(['systemctl', 'enable', self.service_name], check=True)
-            Log.install_message(f"Service {self.service_name} installed and enabled")
+            Log.install(f"Service {self.service_name} installed and enabled")
             return True
         except subprocess.CalledProcessError as e:
             Log.error(f"Error installing service {self.service_name}: {e}")
@@ -226,7 +148,7 @@ WantedBy=multi-user.target
             if os.path.exists(service_file_path):
                 os.remove(service_file_path)
             subprocess.run(['systemctl', 'daemon-reload'], check=True)
-            Log.uninstall_message(f"Service {self.service_name} uninstalled")
+            Log.uninstall(f"Service {self.service_name} uninstalled")
             return True
         except Exception as e:
             Log.error(f"Error uninstalling service {self.service_name}: {e}")
@@ -235,7 +157,7 @@ WantedBy=multi-user.target
     def start(self):
         try:
             subprocess.run(['systemctl', 'start', self.service_name], check=True)
-            Log.start_message(f"Service {self.service_name} started")
+            Log.start(f"Service {self.service_name} started")
             return True
         except subprocess.CalledProcessError as e:
             Log.error(f"Error starting service {self.service_name}: {e}")
@@ -244,7 +166,7 @@ WantedBy=multi-user.target
     def stop(self):
         try:
             subprocess.run(['systemctl', 'stop', self.service_name], check=True)
-            Log.stop_message(f"Service {self.service_name} stopped")
+            Log.stop(f"Service {self.service_name} stopped")
             return True
         except subprocess.CalledProcessError as e:
             Log.error(f"Error stopping service {self.service_name}: {e}")
@@ -255,12 +177,12 @@ WantedBy=multi-user.target
             result = subprocess.run(['systemctl', 'is-active', self.service_name],
                                   capture_output=True, text=True)
             status = result.stdout.strip()
-            Log.status_message(f"Service {self.service_name}: {status}")
+            Log.status(f"Service {self.service_name}: {status}")
             if status == 'active':
                 subprocess.run(['journalctl', '-u', self.service_name, '--lines=10', '--no-pager'])
             return status == 'active'
         except subprocess.CalledProcessError:
-            Log.status_message(f"Service {self.service_name}: not found")
+            Log.status(f"Service {self.service_name}: not found")
             return False
 
 def check_system_requirements():
@@ -300,7 +222,7 @@ def create_directories():
     ]
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
-        Log.file_message(f"Directory ensured: {directory}")
+        Log.file(f"Directory ensured: {directory}")
 
 def main():
     Log.header("BotWave Autorun - Systemd Service Manager")
