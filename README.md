@@ -25,13 +25,13 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 > All requirements can be auto-installed with the automatic installer, see below.
 
 ### Server
-- Python 3.x
+- Python >= 3.6
 
 ### Client
 - Raspberry Pi
 - Root access
-- Python 3.x
-- PiWave module
+- Python >= 3.6
+- [bw_custom](https://github.com/dpipstudio/bw_custom)
 
 ## Installation
 

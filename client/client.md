@@ -28,12 +28,13 @@ We highly recommand using the official installer (Check the [main README](/READM
 To start the BotWave Client, use the following command:
 
 ```bash
-sudo bw-client <server_host> [--port PORT] [--upload-dir UPLOAD_DIR] [--skip-checks] [--pk PASSKEY] [--skip-update-check]
+sudo bw-client [server_host] [--port PORT] [--upload-dir UPLOAD_DIR] [--skip-checks] [--pk PASSKEY] [--skip-update-check]
 ```
 
 ### Arguments
-* `server_host`: The hostname or IP address of the BotWave Server.
+* `server_host`: The hostname or IP address of the BotWave Server. Will prompt for value if not provided.
 * `--port`: The port on which the server is listening (default: `9938`).
+* `--fport`: The port on which the server is listening (default: `9921`).
 * `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
 * `--skip-checks`: Skip system requirements checks.
 * `--pk`: Optional passkey for authentication.
