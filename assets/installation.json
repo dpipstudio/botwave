@@ -6,7 +6,7 @@
             "shared/bw_custom.py"
         ],
         "requirements": [
-            "piwave==2.1.5"
+            "piwave==2.1.6"
         ],
         "binaries": [
             "bin/bw-client",
