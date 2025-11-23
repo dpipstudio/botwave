@@ -634,27 +634,29 @@ class BotWaveServer:
         try:
             Log.info(f"Executing: {command}")
             
-            loop = asyncio.get_event_loop()
-            process = await loop.run_in_executor(
-                None,
-                lambda: subprocess.Popen(
-                    command,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    universal_newlines=True
-                )
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
             )
             
-            for line in process.stdout:
-                Log.print(line, end='')
-            
-            return_code = process.wait()
-            
-            if return_code != 0:
-                Log.info(f"STDERR ({return_code}):")
-                for line in process.stderr:
-                    Log.print(line, end='')
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(),
+                    timeout=30.0
+                )
+                
+                if stdout:
+                    Log.print(stdout.decode('utf-8'), end='')
+                
+                if process.returncode != 0 and stderr:
+                    Log.info(f"STDERR ({process.returncode}):")
+                    Log.print(stderr.decode('utf-8'), end='')
+                    
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                Log.error("Command execution timeout")
         
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
