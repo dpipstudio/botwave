@@ -29,11 +29,13 @@ from datetime import datetime, timezone
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
 from shared.logger import Log
-from shared.syscheck import check_requirements
-from shared.version import check_for_updates
-from shared.socket import BWWebSocketClient
 from shared.http import BWHTTPFileClient
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.pw_monitor import PWM
+from shared.socket import BWWebSocketClient
+from shared.syscheck import check_requirements
+from shared.version import check_for_updates
+
 
 try:
     from piwave import PiWave
@@ -55,7 +57,9 @@ class BotWaveClient:
         self.ws_client = None
         self.http_client = None
         
+        # broadcast
         self.piwave = None
+        self.piwave_monitor = PWM()
         self.broadcasting = False
         self.current_file = None
         self.broadcast_lock = asyncio.Lock() # using asyncio instead of thereading now
@@ -381,6 +385,10 @@ class BotWaveClient:
         await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
 
     async def _start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
+        async def finished():
+            Log.info("Playback finished, stopping broadcast...")
+            await self._stop_broadcast()
+
         async with self.broadcast_lock:
             if self.broadcasting:
                 await self._stop_broadcast()
@@ -400,6 +408,10 @@ class BotWaveClient:
 
                 self.broadcasting = True
                 self.current_file = filename
+
+                if not loop:
+                    self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
+
                 Log.broadcast(f"Broadcasting: {filename} on {frequency} MHz")
 
             except Exception as e:
@@ -408,6 +420,8 @@ class BotWaveClient:
 
     async def _stop_broadcast(self):
         async with self.broadcast_lock:
+            self.piwave_monitor.stop()
+
             if self.piwave:
                 try:
                     self.piwave.cleanup() # stops AND cleanups

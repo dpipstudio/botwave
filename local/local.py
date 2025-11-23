@@ -24,6 +24,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
+from shared.pw_monitor import PWM
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.ws_cmd import WSCMDH
@@ -52,6 +53,7 @@ class BotWaveCLI:
         self.upload_dir = upload_dir
         self.handlers_dir = handlers_dir
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
+        self.piwave_monitor = PWM()
         self.ws_port = ws_port
         self.ws_server = None
         self.ws_clients = set()
@@ -301,11 +303,18 @@ class BotWaveCLI:
             return False
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+        def finished():
+            Log.info("Playback finished, stopping broadcast...")
+            self.stop_broadcast()
+            self.onstop_handlers()
+
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
             return False
+        
         if self.broadcasting:
             self.stop_broadcast()
+
         try:
             self.piwave = PiWave(
                 frequency=frequency,
@@ -316,11 +325,17 @@ class BotWaveCLI:
                 backend="bw_custom",
                 debug=False
             )
+
             self.current_file = file_path
             self.broadcasting = True
             self.piwave.play(file_path)
+
+            if not loop:
+                self.piwave_monitor.start(self.piwave, finished)
+            
             Log.success(f"Broadcast started for {file_path} on frequency {frequency} MHz")
             return True
+        
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")
             self.broadcasting = False
@@ -332,6 +347,8 @@ class BotWaveCLI:
         if not self.broadcasting:
             Log.warning("No broadcast is currently running")
             return False
+        
+        self.piwave_monitor.stop()
         if self.piwave:
             try:
                 self.piwave.cleanup()
@@ -339,6 +356,7 @@ class BotWaveCLI:
                 Log.error(f"Error stopping broadcast: {e}")
             finally:
                 self.piwave = None
+
         self.broadcasting = False
         self.current_file = None
         return True
@@ -455,7 +473,8 @@ class BotWaveCLI:
             signal.signal(signal.SIGINT, self.original_sigint_handler)
         if self.original_sigterm_handler:
             signal.signal(signal.SIGTERM, self.original_sigterm_handler)
-        Log.info("Client stopped")
+
+        Log.client("Client stopped")
 
 def main():
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
