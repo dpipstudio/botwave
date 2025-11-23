@@ -803,6 +803,8 @@ class BotWaveServer:
         # - sync <clients> <folder/> - Sync from local folder to clients
         # - sync <folder/> <source_client> - Sync from client to local folder
         
+        Log.warning("This feature is in beta and may be unstable.")
+
         is_target_folder = client_targets.endswith('/')
         is_source_folder = source.endswith('/')
         
