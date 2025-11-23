@@ -532,6 +532,12 @@ def main():
                 break
             except Exception as e:
                 Log.error(f"Error: {e}")
+
+        if HAS_READLINE:
+            try:
+                readline.write_history_file("/opt/BotWave/.history")
+            except:
+                pass
     else:
         Log.info("Running in daemon mode. Server will continue to run in the background.")
         try:
@@ -539,12 +545,6 @@ def main():
                 time.sleep(1)
         except KeyboardInterrupt:
             cli.stop()
-        finally:
-            if HAS_READLINE:
-                try:
-                    readline.write_history_file("/opt/BotWave/.history")
-                except:
-                    pass
 
 if __name__ == "__main__":
     main()
