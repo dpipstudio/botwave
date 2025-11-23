@@ -13,7 +13,6 @@ import asyncio
 from datetime import datetime, timezone
 import json
 import os
-import subprocess
 import shlex
 import sys
 import ssl
@@ -57,7 +56,7 @@ class BotWaveClient:
         return f"{hostname} ({self.client_id})"
 
 class BotWaveServer:
-    def __init__(self, host: str = '0.0.0.0', ws_port: int = 9938, ws_cmd_port: int = 9939, http_port: int = 9921, passkey: str = None, wait_start: bool = True, handlers_dir: str = "/opt/BotWave/handlers", upload_dir: str = "/opt/BotWave/uploads"):
+    def __init__(self, host: str = '0.0.0.0', ws_port: int = 9938, http_port: int = 9921, ws_cmd_port: int = None, passkey: str = None, wait_start: bool = True, handlers_dir: str = "/opt/BotWave/handlers", upload_dir: str = "/opt/BotWave/uploads"):
         self.host = host
         self.ws_port = ws_port
         self.ws_cmd_port = ws_cmd_port
@@ -1463,15 +1462,15 @@ def main():
     parser.add_argument('--pk', help='Passkey for authentication')
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers')
     parser.add_argument('--start-asap', action='store_false', dest='wait_start')
-    parser.add_argument('--ws', type=int, default=9939, help='WebSocket port')
+    parser.add_argument('--ws', type=int, help='WebSocket port')
     parser.add_argument('--daemon', action='store_true')
     args = parser.parse_args()
     
     server = BotWaveServer(
         host=args.host,
         ws_port=args.port,
-        ws_cmd_port=args.ws,
         http_port=args.fport,
+        ws_cmd_port=args.ws,
         passkey=args.pk,
         wait_start=args.wait_start,
         handlers_dir=args.handlers_dir
