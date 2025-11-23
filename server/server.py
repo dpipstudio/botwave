@@ -365,8 +365,14 @@ class BotWaveServer:
         machine_info = reg_data['machine_info']
         protocol_version = reg_data['protocol_version']
         hostname = machine_info['hostname']
+        ip = "unknown"
+
+        try:
+            ip = websocket.remote_address[0]
+        except:
+            pass
         
-        base_client_id = hostname # since ips are not easily accessible with ws, we'll stick with hostnames for now
+        base_client_id = f"{hostname}_{ip}"
         client_id = base_client_id
         counter = 1
         
