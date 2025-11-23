@@ -502,10 +502,16 @@ class BotWaveClient:
             await self.ws_client.send(error)
 
     async def stop(self):
+        if not self.running:
+            return
+
         self.running = False
         
         if self.broadcasting:
             await self._stop_broadcast()
+
+        if self.piwave:
+            self.piwave.cleanup()
         
         if self.ws_client:
             await self.ws_client.disconnect()

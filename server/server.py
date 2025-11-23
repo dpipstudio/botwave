@@ -133,7 +133,31 @@ class BotWaveServer:
             
         except Exception as e:
             Log.error(f"Error starting server: {e}")
+            await self.stop()
             raise
+
+    async def stop(self):
+        if not self.running:
+            return
+
+        Log.server("Shutting down server...")
+        
+        await self.kick_client("all", "Server is shutting down")
+        
+        if self.ws_server:
+            await self.ws_server.stop()
+            Log.server("Main socket stopped")
+        
+        if self.http_server:
+            await self.http_server.stop()
+            Log.server("File transfer (HTTP) server stopped")
+        
+        for future in self.pending_responses.values():
+            if not future.done():
+                future.cancel()
+        
+        self.running = False
+        Log.success("Server shutdown complete")
 
     def _check_updates(self):
         Log.info("Checking for protocol updates...")
@@ -190,6 +214,7 @@ class BotWaveServer:
                         if f"{client_id}_files" in self.pending_responses:
                             self.pending_responses[f"{client_id}_files"].set_result(files)
                             del self.pending_responses[f"{client_id}_files"]
+                            return
 
                         for file in files:
                             Log.file(f"  {file['name']} ({file['size']} bytes)")
@@ -441,9 +466,7 @@ class BotWaveServer:
         
         # SERVER CONTROL 
         if command_name == 'exit':
-            Log.info("Shutting down server...")
-            await self.kick_client("all", "Server is shutting down")
-            self.running = False
+            await self.stop()
             return
         
         # CLIENT MANAGEMENT 
@@ -1248,10 +1271,6 @@ class BotWaveServer:
 
         return valid_targets
 
-    def stop(self):
-        self.running = False
-
-        Log.server("Server stopped")
 
     async def list_files(self, client_targets: str):
         target_clients = self._parse_client_targets(client_targets)
@@ -1260,19 +1279,48 @@ class BotWaveServer:
         
         Log.info(f"Listing files from {len(target_clients)} client(s)")
         
+        futures = {}
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
             
-            client = self.clients[client_id]
+            future = asyncio.Future()
+            futures[client_id] = future
+            self.pending_responses[f"{client_id}_files"] = future
             
+            client = self.clients[client_id]
             command = ProtocolParser.build_command(Commands.LIST_FILES)
             await self.ws_server.send(client_id, command)
-            
-            Log.file(f"  {client.get_display_name()}: List request sent")
         
-        # clients will reply with files in ok command
+        for client_id, future in futures.items():
+            try:
+                files = await asyncio.wait_for(future, timeout=10.0)
+                client = self.clients[client_id]
+                
+                Log.success(f"  {client.get_display_name()}: {len(files)} file(s)")
+                
+                if files:
+                    for file_info in files:
+                        filename = file_info.get('name', 'unknown')
+                        size = file_info.get('size', 0)
+                        
+                        if size < 1024:
+                            size_str = f"{size} B"
+                        elif size < 1024 * 1024:
+                            size_str = f"{size / 1024:.1f} KB"
+                        else:
+                            size_str = f"{size / (1024 * 1024):.1f} MB"
+                        
+                        Log.print(f"    {filename} ({size_str})", 'white')
+                else:
+                    Log.print("    No files found", 'yellow')
+                    
+            except asyncio.TimeoutError:
+                Log.error(f"  {client_id}: Timeout waiting for response")
+            except Exception as e:
+                Log.error(f"  {client_id}: Error - {e}")
+        
         return True
     
     async def _request_file_list(self, client_id: str, timeout: int = 30) -> Optional[list]:
