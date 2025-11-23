@@ -62,7 +62,7 @@ cd "$INSTALL_DIR"
 
 log INFO "Checking if we have to update..."
 
-LATEST_COMMIT=$(curl -s https://api.github.com/repos/dpipstudio/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4)
+LATEST_COMMIT=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4)
 CURRENT_COMMIT=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
 
 if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
@@ -103,7 +103,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
             while IFS= read -r req; do
                 [[ -z "$req" ]] && continue
                 log INFO "  - Installing $req..."
-                ./venv/bin/pip install "$req"
+                ./venv/bin/pip install "$req" > /dev/null
             done <<< "$req_list"
         fi
     }
@@ -152,7 +152,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
                 
                 local before_commit=$(git rev-parse HEAD 2>/dev/null || echo "")
                 
-                git pull || {
+                git pull --quiet || {
                     log ERROR "    Failed to pull updates for $repo_name"
                     cd "$BACKENDS_DIR"
                     continue
@@ -167,8 +167,8 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
                     if [[ -d "src" ]]; then
                         cd src
                         
-                        make clean
-                        make || {
+                        make -s clean
+                        make -s || {
                             log ERROR "    Failed to build $repo_name"
                             cd "$BACKENDS_DIR"
                             continue
@@ -185,7 +185,7 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
                 cd "$BACKENDS_DIR"
             else
                 log INFO "    Backend $repo_name not found, cloning..."
-                git clone "$repo_url" || {
+                git clone --quiet "$repo_url" || {
                     log ERROR "    Failed to clone $repo_name"
                     continue
                 }
@@ -196,8 +196,8 @@ if [[ "$LATEST_COMMIT" != "$CURRENT_COMMIT" ]]; then
                     log INFO "    Building $repo_name..."
                     cd src
                     
-                    make clean
-                    make || {
+                    make -s clean
+                    make -s || {
                         log ERROR "    Failed to build $repo_name"
                         cd "$BACKENDS_DIR"
                         continue

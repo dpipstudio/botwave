@@ -58,8 +58,8 @@ fi
 
 # install dependencies
 log INFO "Installing system dependencies..."
-apt update
-apt install -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl jq
+apt update -qq
+apt install -qq -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl jq
 
 log INFO "Creating install directories..."
 mkdir -p "$INSTALL_DIR/uploads"
@@ -74,7 +74,7 @@ if [[ ! -d venv ]]; then
     log INFO "Creating Python virtual environment..."
     python3 -m venv venv
     log INFO "Updating PIP in the virtual environment..."
-    ./venv/bin/pip install --upgrade pip
+    ./venv/bin/pip install --upgrade pip > /dev/null
 fi
 
 # fetch install.json
@@ -122,7 +122,7 @@ install_requirements() {
         while IFS= read -r req; do
             [[ -z "$req" ]] && continue
             log INFO "  - Installing $req..."
-            ./venv/bin/pip install "$req"
+            ./venv/bin/pip install "$req" > /dev/null
         done <<< "$req_list"
     fi
 }
@@ -168,7 +168,7 @@ install_backends() {
             log INFO "    Backend $repo_name already exists, skipping clone" # shoudltn happen
         else
             log INFO "    Cloning $repo_name..."
-            git clone "$repo_url" || {
+            git clone --quiet "$repo_url" || {
                 log ERROR "    Failed to clone $repo_name"
                 continue
             }
@@ -180,8 +180,8 @@ install_backends() {
             log INFO "    Building $repo_name..."
             cd src
 
-            make clean
-            make || {
+            make -s clean
+            make -s || {
                 log ERROR "    Failed to build $repo_name"
                 cd "$BACKENDS_DIR"
                 continue
