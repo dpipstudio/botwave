@@ -4,7 +4,7 @@
 # BotWave - Local Client
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # PiWave is required! (https://github.com/douxxtech/piwave)
-# Built on Top of Christophe Jacquet's amazing work: https://github.com/ChristopheJacquet/PiFmRds
+# bw_custom is required! (https://github.com/dpipstudio/bw_custom)
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
 # A DPIP Studios project. https://dpip.lol
