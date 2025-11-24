@@ -5,11 +5,8 @@
 BotWave AutoRunner is a server / client application allowing you to manage easily systemd services, allowing you to create autorun scripts for BotWave Client and BotWave Server, starting immediatly when booting up your device.
 
 ## Requirements
-* Raspberry Pi - Officially working : RPI 0 1, 2, 3, and 4
 * Root Access
-* Python 3.x
-* [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds) installed
-* [PiWave](https://github.com/dpipstudio/piwave) python module
+* Python 3.6
 
 ## Installation
 

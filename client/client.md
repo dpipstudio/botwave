@@ -7,9 +7,9 @@ BotWave Client is a client application designed to connect to a BotWave Server, 
 ## Requirements
 * Raspberry Pi - Officially working : RPI 0 1, 2, 3, and 4
 * Root Access
-* Python 3.x
-* [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds) installed
-* [PiWave](https://github.com/dpipstudio/piwave) python module
+* Python >= 3.6
+* [bw_custom](https://github.com/dpipstudio/bw_custom) installed
+* [PiWave](https://github.com/douxxtech/piwave) python module
 
 ## Installation
 

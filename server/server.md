@@ -5,7 +5,7 @@
 BotWave Server is a program designed to manage multiple BotWave clients, allowing for the upload and broadcast of audio files over FM radio using Raspberry Pi devices.
 
 ## Requirements
-* Python 3.x
+* Python >= 3.6
 
 ## Installation
 
