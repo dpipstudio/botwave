@@ -539,9 +539,9 @@ def main():
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
     parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads')
+    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Uploads directory')
     parser.add_argument('--pk', help='Passkey for authentication')
-    parser.add_argument('--skip-checks', action='store_true')
+    parser.add_argument('--skip-checks', action='store_true', help='Skip update and requirements checks')
     args = parser.parse_args()
     
     if not args.server_host:

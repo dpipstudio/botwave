@@ -1460,10 +1460,10 @@ def main():
     parser.add_argument('--port', type=int, default=9938, help='Server port')
     parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
     parser.add_argument('--pk', help='Passkey for authentication')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers')
-    parser.add_argument('--start-asap', action='store_false', dest='wait_start')
-    parser.add_argument('--ws', type=int, help='WebSocket port')
-    parser.add_argument('--daemon', action='store_true')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve s_ handlers from')
+    parser.add_argument('--start-asap', action='store_false', dest='wait_start', help='Start broadcasts immediately (may cause client desync)')
+    parser.add_argument('--ws', type=int, help='WebSocket port for remote shell access')
+    parser.add_argument('--daemon', action='store_true', help='Run in non-interactive daemon mode')
     args = parser.parse_args()
     
     server = BotWaveServer(
