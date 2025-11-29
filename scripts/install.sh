@@ -60,16 +60,6 @@ silent() {
     "$@" >> "$LOG_FILE" 2>&1
 }
 
-piped() {
-    if [[ ! -t 0 ]]; then
-        local temp_script="$TMP_DIR/install.sh"
-        mkdir -p "$TMP_DIR"
-        curl -sSL "$GITHUB_RAW_URL/scripts/install.sh?t=$(date +%s)" -o "$temp_script" 
-        bash "$temp_script" "$@"
-        exit $?
-    fi
-}
-
 # ============================================================================
 # INTERACTIVE MENU SYSTEM
 # ============================================================================
@@ -173,6 +163,11 @@ _arrow_key_menu() {
 
 check_root_privileges() {
     if [[ "$EUID" -ne 0 ]]; then
+        if [[ ! -t 0 ]]; then
+            log WARN "This script must be run as root. Please run it again with sudo."
+            exit 1
+        fi
+        
         log WARN "This script must be run as root. Re-run with sudo?"
         export MENU_SELECT_COLOR="$RED"
         select_option "Yes (sudo)" "No (exit)"
