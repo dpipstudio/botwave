@@ -64,7 +64,7 @@ piped() {
     if [[ ! -t 0 ]]; then
         local temp_script="$TMP_DIR/install.sh"
         mkdir -p "$TMP_DIR"
-        curl -sSL "$GITHUB_RAW_URL/scripts/install.sh" -o "$temp_script" 
+        curl -sSL "$GITHUB_RAW_URL/scripts/install.sh?t=$(date +%s)" -o "$temp_script" 
         bash "$temp_script" "$@"
         exit $?
     fi
