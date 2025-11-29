@@ -529,7 +529,7 @@ main() {
     print_summary "$mode"
 
     cd "$START_PWD"
-    echo 'Installation completed, exiting !' # avoid blocking
+    echo "Installation completed, exiting " # avoid blocking
     exit 0
 }
 
