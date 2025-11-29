@@ -488,9 +488,7 @@ print_summary() {
 
 main() {
     local mode
-
-    piped "$@"
-
+    
     echo "$BANNER"
 
     # Pre-flight checks
