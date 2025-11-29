@@ -60,6 +60,12 @@ silent() {
     "$@" >> "$LOG_FILE" 2>&1
 }
 
+cleanup() {
+    printf '\033[?25h'
+    stty echo
+    trap - 2 EXIT
+}
+
 # ============================================================================
 # INTERACTIVE MENU SYSTEM
 # ============================================================================
@@ -489,6 +495,9 @@ print_summary() {
 main() {
     local mode
     
+    trap cleanup EXIT
+    trap cleanup 2
+
     echo "$BANNER"
 
     # Pre-flight checks
