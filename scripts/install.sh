@@ -56,7 +56,6 @@ log() {
 }
 
 silent() {
-    mkdir -p "$TMP_DIR"
     "$@" >> "$LOG_FILE" 2>&1
 }
 
@@ -260,7 +259,6 @@ setup_directory_structure() {
     mkdir -p "$INSTALL_DIR/handlers"
     mkdir -p "$BIN_DIR"
     mkdir -p "$BACKENDS_DIR"
-    mkdir -p "$TMP_DIR"
     cd "$INSTALL_DIR"
     umask 002
 }
@@ -488,6 +486,8 @@ print_summary() {
 
 main() {
     local mode
+
+    mkdir -p "$TMP_DIR"
 
     echo "$BANNER"
 
