@@ -1,0 +1,17 @@
+*
+
+!/api/
+!/api/**
+!/assets/
+!/assets/**
+!/install/
+!/install/**
+!/uninstall/
+!/uninstall/**
+!/update/
+!/update/**
+!/websocket/
+!/websocket/**
+!/*.html
+!/*.md
+!/.gitignore
