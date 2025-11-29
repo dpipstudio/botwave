@@ -61,9 +61,12 @@ silent() {
 }
 
 piped() {
-    if [[ -t 1 ]]; then
-        sudo curl -sSL "$GITHUB_RAW_URL/scripts/install.sh" -o "$TMP_DIR/install.sh" 
-        sudo bash "$TMP_DIR/install.sh" "$@"
+    if [[ ! -t 0 ]]; then
+        local temp_script="$TMP_DIR/install.sh"
+        mkdir -p "$TMP_DIR"
+        curl -sSL "$GITHUB_RAW_URL/scripts/install.sh" -o "$temp_script" 
+        bash "$temp_script" "$@"
+        exit $?
     fi
 }
 
