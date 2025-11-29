@@ -1,235 +1,538 @@
 #!/bin/bash
 
-# BotWave - Install script
-
+# BotWave - Installation Script
 # A program by Douxx (douxx.tech | github.com/dpipstudio)
 # https://github.com/dpipstudio/botwave
-# https://botwave.dpip.lol
-# A DPIP Studios project. https://dpip.lol
-# Licensed under GPL-v3.0 (see LICENSE)
+# Licensed under GPL-v3.0
 
 set -e
 
-START_PWD=$(pwd)
+# ============================================================================
+# CONSTANTS & CONFIGURATION
+# ============================================================================
 
-RED='\033[0;31m'
-GRN='\033[0;32m'
-YEL='\033[1;33m'
-NC='\033[0m'
+readonly SCRIPT_VERSION="1.2.0"
+readonly START_PWD=$(pwd)
+readonly BANNER=$(cat <<EOF
+   ___       __ _      __
+  / _ )___  / /| | /| / /__ __  _____
+ / _  / _ \/ __/ |/ |/ / _ \`/ |/ / -_)
+/____/\___/\__/|__/|__/\_,_/|___/\__/ Installer v$SCRIPT_VERSION
+======================================================
 
-GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
-INSTALL_DIR="/opt/BotWave"
-BIN_DIR="$INSTALL_DIR/bin"
-BACKENDS_DIR="$INSTALL_DIR/backends"
-SYMLINK_DIR="/usr/local/bin"
+EOF
+)
+
+readonly RED='\033[0;31m'
+readonly GRN='\033[0;32m'
+readonly YEL='\033[1;33m'
+readonly NC='\033[0m'
+readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
+readonly INSTALL_DIR="/opt/BotWave"
+readonly BIN_DIR="$INSTALL_DIR/bin"
+readonly BACKENDS_DIR="$INSTALL_DIR/backends"
+readonly SYMLINK_DIR="/usr/local/bin"
+readonly TMP_DIR="/tmp/bw_install"
+readonly LOG_FILE="$TMP_DIR/install_$(date +%s).log"
+readonly VALID_MODES=("client" "server" "both")
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
 
 log() {
     local level="$1"
     shift
     local color=""
+
     case "$level" in
-        INFO) color="$GRN" ;;
-        WARN) color="$YEL" ;;
+        INFO)  color="$GRN" ;;
+        WARN)  color="$YEL" ;;
         ERROR) color="$RED" ;;
-        *) color="$NC" ;;
+        *)     color="$NC" ;;
     esac
-    printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*"
+
+    printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*" | tee -a "$LOG_FILE" >&2 || true
 }
 
-# validate input
-if [[ "$1" != "client" && "$1" != "server" && "$1" != "both" ]]; then
-    log ERROR "Usage: $0 {client|server|both}"
-    exit 1
-fi
-MODE="$1"
-log INFO "Mode selected: $MODE"
+silent() {
+    mkdir -p "$TMP_DIR"
+    "$@" >> "$LOG_FILE" 2>&1
+}
 
-# ensure we're root
-if [[ "$EUID" -ne 0 ]]; then
-    log ERROR "This script must be run as root. Try: sudo $0 $1"
-    exit 1
-fi
+piped() {
+    if [[ -t 1 ]]; then
+        sudo curl -sSL "$GITHUB_RAW_URL/scripts/install.sh" -o "$TMP_DIR/install.sh" 
+        sudo bash "$TMP_DIR/install.sh" "$@"
+    fi
+}
 
-# check OS
-if [[ "$(uname)" != "Linux" && "$(uname)" != "Darwin" ]]; then
-    log ERROR "This script must be run on a Unix-like system (Linux/macOS)."
-    exit 1
-fi
+# ============================================================================
+# INTERACTIVE MENU SYSTEM
+# ============================================================================
 
-# install dependencies
-log INFO "Installing system dependencies..."
-apt update -qq
-apt install -qq -y python3 python3-pip python3-venv libsndfile1-dev make ffmpeg git curl jq
+select_option() {
+    # Credit: https://unix.stackexchange.com/questions/146570/arrow-key-enter-menu
+    set +e
 
-log INFO "Creating install directories..."
-mkdir -p "$INSTALL_DIR/uploads"
-mkdir -p "$INSTALL_DIR/handlers"
-mkdir -p "$BIN_DIR"
-mkdir -p "$BACKENDS_DIR"
-cd "$INSTALL_DIR"
+    # Handle non-interactive environments
+    if [[ -e /dev/tty ]]; then
+        exec < /dev/tty > /dev/tty
+    elif [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+        _fallback_menu "$@"
+        return $?
+    fi
 
-umask 002
+    _arrow_key_menu "$@"
+    local result=$?
+    return $result
+}
 
-if [[ ! -d venv ]]; then
-    log INFO "Creating Python virtual environment..."
-    python3 -m venv venv
-    log INFO "Updating PIP in the virtual environment..."
-    ./venv/bin/pip install --upgrade pip > /dev/null
-fi
+_fallback_menu() {
+    local idx=1
+    for opt; do
+        echo "  $idx) $opt" >&2
+        ((idx++))
+    done
 
-# fetch install.json
-log INFO "Fetching installation configuration..."
-INSTALL_JSON=$(curl -sSL "${GITHUB_RAW_URL}/assets/installation.json?t=$(date +%s)")
-if [[ -z "$INSTALL_JSON" ]]; then
-    log ERROR "Failed to fetch installation.json"
-    exit 1
-fi
+    while true; do
+        echo -n "Enter number (1-$#): " >&2
+        read selection
+
+        if [[ "$selection" =~ ^[0-9]+$ ]] &&
+           [ "$selection" -ge 1 ] &&
+           [ "$selection" -le $# ]; then
+            return $((selection - 1))
+        else
+            echo "Invalid selection. Please enter a number between 1 and $#." >&2
+        fi
+    done
+}
+
+_arrow_key_menu() {
+    local ESC=$(printf "\033")
+    local MENU_SELECT_COLOR="${MENU_SELECT_COLOR:-$ESC[94m}"
+    local MENU_UNSELECT_COLOR="${MENU_UNSELECT_COLOR:-$NC}"
+
+    cursor_blink_on()  { printf "$ESC[?25h"; }
+    cursor_blink_off() { printf "$ESC[?25l"; }
+    cursor_to()        { printf "$ESC[$1;${2:-1}H"; }
+    print_option()     { printf "  ${MENU_UNSELECT_COLOR}$1${NC}"; }
+    print_selected()   { printf "${MENU_SELECT_COLOR}> $1${NC}"; }
+    get_cursor_row()   { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+    key_input() {
+        read -s -n3 key 2>/dev/null >&2
+        if [[ $key = $ESC[A ]]; then echo up; fi
+        if [[ $key = $ESC[B ]]; then echo down; fi
+        if [[ $key = "" ]]; then echo enter; fi
+    }
+
+    # Print blank lines for menu
+    for opt; do printf "\n"; done
+
+    local lastrow=$(get_cursor_row)
+    local startrow=$(($lastrow - $#))
+
+    trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
+    cursor_blink_off
+
+    local selected=0
+    while true; do
+        local idx=0
+        for opt; do
+            cursor_to $(($startrow + $idx))
+            if [ $idx -eq $selected ]; then
+                print_selected "$opt"
+            else
+                print_option "$opt"
+            fi
+            ((idx++))
+        done
+
+        case $(key_input) in
+            enter) break;;
+            up)    ((selected--));
+                   if [ $selected -lt 0 ]; then selected=$(($# - 1)); fi;;
+            down)  ((selected++));
+                   if [ $selected -ge $# ]; then selected=0; fi;;
+        esac
+    done
+
+    cursor_to $lastrow
+    printf "\n"
+    cursor_blink_on
+    return $selected
+}
+
+# ============================================================================
+# VALIDATION FUNCTIONS
+# ============================================================================
+
+check_root_privileges() {
+    if [[ "$EUID" -ne 0 ]]; then
+        log WARN "This script must be run as root. Re-run with sudo?"
+        export MENU_SELECT_COLOR="$RED"
+        select_option "Yes (sudo)" "No (exit)"
+        local choice=$?
+        set -e
+
+        if [[ "$choice" -eq 0 ]]; then
+            log WARN "Restarting with sudo..."
+            sudo bash "$0" "$@"
+            exit $?
+        else
+            log ERROR "Root privileges required. Exiting."
+            exit 1
+        fi
+    fi
+}
+
+validate_os() {
+    source /etc/os-release
+
+    if ! [[ "$ID_LIKE" == *"debian"* || "$ID" == "debian" ]]; then
+        log ERROR "This doesn't seem to be a Debian-based Linux distribution."
+        log WARN "Installation may not work as expected on this system."
+        log WARN "Continue anyway?"
+
+        export MENU_SELECT_COLOR="$RED"
+        select_option "No (exit)" "Yes (continue)"
+
+        if [[ $? -eq 0 ]]; then
+            exit 1
+        fi
+        set -e
+    fi
+}
+
+validate_hardware() {
+    local mode="$1"
+
+    if [[ "$mode" != "client" && "$mode" != "both" ]]; then
+        return 0
+    fi
+
+    local model="$(tr -d '\0' </proc/device-tree/model 2>/dev/null)"
+    local supported=false
+
+    if echo "$model" | grep -qi "raspberry pi"; then
+        if ! echo "$model" | grep -qiE "raspberry pi [5-9]"; then
+            supported=true
+        fi
+    fi
+
+    if [[ "$supported" == false ]]; then
+        log ERROR "Unsupported device detected."
+        log WARN "This program requires a Raspberry Pi (models 1-4, Zero) but not Pi 5 or newer."
+        log WARN "Continue anyway?"
+
+        export MENU_SELECT_COLOR="$RED"
+        select_option "No (exit)" "Yes (continue)"
+        export MENU_SELECT_COLOR=""
+
+        if [[ $? -eq 0 ]]; then
+            exit 1
+        fi
+        set -e
+    fi
+}
+
+# ============================================================================
+# SYSTEM SETUP
+# ============================================================================
+
+install_system_dependencies() {
+    log INFO "Installing system dependencies..."
+    silent apt update
+    silent apt install -y \
+        python3 \
+        python3-pip \
+        python3-venv \
+        libsndfile1-dev \
+        make \
+        ffmpeg \
+        git \
+        curl \
+        jq
+}
+
+setup_directory_structure() {
+    log INFO "Creating directory structure..."
+    mkdir -p "$INSTALL_DIR/uploads"
+    mkdir -p "$INSTALL_DIR/handlers"
+    mkdir -p "$BIN_DIR"
+    mkdir -p "$BACKENDS_DIR"
+    mkdir -p "$TMP_DIR"
+    cd "$INSTALL_DIR"
+    umask 002
+}
+
+setup_python_environment() {
+    if [[ ! -d venv ]]; then
+        log INFO "Creating Python virtual environment..."
+        silent python3 -m venv venv
+        log INFO "Upgrading pip..."
+        silent ./venv/bin/pip install --upgrade pip
+    else
+        log INFO "Python virtual environment already exists."
+    fi
+}
+
+# ============================================================================
+# INSTALLATION CONFIGURATION
+# ============================================================================
+
+fetch_installation_config() {
+    log INFO "Fetching installation configuration..."
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/assets/installation.json?t=$(date +%s)")
+
+    if [[ -z "$config" ]]; then
+        log ERROR "Failed to fetch installation.json"
+        exit 1
+    fi
+
+    echo "$config"
+}
+
+# ============================================================================
+# FILE OPERATIONS
+# ============================================================================
 
 create_symlink() {
     local link_name="$1"
+
     if [[ -e "$SYMLINK_DIR/$link_name" ]]; then
-        log WARN "Removing existing symlink or file: $SYMLINK_DIR/$link_name"
+        log WARN "Removing existing symlink: $SYMLINK_DIR/$link_name"
         rm -f "$SYMLINK_DIR/$link_name"
     fi
+
     ln -s "$BIN_DIR/$link_name" "$SYMLINK_DIR/$link_name"
-    log INFO "Symlink created: $SYMLINK_DIR/$link_name -> $BIN_DIR/$link_name"
+    log INFO "Symlink created: $link_name"
 }
 
 download_files() {
     local section="$1"
-    local file_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.files[]" 2>/dev/null)
-    
-    if [[ -n "$file_list" ]]; then
-        log INFO "Downloading files for : $section"
-        while IFS= read -r file; do
-            [[ -z "$file" ]] && continue
-            local target_path="$INSTALL_DIR/$file"
-            local target_dir=$(dirname "$target_path")
-            
-            mkdir -p "$target_dir"
-            log INFO "  - Downloading $file..."
-            curl -sSL "${GITHUB_RAW_URL}/${file}?t=$(date +%s)" -o "$target_path"
-        done <<< "$file_list"
+    local install_json="$2"
+    local file_list=$(echo "$install_json" | jq -r ".${section}.files[]?" 2>/dev/null)
+
+    if [[ -z "$file_list" ]]; then
+        return 0
     fi
+
+    log INFO "Downloading files for: $section"
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+
+        local target_path="$INSTALL_DIR/$file"
+        local target_dir=$(dirname "$target_path")
+
+        mkdir -p "$target_dir"
+        log INFO "  - $file"
+        silent curl -SL "${GITHUB_RAW_URL}/${file}?t=$(date +%s)" -o "$target_path"
+    done <<< "$file_list"
 }
 
 install_requirements() {
     local section="$1"
-    local req_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.requirements[]" 2>/dev/null)
-    
-    if [[ -n "$req_list" ]]; then
-        log INFO "Installing Python requirements for : $section"
-        while IFS= read -r req; do
-            [[ -z "$req" ]] && continue
-            log INFO "  - Installing $req..."
-            ./venv/bin/pip install "$req" > /dev/null
-        done <<< "$req_list"
+    local install_json="$2"
+    local req_list=$(echo "$install_json" | jq -r ".${section}.requirements[]?" 2>/dev/null)
+
+    if [[ -z "$req_list" ]]; then
+        return 0
     fi
+
+    log INFO "Installing Python requirements for: $section"
+    while IFS= read -r req; do
+        [[ -z "$req" ]] && continue
+        log INFO "  - $req"
+        silent ./venv/bin/pip install "$req"
+    done <<< "$req_list"
 }
 
 install_binaries() {
     local section="$1"
-    local bin_list=$(echo "$INSTALL_JSON" | jq -r ".${section}.binaries[]" 2>/dev/null)
-    
-    if [[ -n "$bin_list" ]]; then
-        log INFO "Installing binaries for : $section"
-        while IFS= read -r binary; do
-            [[ -z "$binary" ]] && continue
-            local bin_name=$(basename "$binary")
-            local target_path="$INSTALL_DIR/$binary"
-            
-            mkdir -p "$(dirname "$target_path")"
-            log INFO "  - Downloading $binary..."
-            curl -sSL "${GITHUB_RAW_URL}/${binary}?t=$(date +%s)" -o "$target_path"
-            chmod +x "$target_path"
-            create_symlink "$bin_name"
-        done <<< "$bin_list"
+    local install_json="$2"
+    local bin_list=$(echo "$install_json" | jq -r ".${section}.binaries[]?" 2>/dev/null)
+
+    if [[ -z "$bin_list" ]]; then
+        return 0
     fi
+
+    log INFO "Installing binaries for: $section"
+    while IFS= read -r binary; do
+        [[ -z "$binary" ]] && continue
+
+        local bin_name=$(basename "$binary")
+        local target_path="$INSTALL_DIR/$binary"
+
+        mkdir -p "$(dirname "$target_path")"
+        log INFO "  - $binary"
+        silent curl -SL "${GITHUB_RAW_URL}/${binary}?t=$(date +%s)" -o "$target_path"
+        chmod +x "$target_path"
+        create_symlink "$bin_name"
+    done <<< "$bin_list"
 }
 
+# ============================================================================
+# BACKEND INSTALLATION
+# ============================================================================
+
 install_backends() {
-    local backend_list=$(echo "$INSTALL_JSON" | jq -r ".backends[]" 2>/dev/null)
-    
+    local install_json="$1"
+    local backend_list=$(echo "$install_json" | jq -r ".backends[]?" 2>/dev/null)
+
     if [[ -z "$backend_list" ]]; then
-        log WARN "No backends found in installation.json"
-        return
+        log WARN "No backends found in configuration"
+        return 0
     fi
-    
+
     log INFO "Installing backends..."
     cd "$BACKENDS_DIR"
-    
+
     while IFS= read -r repo_url; do
         [[ -z "$repo_url" ]] && continue
-        
+
         local repo_name=$(basename "$repo_url" .git)
-        log INFO "  - Processing backend: $repo_name"
-        
+        log INFO "  - Processing: $repo_name"
+
         if [[ -d "$repo_name" ]]; then
-            log INFO "    Backend $repo_name already exists, skipping clone" # shoudltn happen
+            log INFO "    Already exists, skipping clone"
         else
-            log INFO "    Cloning $repo_name..."
-            git clone --quiet "$repo_url" || {
+            log INFO "    Cloning repository..."
+            silent git clone "$repo_url" || {
                 log ERROR "    Failed to clone $repo_name"
                 continue
             }
         fi
-        
-        cd "$repo_name"
-        
-        if [[ -d "src" ]]; then
-            log INFO "    Building $repo_name..."
-            cd src
 
-            make -s clean
-            make -s || {
-                log ERROR "    Failed to build $repo_name"
+        cd "$repo_name"
+
+        if [[ -d "src" ]]; then
+            log INFO "    Building..."
+            cd src
+            silent make clean
+            silent make || {
+                log ERROR "    Build failed"
                 cd "$BACKENDS_DIR"
                 continue
             }
-            log INFO "    Successfully built $repo_name"
+            log INFO "    Build successful"
             cd ..
         else
-            log WARN "    No src directory found in $repo_name, skipping build"
+            log WARN "    No src directory, skipping build"
         fi
-        
+
         cd "$BACKENDS_DIR"
     done <<< "$backend_list"
-    
+
     cd "$INSTALL_DIR"
 }
 
-# what to install
-SECTIONS_TO_INSTALL=()
+# ============================================================================
+# COMPONENT INSTALLATION
+# ============================================================================
 
-if [[ "$MODE" == "both" ]]; then
-    log INFO "Installing both client and server"
-    SECTIONS_TO_INSTALL+=("client" "server")
-else
-    SECTIONS_TO_INSTALL+=("$MODE")
-fi
+install_components() {
+    local mode="$1"
+    local install_json="$2"
+    local sections=()
 
-# add 'always' section
-SECTIONS_TO_INSTALL+=("always")
+    # Determine sections to install
+    if [[ "$mode" == "both" ]]; then
+        sections=("client" "server" "always")
+    else
+        sections=("$mode" "always")
+    fi
 
-# install backends if client mode is selected
-if [[ "$MODE" == "client" || "$MODE" == "both" ]]; then
-    install_backends
-fi
+    # Install backends if client mode
+    if [[ "$mode" == "client" || "$mode" == "both" ]]; then
+        install_backends "$install_json"
+    fi
 
-for section in "${SECTIONS_TO_INSTALL[@]}"; do
-    log INFO "Processing : $section"
-    download_files "$section"
-    install_requirements "$section"
-    install_binaries "$section"
-done
+    # Install each section
+    for section in "${sections[@]}"; do
+        log INFO "Processing section: $section"
+        download_files "$section" "$install_json"
+        install_requirements "$section" "$install_json"
+        install_binaries "$section" "$install_json"
+    done
+}
 
-log INFO "Retrieving last commit..."
-curl -s https://api.github.com/repos/dpipstudio/botwave/commits | grep '"sha":' | head -n 1 | cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
+# ============================================================================
+# POST-INSTALLATION
+# ============================================================================
 
-log INFO "Installation complete."
-log INFO "Installed components:"
-[[ "$MODE" == "client" || "$MODE" == "both" ]] && log INFO "  - Client mode"
-[[ "$MODE" == "server" || "$MODE" == "both" ]] && log INFO "  - Server mode"
-log INFO "  - Common utilities"
+save_version_info() {
+    log INFO "Saving version information..."
+    curl -s https://api.github.com/repos/dpipstudio/botwave/commits | \
+        grep '"sha":' | \
+        head -n 1 | \
+        cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
+}
 
-cd "$START_PWD"
+print_summary() {
+    local mode="$1"
+
+    log INFO "Installation complete!"
+    log INFO ""
+    log INFO "Installed components:"
+    [[ "$mode" == "client" || "$mode" == "both" ]] && log INFO "  - Client mode"
+    [[ "$mode" == "server" || "$mode" == "both" ]] && log INFO "  - Server mode"
+    log INFO "  - Common utilities"
+    log INFO ""
+    log INFO "Installation directory: $INSTALL_DIR"
+    log INFO "Log file: $LOG_FILE"
+}
+
+# ============================================================================
+# MAIN INSTALLATION FLOW
+# ============================================================================
+
+main() {
+    local mode
+
+    piped "$@"
+
+    echo "$BANNER"
+
+    # Pre-flight checks
+    check_root_privileges "$@"
+
+    log INFO "Full log transcript will be written in $LOG_FILE"
+
+    validate_os
+
+    # Validate modes
+    mode="$1"
+    if [[ -z "$mode" ]] || [[ ! " ${VALID_MODES[*]} " == *" $mode "* ]]; then
+        if [[ -n "$mode" ]]; then
+            log WARN "Invalid installation mode: $mode"
+        fi
+        log INFO "Select installation type:"
+        select_option "Client Unit" "Server Unit" "Both Units"
+        mode="${VALID_MODES[$?]}"
+        set -e
+    fi
+
+    log INFO "Installation mode: $mode"
+
+    # Hardware validation
+    validate_hardware "$mode"
+
+    # System setup
+    install_system_dependencies
+    setup_directory_structure
+    setup_python_environment
+
+    # Fetch configuration and install
+    local install_json=$(fetch_installation_config)
+    install_components "$mode" "$install_json"
+
+    # Finalize
+    save_version_info
+    print_summary "$mode"
+
+    cd "$START_PWD"
+}
+
+main "$@"
