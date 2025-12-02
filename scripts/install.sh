@@ -245,7 +245,11 @@ install_system_dependencies() {
         python3 \
         python3-pip \
         python3-venv \
+        python3-dev \
         libsndfile1-dev \
+        libffi-dev \
+        libssl-dev \
+        build-essential \
         make \
         ffmpeg \
         git \
