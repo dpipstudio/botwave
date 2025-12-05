@@ -630,7 +630,7 @@ class BotWaveServer:
 
     async def run_shell_command(self, command: str):
         try:
-            Log.info(f"Executing: {command}")
+            #Log.info(f"Executing: {command}")
             
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -1514,7 +1514,7 @@ def main():
         try:
 
             server.onready_handlers()
-            
+
             while server.running:
                 try:
                     print()
