@@ -125,7 +125,6 @@ class BotWaveServer:
             self.running = True
             
             self._check_updates()
-            self.onready_handlers()
             
             while self.running:
                 await asyncio.sleep(1)
@@ -1513,6 +1512,9 @@ def main():
         Log.print("Type 'help' for commands", 'bright_yellow')
         
         try:
+
+            server.onready_handlers()
+            
             while server.running:
                 try:
                     print()
