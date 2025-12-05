@@ -198,6 +198,7 @@ validate_os() {
         if [[ $? -eq 0 ]]; then
             exit 1
         fi
+
         set -e
     fi
 }
@@ -225,11 +226,13 @@ validate_hardware() {
 
         export MENU_SELECT_COLOR="$RED"
         select_option "No (exit)" "Yes (continue)"
-        export MENU_SELECT_COLOR=""
 
         if [[ $? -eq 0 ]]; then
             exit 1
         fi
+
+        export MENU_SELECT_COLOR=""
+
         set -e
     fi
 }
