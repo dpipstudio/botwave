@@ -45,8 +45,9 @@ except ImportError:
 
 
 class BotWaveClient:
-    def __init__(self, server_host: str, ws_port: int, http_port: int, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
+    def __init__(self, server_host: str, ws_port: int, http_port: int, http_host: str = None, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
         self.server_host = server_host
+        self.http_host = http_host or server_host
         self.ws_port = ws_port
         self.http_port = http_port
         self.upload_dir = upload_dir
@@ -246,7 +247,7 @@ class BotWaveClient:
                 Log.progress_bar(bytes_sent, total, prefix=f'Uploading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=(bytes_sent == total))
         
         success = await self.http_client.upload_file(
-            server_host=self.server_host,
+            server_host=self.http_host,
             server_port=self.http_port,
             token=token,
             filepath=os.path.join(self.upload_dir, filename),
@@ -284,7 +285,7 @@ class BotWaveClient:
                 Log.progress_bar(bytes_received, total, prefix=f'Downloaded {filename} !', suffix='Complete', style='yellow', icon='FILE', auto_clear=True)
         
         success = await self.http_client.download_file(
-            server_host=self.server_host,
+            server_host=self.http_host,
             server_port=self.http_port,
             token=token,
             save_path=save_path,
@@ -538,6 +539,7 @@ def main():
     parser = argparse.ArgumentParser(description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=9938, help='Server port')
+    parser.add_argument('--fhost', help='File transfer server hostname/IP (defaults to server_host)')
     parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Uploads directory')
     parser.add_argument('--pk', help='Passkey for authentication')
@@ -564,6 +566,7 @@ def main():
         server_host=args.server_host,
         ws_port=args.port,
         http_port=args.fport,
+        http_host=args.fhost,
         upload_dir=args.upload_dir,
         passkey=args.pk
     )
