@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BotWave - Google Cloud Shell Quick Install
+# BotWave - Cloud Shell Quick Install
 # Sets up BotWave server with bore.pub tunnels
 
 set -e
@@ -82,7 +82,7 @@ install_botwave() {
 create_tunnel_script() {
     log INFO "Creating bore tunnel script..."
     
-    local script_dir="/opt/BotWave/googleshell"
+    local script_dir="/opt/BotWave/cloudtunnel"
     local script_file="$script_dir/tunnel.sh"
     
     sudo mkdir -p "$script_dir"
@@ -152,7 +152,7 @@ create_tunnel_handler() {
 < echo "=========================================="
 < echo ""
 < echo "Launching tunnels, please wait."
-< bash /opt/BotWave/googleshell/tunnel.sh
+< bash /opt/BotWave/cloudtunnel/tunnel.sh
 EOF
 
     log INFO "Tunnel handler created at $handler_file"
@@ -165,7 +165,7 @@ EOF
 main() {
     echo ""
     echo "=================================="
-    echo "BotWave Google Cloud Shell Install"
+    echo "BotWave For Cloud Shell Install"
     echo "Using bore.pub for tunnels"
     echo "=================================="
     echo ""
