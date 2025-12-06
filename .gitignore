@@ -1,6 +1,8 @@
 *
 !/.github/
 !/.github/**
+!/.devcontainer/
+!/.devcontainer/**
 !/assets/
 !/assets/**
 !/autorun/

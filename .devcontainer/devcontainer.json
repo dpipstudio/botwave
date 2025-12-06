@@ -1,0 +1,14 @@
+{
+  "name": "BotWave",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
+      }
+    }
+  },
+  "postAttachCommand": "code misc_doc/codespaces.md; clear; echo 'Welcome to your BotWave Server for Codespaces! Please follow the tutorial to get started.'"
+}
