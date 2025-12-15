@@ -19,7 +19,6 @@ def tone(frequency, duration, sample_rate, volume=0.5):
         for t in range(num_samples)
     ]
 
-
 def silence(duration, sample_rate):
     return [0.0] * int(sample_rate * duration)
 
@@ -27,8 +26,8 @@ def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rat
     try:
         Log.morse(f"Encoding {len(text)} characters to morse...")
         morse = mtalk.encode(text)
-        dot, dash, intra, inter, word = morse_timings(wpm)
 
+        dot, dash, intra, inter, word = morse_timings(wpm)
         audio = []
 
         for char in morse:
@@ -46,6 +45,9 @@ def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rat
             elif char == "\n":
                 audio += silence(word, sample_rate)
 
+        # Tail silence so radios don't clip the end
+        audio += silence(word, sample_rate)
+
         with wave.open(filename, "w") as wf:
             wf.setnchannels(1)
             wf.setsampwidth(2)
@@ -55,6 +57,7 @@ def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rat
                 wf.writeframes(struct.pack("<h", int(sample * 32767)))
 
     except Exception as e:
-        Log.error(f"Failed to encode to WAV: {e.message}")
+        Log.error(f"Failed to encode to WAV: {e}")
+        return False
 
     return True
