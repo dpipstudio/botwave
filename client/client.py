@@ -27,8 +27,8 @@ from datetime import datetime, timezone
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
-from shared.logger import Log
 from shared.http import BWHTTPFileClient
+from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.pw_monitor import PWM
 from shared.socket import BWWebSocketClient
