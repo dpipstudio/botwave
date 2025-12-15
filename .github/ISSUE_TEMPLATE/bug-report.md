@@ -29,6 +29,7 @@ assignees: douxxtech
 ### Operating System
 - [ ] Debian-based
 - [ ] Windows
+- [ ] MacOs
 - [ ] Other: `__________`
 
 ### Python Version
