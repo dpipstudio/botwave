@@ -28,6 +28,7 @@
             "shared/handlers.py",
             "shared/http.py",
             "shared/logger.py",
+            "shared/morser.py",
             "shared/protocol.py",
             "shared/socket.py",
             "shared/sstv.py",
@@ -39,7 +40,8 @@
             "websockets==11.0.3",
             "dlogger==1.0.2",
             "aiofiles==0.8.0",
-            "aiohttp"
+            "aiohttp",
+            "morse-talk==0.2"
         ],
         "binaries": [
             "bin/bw-autorun",

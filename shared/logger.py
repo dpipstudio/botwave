@@ -16,7 +16,8 @@ class Logger(DLogger):
         'update': 'UPD',
         'sstv': 'SSTV',
         'auth': 'AUTH',
-        'tls': 'TLS'
+        'tls': 'TLS',
+        'morse': 'MORSE'
     }
 
     STYLES = {
@@ -33,7 +34,8 @@ class Logger(DLogger):
         'update': 'bright_yellow',
         'sstv': 'bright_blue',
         'auth': 'blue',
-        'tls': 'red'
+        'tls': 'red',
+        'morse': 'purple'
     }
 
     ws_clients = set()
