@@ -7,7 +7,7 @@
 # bw_custom is required! (https://github.com/dpipstudio/bw_custom)
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
-# A DPIP Studios project. https://dpip.lol
+# A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
 
