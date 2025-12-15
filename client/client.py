@@ -7,7 +7,7 @@
 # bw_custom is required! (https://github.com/dpipstudio/bw_custom)
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
-# A DPIP Studios project. https://dpip.lol
+# A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
 
@@ -27,8 +27,8 @@ from datetime import datetime, timezone
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
-from shared.logger import Log
 from shared.http import BWHTTPFileClient
+from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.pw_monitor import PWM
 from shared.socket import BWWebSocketClient

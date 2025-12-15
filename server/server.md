@@ -57,6 +57,9 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
     - Usage: `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`  
 
+`morse`: Start broadcasting text converted to morse code.  
+    - Usage: `botwave> sstv <targets> <text|file path> [wpm] [freq] [loop] [ps] [rt] [pi]`  
+
 `list`: Lists all connected clients.  
     - Usage: `botwave> list`  
 

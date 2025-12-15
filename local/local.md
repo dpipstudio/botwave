@@ -65,6 +65,9 @@ Once the client is running, you can use the following commands:
 - `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
     - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
 
+- `sstv`: Start broadcasting text converted to morse.    
+    - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
+
 - `list`: List files in the specified directory (default: upload directory).  
     - Usage: `botwave> list [directory]`
 

@@ -7,11 +7,12 @@
 # bw_custom is required! (https://github.com/dpipstudio/bw_custom)
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
-# A DPIP Studios project. https://dpip.lol
+# A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import argparse
 import os
+import uuid
 import signal
 import subprocess
 import shlex
@@ -24,6 +25,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
+from shared.morser import text_to_morse
 from shared.pw_monitor import PWM
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
@@ -142,7 +144,45 @@ class BotWaveCLI:
                     Log.sstv(f"Broadcasting {output_wav} on {frequency} MHz...")
                     self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
                 return True
+            
+            elif cmd == 'morse':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]")
+                    return True
 
+                text_source = cmd_parts[1]
+    
+                if os.path.exists(text_source) and os.path.isfile(text_source):
+                    try:
+                        with open(text_source, "r", encoding="utf-8") as f:
+                            text = f.read()
+                        Log.morse(f"Loaded Morse text from file: {text_source}")
+                    except Exception as e:
+                        Log.error(f"Failed to read text file: {e}")
+                        return True
+                else:
+                    text = text_source
+                
+                wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else 20
+                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else 90.0
+                loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
+                ps = cmd_parts[5] if len(cmd_parts) > 5 else "BOTWAVE"
+                rt = cmd_parts[6] if len(cmd_parts) > 6 else "MORSE"
+                pi = cmd_parts[7] if len(cmd_parts) > 7 else "FFFF"
+                
+                output_wav = os.path.join(self.upload_dir, f"morse_{uuid.uuid4().hex[:8]}.wav")
+                
+                Log.morse(f"Generating Morse WAV ({wpm} WPM @ {frequency}Hz)...")
+                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=frequency)
+                
+                if not success or not os.path.exists(output_wav):
+                    Log.error("Failed to generate Morse WAV")
+                    return True
+                
+                Log.morse(f"Broadcasting {output_wav}...")
+                self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
+                self.onstart_handlers()
+                return True
 
             elif cmd == 'list':
                 directory = cmd_parts[1] if len(cmd_parts) > 1 else None
@@ -427,6 +467,12 @@ class BotWaveCLI:
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
+        Log.print("")
+
+        Log.print("morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Convert text to Morse code WAV and broadcast it", 'white')
+        Log.print("  Example: morse \"CQ CQ DE BOTWAVE\" 18 90 false BOTWAVE MORSE", 'cyan')
+        Log.print("  Example: morse message.txt", 'cyan')
         Log.print("")
 
         Log.print("list [directory]", 'bright_green')

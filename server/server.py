@@ -5,7 +5,7 @@
 # A program by Douxx (douxx.tech | github.com/douxxtech)
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
-# A DPIP Studios project. https://dpip.lol
+# A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import argparse
@@ -26,14 +26,15 @@ import uuid
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.handlers import HandlerExecutor
-from shared.logger import Log
-from shared.version import check_for_updates, versions_compatible
-from shared.sstv import make_sstv_wav
-from shared.ws_cmd import WSCMDH
-from shared.socket import BWWebSocketServer
 from shared.http import BWHTTPFileServer
+from shared.logger import Log
+from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.socket import BWWebSocketServer
+from shared.sstv import make_sstv_wav
 from shared.tls import gen_cert, save_cert
+from shared.version import check_for_updates, versions_compatible
+from shared.ws_cmd import WSCMDH
 
 try:
     import readline
@@ -551,7 +552,7 @@ class BotWaveServer:
             await self.stop_broadcast(cmd[1])
             return
         
-        # SSTV 
+        # OTHER MEDIA FORM
         elif command_name == 'sstv':
             if len(cmd) < 3:
                 Log.error("Usage: sstv <targets> <image_path> [mode] [output_wav] [freq] [loop] [ps] [rt] [pi]")
@@ -582,6 +583,55 @@ class BotWaveServer:
                 Log.sstv(f"Broadcasting {os.path.basename(output_wav)}...")
                 await self.start_broadcast(targets, os.path.basename(output_wav), frequency, ps, rt, pi, loop)
             return
+        
+        # MORSE
+        elif command_name == 'morse':
+            if len(cmd) < 3:
+                Log.error("Usage: morse <targets> <text|file> [wpm] [freq] [loop] [ps] [rt] [pi]")
+                return
+
+            targets = cmd[1]
+            text_source = cmd[2]
+
+            if os.path.exists(text_source) and os.path.isfile(text_source):
+                try:
+                    with open(text_source, "r", encoding="utf-8") as f:
+                        text = f.read()
+                    Log.morse(f"Loaded Morse text from file: {text_source}")
+                except Exception as e:
+                    Log.error(f"Failed to read text file: {e}")
+                    return
+            else:
+                text = text_source
+
+            wpm = int(cmd[3]) if len(cmd) > 3 else 20
+            frequency = float(cmd[4]) if len(cmd) > 4 else 90
+            loop = cmd[5].lower() == 'true' if len(cmd) > 5 else False
+            ps = cmd[6] if len(cmd) > 6 else "BOTWAVE"
+            rt = cmd[7] if len(cmd) > 7 else "MORSE"
+            pi = cmd[8] if len(cmd) > 8 else "FFFF"
+
+            output_wav = f"morse_{uuid.uuid4().hex[:8]}.wav"
+
+            Log.morse(f"Generating Morse WAV ({wpm} WPM @ {frequency}Hz)...")
+
+            success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=frequency)
+
+            if not success or not os.path.exists(output_wav):
+                Log.error("Failed to generate Morse WAV")
+                return
+
+            Log.morse(f"Uploading {output_wav} to {targets}...")
+            await self.upload_file(targets, output_wav)
+            await asyncio.sleep(2)
+
+            os.remove(output_wav)
+
+            Log.morse("Broadcasting Morse...")
+            await self.start_broadcast(targets, os.path.basename(output_wav), frequency=frequency, ps=ps, rt=rt, pi=pi, loop=loop)
+
+            return
+
         
         # OTHER 
         elif command_name == 'handlers':
@@ -1384,6 +1434,12 @@ class BotWaveServer:
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
+        Log.print("")
+
+        Log.print("morse <targets> <text|file> [wpm] [freq] [loop] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Convert text to Morse code WAV and broadcast it", 'white')
+        Log.print("  Example: morse all \"CQ CQ DE BOTWAVE\" 18 90 false BOTWAVE MORSE", 'cyan')
+        Log.print("  Example: morse pi1 message.txt", 'cyan')
         Log.print("")
 
         Log.print("upload <targets> <file|folder>", 'bright_green')
