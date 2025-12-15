@@ -23,7 +23,7 @@ def tone(frequency, duration, sample_rate, volume=0.5):
 def silence(duration, sample_rate):
     return [0.0] * int(sample_rate * duration)
 
-def text_to_morse_wav(text, filename="output.wav", wpm=20, frequency=700, sample_rate=44100):
+def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rate=44100):
     try:
         Log.morse(f"Encoding {len(text)} characters to morse...")
         morse = mtalk.encode(text)
