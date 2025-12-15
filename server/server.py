@@ -605,7 +605,7 @@ class BotWaveServer:
                 text = text_source
 
             wpm = int(cmd[3]) if len(cmd) > 3 else 20
-            frequency = float(cmd[4]) if len(cmd) > 4 else 700
+            frequency = float(cmd[4]) if len(cmd) > 4 else 90
             loop = cmd[5].lower() == 'true' if len(cmd) > 5 else False
             ps = cmd[6] if len(cmd) > 6 else "BOTWAVE"
             rt = cmd[7] if len(cmd) > 7 else "MORSE"
@@ -625,16 +625,10 @@ class BotWaveServer:
             await self.upload_file(targets, output_wav)
             await asyncio.sleep(2)
 
+            os.remove(output_wav)
+
             Log.morse("Broadcasting Morse...")
-            await self.start_broadcast(
-                targets,
-                os.path.basename(output_wav),
-                frequency=frequency,
-                ps=ps,
-                rt=rt,
-                pi=pi,
-                loop=loop
-            )
+            await self.start_broadcast(targets, os.path.basename(output_wav), frequency=frequency, ps=ps, rt=rt, pi=pi, loop=loop)
 
             return
 
@@ -1444,7 +1438,7 @@ class BotWaveServer:
 
         Log.print("morse <targets> <text|file> [wpm] [freq] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert text to Morse code WAV and broadcast it", 'white')
-        Log.print("  Example: morse all \"CQ CQ DE BOTWAVE\" 18 700 false BOTWAVE MORSE", 'cyan')
+        Log.print("  Example: morse all \"CQ CQ DE BOTWAVE\" 18 90 false BOTWAVE MORSE", 'cyan')
         Log.print("  Example: morse pi1 message.txt", 'cyan')
         Log.print("")
 
