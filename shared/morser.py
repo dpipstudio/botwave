@@ -2,7 +2,7 @@ import morse_talk as mtalk
 import wave
 import struct
 import math
-from logger import Log
+from .logger import Log
 
 def morse_timings(wpm):
     dot = 1.2 / wpm
