@@ -7,7 +7,7 @@
             "shared/pw_monitor.py"
         ],
         "requirements": [
-            "piwave==2.1.8"
+            "piwave==2.1.9"
         ],
         "binaries": [
             "bin/bw-client",
@@ -38,7 +38,7 @@
         ],
         "requirements": [
             "websockets==11.0.3",
-            "dlogger==1.0.2",
+            "dlogger==1.0.4",
             "aiofiles==0.8.0",
             "aiohttp",
             "morse-talk==0.2"
