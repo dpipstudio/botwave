@@ -136,8 +136,12 @@ class BWWebSocketClient:
             
             return True
         except Exception as e:
-            Log.error(f"Error connecting to server: {e}")
+            Log.error(
+                f"Error connecting to server "
+                f"({type(e).__name__}): {repr(e)}"
+            )
             return False
+
     
     async def disconnect(self):
         self.running = False
