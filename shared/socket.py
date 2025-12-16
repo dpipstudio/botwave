@@ -72,7 +72,10 @@ class BWWebSocketServer:
         except websockets.exceptions.ConnectionClosed:
             pass
         except Exception as e:
-            Log.error(f"Error handling client: {e}")
+            Log.error(
+                f"Error handling client "
+                f"({type(e).__name__}): {repr(e)}"
+                )
         finally:
             if websocket in self.pending_clients:
                 del self.pending_clients[websocket]
@@ -92,7 +95,10 @@ class BWWebSocketServer:
             try:
                 await self.clients[client_id].send(message)
             except Exception as e:
-                Log.error(f"Error sending to {client_id}: {e}")
+                Log.error(
+                    f"Error sending to {client_id} "
+                    f"({type(e).__name__}): {repr(e)}"
+                    )
     
     async def broadcast(self, message: str, exclude: Optional[str] = None):
         tasks = []
@@ -160,7 +166,11 @@ class BWWebSocketClient:
             try:
                 await self.ws.send(message)
             except Exception as e:
-                Log.warning(f"Error sending message: {e}")
+                Log.warning(
+                    f"Error sending message "
+                    f"({type(e).__name__}): {repr(e)}"
+                    )
+                
                 self.connected = False
     
     async def _receive_loop(self):
@@ -174,7 +184,10 @@ class BWWebSocketClient:
                     self.connected = False
                     break
                 except Exception as e:
-                    Log.warning(f"Error receiving message: {e}")
+                    Log.warning(
+                        f"Error receiving message "
+                        f"({type(e).__name__}): {repr(e)}"
+                        )
                     break
         except asyncio.CancelledError:
             pass
