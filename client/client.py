@@ -376,13 +376,26 @@ class BotWaveClient:
                 return
         
         # "start asap"
-        await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
-        response = ProtocolParser.build_response(Commands.OK, "Broadcasting started")
+        started = await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+
+        if isinstance(started, Exception):
+            response = ProtocolParser.build_response(Commands.ERROR, message=str(started));
+        else:
+            response = ProtocolParser.build_response(Commands.OK, "Broadcast started")
+
         await self.ws_client.send(response)
 
     async def _delayed_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop, delay):
         await asyncio.sleep(delay)
-        await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+        started = await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+
+        if isinstance(started, Exception):
+            response = ProtocolParser.build_response(Commands.ERROR, message=str(started));
+        else:
+            response = ProtocolParser.build_response(Commands.OK, "Broadcast started")
+
+        await self.ws_client.send(response)
+
 
     async def _start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
         async def finished():
@@ -413,10 +426,12 @@ class BotWaveClient:
                     self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
 
                 Log.broadcast(f"Broadcasting: {filename} on {frequency} MHz")
+                return True
 
             except Exception as e:
                 Log.error(f"Broadcast error: {e}")
                 self.broadcasting = False
+                return e
 
     async def _stop_broadcast(self):
         async with self.broadcast_lock:
