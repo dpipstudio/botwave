@@ -117,15 +117,15 @@ class ProtocolParser:
         
         for arg in args:
             arg_str = str(arg)
-            if ' ' in arg_str:
-                parts.append(f"'{arg_str}'")
+            if ' ' in arg_str or "'" in arg_str or '"' in arg_str:
+                parts.append(shlex.quote(arg_str))
             else:
                 parts.append(arg_str)
         
         for key, value in kwargs.items():
             value_str = str(value)
-            if ' ' in value_str:
-                parts.append(f"{key}='{value_str}'")
+            if ' ' in value_str or "'" in value_str or '"' in value_str:
+                parts.append(f"{key}={shlex.quote(value_str)}")
             else:
                 parts.append(f"{key}={value_str}")
         
