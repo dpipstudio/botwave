@@ -35,6 +35,9 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 
 ## Installation
 
+> [!TIP]
+> We have a W.I.P wiki that explains some basics about BotWave. We recommand reading it at least once: [`/wiki`](https://github.com/dpipstudio/botwave/wiki)
+
 For debian-like systems, we recommand using our automatic installation scripts, for other operating systems, you're on your own.
 
 ```bash
@@ -130,4 +133,5 @@ BotWave is licensed under [GPLv3.0](LICENSE).
 
 ![a DPIP Studio Project](https://madeby.dpip.lol)
 ![Made by Douxx](https://madeby.douxx.tech)
+
 
