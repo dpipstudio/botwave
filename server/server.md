@@ -94,7 +94,7 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
     - Usage: `botwave> help`  
 
 > [!WARNING]
-> 1. `update` command support is experimental. Your client / server connexion may crash or act strange.  
+> 1. `upload` command support is experimental. Your client / server connexion may crash or act strange.  
 > 2. `sstv` command modules are not installed by default. Install them with `[sudo /opt/BotWave/venv/bin/]pip install pysstv numpy pillow`
 
 ### Supported handlers
@@ -112,3 +112,4 @@ Check [misc_doc/handlers.md](/misc_doc/handlers.md) for a better documentation.
 
 ![a DPIP Studio Project](https://madeby.dpip.lol)
 ![Made by Douxx](https://madeby.douxx.tech)
+
