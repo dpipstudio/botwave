@@ -7,9 +7,16 @@
 #   =--- release-name ---=
 #   Release description
 #   Can span multiple lines
-#   =--- END ===
+#   =--- END ---=
 #
 # Details:
 # - release-name: the name of the release
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
+
+=--- v1.0.0-oak ---=
+This is the first BotWave release.
+This release provides a basic client-server implementation for BotWave,
+alongside a standalone client. The protocol version is 2.0.0.
+It supports basic FM broadcasing, SSTV & morse encoding, and more !
+=--- END ---=
