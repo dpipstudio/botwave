@@ -22,5 +22,5 @@
 !/shared/
 !/shared/**
 !/LICENSE
-!/README.md
+!/*.md
 !/.gitignore
