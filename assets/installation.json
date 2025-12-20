@@ -1,55 +1,60 @@
 {
-    "client": {
-        "files": [
-            "client/client.py",
-            "local/local.py",
-            "shared/bw_custom.py",
-            "shared/pw_monitor.py"
-        ],
-        "requirements": [
-            "piwave==2.1.10"
-        ],
-        "binaries": [
-            "bin/bw-client",
-            "bin/bw-local"
-        ]
-    },
-    "server": {
-        "files": [
-            "server/server.py",
-            "shared/tls.py"
-        ],
-        "requirements": ["cryptography==36.0.2"],
-        "binaries": ["bin/bw-server"]
-    },
-    "always": {
-        "files": [
-            "autorun/autorun.py",
-            "shared/handlers.py",
-            "shared/http.py",
-            "shared/logger.py",
-            "shared/morser.py",
-            "shared/protocol.py",
-            "shared/socket.py",
-            "shared/sstv.py",
-            "shared/syscheck.py",
-            "shared/version.py",
-            "shared/ws_cmd.py"
-        ],
-        "requirements": [
-            "websockets==11.0.3",
-            "dlogger==1.0.4",
-            "aiofiles==0.8.0",
-            "aiohttp",
-            "morse-talk==0.2"
-        ],
-        "binaries": [
-            "bin/bw-autorun",
-            "bin/bw-nandl",
-            "bin/bw-update"
-        ]
-    },
-    "backends": [
-        "https://github.com/dpipstudio/bw_custom.git"
+  "releases": [],
+  "client": {
+    "files": [
+      "client/client.py",
+      "local/local.py",
+      "shared/bw_custom.py",
+      "shared/pw_monitor.py"
+    ],
+    "requirements": [
+      "piwave==2.1.10"
+    ],
+    "binaries": [
+      "bin/bw-client",
+      "bin/bw-local"
     ]
+  },
+  "server": {
+    "files": [
+      "server/server.py",
+      "shared/tls.py"
+    ],
+    "requirements": [
+      "cryptography==36.0.2"
+    ],
+    "binaries": [
+      "bin/bw-server"
+    ]
+  },
+  "always": {
+    "files": [
+      "autorun/autorun.py",
+      "shared/handlers.py",
+      "shared/http.py",
+      "shared/logger.py",
+      "shared/morser.py",
+      "shared/protocol.py",
+      "shared/socket.py",
+      "shared/sstv.py",
+      "shared/syscheck.py",
+      "shared/version.py",
+      "shared/ws_cmd.py"
+    ],
+    "requirements": [
+      "websockets==11.0.3",
+      "dlogger==1.0.4",
+      "aiofiles==0.8.0",
+      "aiohttp",
+      "morse-talk==0.2"
+    ],
+    "binaries": [
+      "bin/bw-autorun",
+      "bin/bw-nandl",
+      "bin/bw-update"
+    ]
+  },
+  "backends": [
+    "https://github.com/dpipstudio/bw_custom.git"
+  ]
 }

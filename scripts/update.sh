@@ -11,7 +11,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.2.0"
+readonly SCRIPT_VERSION="1.3.0"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -55,6 +55,63 @@ log() {
 
 silent() {
     "$@" >> "$LOG_FILE" 2>&1
+}
+
+# ============================================================================
+# ARGUMENT PARSING
+# ============================================================================
+
+parse_arguments() {
+    TARGET_VERSION=""
+    USE_LATEST=false
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -l|--latest)
+                USE_LATEST=true
+                shift
+                ;;
+            -t|--to)
+                if [[ -z "$2" ]] || [[ "$2" == -* ]]; then
+                    log ERROR "Option --to requires a version argument"
+                    exit 1
+                fi
+                TARGET_VERSION="$2"
+                shift 2
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            *)
+                log ERROR "Unknown option: $1"
+                log INFO "Did you mean one of these?"
+                log INFO "  -l, --latest        Update to latest commit (unreleased)"
+                log INFO "  -t, --to <version>  Update to specific release version"
+                log INFO "  -h, --help          Show help message"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+show_help() {
+    cat << EOF
+BotWave Update Script v$SCRIPT_VERSION
+
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  -l, --latest        Update to the latest commit (even if unreleased)
+  -t, --to <version>  Update to a specific release version
+  -h, --help          Show this help message
+
+Examples:
+  $(basename "$0")                    # Update to latest release
+  $(basename "$0") --latest           # Update to latest commit
+  $(basename "$0") --to v1.0.0-oak
+
+EOF
 }
 
 # ============================================================================
@@ -384,27 +441,76 @@ update_backends() {
 # ============================================================================
 
 check_for_updates() {
+    if [[ "$USE_LATEST" == true ]]; then
+        log INFO "Fetching latest commit..."
+        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
+            grep '"sha":' | \
+            head -n 1 | \
+            cut -d '"' -f 4)
+        
+        if [[ -z "$latest_commit" ]]; then
+            log ERROR "Failed to fetch latest commit"
+            exit 1
+        fi
+        
+        local current_commit=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
+        
+        if [[ "$latest_commit" == "$current_commit" ]]; then
+            log INFO "Already on the latest commit."
+            return 1
+        fi
+        
+        log INFO "Latest commit: ${latest_commit:0:7}"
+        echo "$latest_commit"
+        return 0
+    fi
+    
+    if [[ -n "$TARGET_VERSION" ]]; then
+        log INFO "Looking up release: $TARGET_VERSION"
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
+        
+        if [[ -z "$commit" ]]; then
+            log ERROR "Release '$TARGET_VERSION' not found"
+            log INFO "Available releases:"
+            echo "$install_json" | jq -r '.releases[].codename' | while read -r rel; do
+                log INFO "  - $rel"
+            done
+            exit 1
+        fi
+        
+        local current_commit=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
+        
+        if [[ "$commit" == "$current_commit" ]]; then
+            log INFO "Already on version $TARGET_VERSION"
+            return 1
+        fi
+        
+        log INFO "Found commit: ${commit:0:7}"
+        echo "$commit"
+        return 0
+    fi
+    
+    # Default: latest release
     log INFO "Checking for updates..."
-
-    local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
-        grep '"sha":' | \
-        head -n 1 | \
-        cut -d '"' -f 4)
-
-    if [[ -z "$latest_commit" ]]; then
-        log ERROR "Failed to fetch latest commit information"
+    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
+    
+    if [[ -z "$latest_release_commit" ]]; then
+        log ERROR "Failed to fetch latest release"
         exit 1
     fi
-
+    
     local current_commit=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
-
-    if [[ "$latest_commit" == "$current_commit" ]]; then
+    
+    if [[ "$latest_release_commit" == "$current_commit" ]]; then
         log INFO "BotWave is already up-to-date."
         return 1
     fi
-
-    log INFO "New version available: ${latest_commit:0:7}"
-    echo "$latest_commit"
+    
+    local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
+    log INFO "New release available: $codename (${latest_release_commit:0:7})"
+    echo "$latest_release_commit"
 }
 
 fetch_installation_config() {
@@ -424,6 +530,20 @@ save_version_info() {
     local commit="$1"
     log INFO "Saving version information..."
     echo "$commit" > "$INSTALL_DIR/last_commit"
+    
+    # Save release info if applicable
+    if [[ -n "$TARGET_VERSION" ]]; then
+        echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
+    elif [[ "$USE_LATEST" != true ]]; then
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
+        if [[ -n "$codename" ]]; then
+            echo "$codename" > "$INSTALL_DIR/last_release"
+        fi
+    else
+        # Clear release info if on latest commit
+        rm -f "$INSTALL_DIR/last_release"
+    fi
 }
 
 # ============================================================================
@@ -433,6 +553,16 @@ save_version_info() {
 update_components() {
     local install_json="$1"
     local commit="$2"
+
+    # Show version info
+    if [[ -n "$TARGET_VERSION" ]]; then
+        log INFO "Target version: $TARGET_VERSION"
+    elif [[ "$USE_LATEST" == true ]]; then
+        log WARN "Using latest commit (unreleased)"
+    else
+        local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
+        log INFO "Updating to release: $codename"
+    fi
 
     # Update backends if client exists
     if [[ -d "$INSTALL_DIR/client" ]]; then
@@ -467,8 +597,11 @@ main() {
 
     echo "$BANNER"
 
+    # Parse command line arguments
+    parse_arguments "$@"
+
     # Pre-flight checks
-    check_root_privileges "$@"
+    check_root_privileges
     
     log INFO "Full log transcript will be written to $LOG_FILE"
     

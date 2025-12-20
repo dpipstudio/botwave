@@ -11,7 +11,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.2.0"
+readonly SCRIPT_VERSION="1.3.0"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -27,7 +27,7 @@ readonly RED='\033[0;31m'
 readonly GRN='\033[0;32m'
 readonly YEL='\033[1;33m'
 readonly NC='\033[0m'
-readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave/main"
+readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
 readonly INSTALL_DIR="/opt/BotWave"
 readonly BIN_DIR="$INSTALL_DIR/bin"
 readonly BACKENDS_DIR="$INSTALL_DIR/backends"
@@ -57,6 +57,76 @@ log() {
 
 silent() {
     "$@" >> "$LOG_FILE" 2>&1
+}
+
+# ============================================================================
+# ARGUMENT PARSING
+# ============================================================================
+
+parse_arguments() {
+    TARGET_VERSION=""
+    USE_LATEST=false
+    INSTALL_MODE=""
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -l|--latest)
+                USE_LATEST=true
+                shift
+                ;;
+            -t|--to)
+                if [[ -z "$2" ]] || [[ "$2" == -* ]]; then
+                    log ERROR "Option --to requires a version argument"
+                    exit 1
+                fi
+                TARGET_VERSION="$2"
+                shift 2
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            client|server|both)
+                INSTALL_MODE="$1"
+                shift
+                ;;
+            *)
+                log ERROR "Unknown option: $1"
+                log INFO "Did you mean one of these?"
+                log INFO "  client              Install client components"
+                log INFO "  server              Install server components"
+                log INFO "  both                Install both client and server"
+                log INFO "  -l, --latest        Install from latest commit (unreleased)"
+                log INFO "  -t, --to <version>  Install specific release version"
+                log INFO "  -h, --help          Show help message"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+show_help() {
+    cat << EOF
+BotWave Installation Script v$SCRIPT_VERSION
+
+Usage: $(basename "$0") [MODE] [OPTIONS]
+
+Modes:
+  client              Install client components
+  server              Install server components
+  both                Install both client and server components
+
+Options:
+  -l, --latest        Install from the latest commit (even if unreleased)
+  -t, --to <version>  Install a specific release version
+  -h, --help          Show this help message
+
+Examples:
+  $(basename "$0") client                    # Install client (latest release)
+  $(basename "$0") both --latest             # Install both (latest commit)
+  $(basename "$0") server --to v1.0.0-oak
+
+EOF
 }
 
 # ============================================================================
@@ -238,6 +308,62 @@ validate_hardware() {
 }
 
 # ============================================================================
+# VERSION MANAGEMENT
+# ============================================================================
+
+resolve_target_commit() {
+    if [[ "$USE_LATEST" == true ]]; then
+        log INFO "Fetching latest commit..."
+        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
+            grep '"sha":' | \
+            head -n 1 | \
+            cut -d '"' -f 4)
+        
+        if [[ -z "$latest_commit" ]]; then
+            log ERROR "Failed to fetch latest commit"
+            exit 1
+        fi
+        
+        log INFO "Latest commit: ${latest_commit:0:7}"
+        echo "$latest_commit"
+        return 0
+    fi
+    
+    if [[ -n "$TARGET_VERSION" ]]; then
+        log INFO "Looking up release: $TARGET_VERSION"
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
+        
+        if [[ -z "$commit" ]]; then
+            log ERROR "Release '$TARGET_VERSION' not found"
+            log INFO "Available releases:"
+            echo "$install_json" | jq -r '.releases[].codename' | while read -r rel; do
+                log INFO "  - $rel"
+            done
+            exit 1
+        fi
+        
+        log INFO "Found commit: ${commit:0:7}"
+        echo "$commit"
+        return 0
+    fi
+    
+    # Default: latest release
+    log INFO "Fetching latest release..."
+    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
+    
+    if [[ -z "$latest_release_commit" ]]; then
+        log ERROR "Failed to fetch latest release"
+        exit 1
+    fi
+    
+    local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
+    log INFO "Latest release: $codename (${latest_release_commit:0:7})"
+    echo "$latest_release_commit"
+}
+
+# ============================================================================
 # SYSTEM SETUP
 # ============================================================================
 
@@ -286,8 +412,9 @@ setup_python_environment() {
 # ============================================================================
 
 fetch_installation_config() {
+    local commit="$1"
     log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/assets/installation.json?t=$(date +%s)")
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/${commit}/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
         log ERROR "Failed to fetch installation.json"
@@ -316,6 +443,7 @@ create_symlink() {
 download_files() {
     local section="$1"
     local install_json="$2"
+    local commit="$3"
     local file_list=$(echo "$install_json" | jq -r ".${section}.files[]?" 2>/dev/null)
 
     if [[ -z "$file_list" ]]; then
@@ -331,7 +459,7 @@ download_files() {
 
         mkdir -p "$target_dir"
         log INFO "  - $file"
-        silent curl -SL "${GITHUB_RAW_URL}/${file}?t=$(date +%s)" -o "$target_path"
+        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${file}?t=$(date +%s)" -o "$target_path"
     done <<< "$file_list"
 }
 
@@ -355,6 +483,7 @@ install_requirements() {
 install_binaries() {
     local section="$1"
     local install_json="$2"
+    local commit="$3"
     local bin_list=$(echo "$install_json" | jq -r ".${section}.binaries[]?" 2>/dev/null)
 
     if [[ -z "$bin_list" ]]; then
@@ -370,7 +499,7 @@ install_binaries() {
 
         mkdir -p "$(dirname "$target_path")"
         log INFO "  - $binary"
-        silent curl -SL "${GITHUB_RAW_URL}/${binary}?t=$(date +%s)" -o "$target_path"
+        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${binary}?t=$(date +%s)" -o "$target_path"
         chmod +x "$target_path"
         create_symlink "$bin_name"
     done <<< "$bin_list"
@@ -438,7 +567,18 @@ install_backends() {
 install_components() {
     local mode="$1"
     local install_json="$2"
+    local commit="$3"
     local sections=()
+
+    # Show version info
+    if [[ -n "$TARGET_VERSION" ]]; then
+        log INFO "Target version: $TARGET_VERSION"
+    elif [[ "$USE_LATEST" == true ]]; then
+        log WARN "Using latest commit (unreleased)"
+    else
+        local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
+        log INFO "Installing release: $codename"
+    fi
 
     # Determine sections to install
     if [[ "$mode" == "both" ]]; then
@@ -455,9 +595,9 @@ install_components() {
     # Install each section
     for section in "${sections[@]}"; do
         log INFO "Processing section: $section"
-        download_files "$section" "$install_json"
+        download_files "$section" "$install_json" "$commit"
         install_requirements "$section" "$install_json"
-        install_binaries "$section" "$install_json"
+        install_binaries "$section" "$install_json" "$commit"
     done
 }
 
@@ -466,11 +606,20 @@ install_components() {
 # ============================================================================
 
 save_version_info() {
+    local commit="$1"
     log INFO "Saving version information..."
-    curl -s https://api.github.com/repos/dpipstudio/botwave/commits | \
-        grep '"sha":' | \
-        head -n 1 | \
-        cut -d '"' -f 4 > "$INSTALL_DIR/last_commit"
+    echo "$commit" > "$INSTALL_DIR/last_commit"
+    
+    # Save release info if applicable
+    if [[ -n "$TARGET_VERSION" ]]; then
+        echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
+    elif [[ "$USE_LATEST" != true ]]; then
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
+        if [[ -n "$codename" ]]; then
+            echo "$codename" > "$INSTALL_DIR/last_release"
+        fi
+    fi
 }
 
 print_summary() {
@@ -492,21 +641,22 @@ print_summary() {
 # ============================================================================
 
 main() {
-    local mode
-
     mkdir -p "$TMP_DIR"
 
     echo "$BANNER"
 
+    # Parse command line arguments first
+    parse_arguments "$@"
+
     # Pre-flight checks
-    check_root_privileges "$@"
+    check_root_privileges
 
     log INFO "Full log transcript will be written in $LOG_FILE"
 
     validate_os
 
-    # Validate modes
-    mode="$1"
+    # find installation mode
+    local mode="$INSTALL_MODE"
     if [[ -z "$mode" ]] || [[ ! " ${VALID_MODES[*]} " == *" $mode "* ]]; then
         if [[ -n "$mode" ]]; then
             log WARN "Invalid installation mode: $mode"
@@ -522,17 +672,23 @@ main() {
     # Hardware validation
     validate_hardware "$mode"
 
-    # System setup
+    # System setup 1
     install_system_dependencies
+
+    # Find target commit
+    local target_commit
+    target_commit=$(resolve_target_commit) || exit 1
+
+    # System setup 2
     setup_directory_structure
     setup_python_environment
 
     # Fetch configuration and install
-    local install_json=$(fetch_installation_config)
-    install_components "$mode" "$install_json"
+    local install_json=$(fetch_installation_config "$target_commit")
+    install_components "$mode" "$install_json" "$target_commit"
 
     # Finalize
-    save_version_info
+    save_version_info "$target_commit"
     print_summary "$mode"
 
     cd "$START_PWD"

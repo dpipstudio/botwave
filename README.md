@@ -43,10 +43,26 @@ For debian-like systems, we recommand using our automatic installation scripts, 
 ```bash
 curl -sSL https://botwave.dpip.lol/install | sudo bash
 ```
+<details>
+<summary><code>Installer options</code></summary>
+<pre>
+Usage: curl -sSL https://botwave.dpip.lol/install | sudo bash [-s -- [MODE] [OPTIONS]]
 
-> [!TIP]
-> adding ` -s <server, client or both>` at the end of the command skips the interactive menu and goes straight to installation!
-> 
+Modes:
+  client              Install client components
+  server              Install server components
+  both                Install both client and server components
+
+Options:
+  -l, --latest        Install from the latest commit (even if unreleased)
+  -t, --to &lt;version&gt;  Install a specific release version
+  -h, --help          Show this help message
+</pre>
+<p>Adding <code> -s &lt;server, client or both&gt;</code> at the end of the command skips the interactive menu and goes straight to installation.</p>
+<p>Use <code> -s -- &lt;server, client or both&gt; &lt;options&gt;</code> to add options flags.</p>
+<p>Note that all this is optional and not needed for basic installation.</p>
+</details>
+
 ### BotWave Server For Cloud Instances
 You can directly try BotWave `server` on Cloud Instances like Google Shell or GitHub Codespaces !  
 [![Run in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)  

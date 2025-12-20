@@ -1,0 +1,15 @@
+# Custom Release File Format
+#
+# - Lines starting with '#' are comments.
+# - Releases are listed in descending order, with the latest release first.
+# - Each release follows this structure:
+#
+#   =--- release-name ---=
+#   Release description
+#   Can span multiple lines
+#   =--- END ===
+#
+# Details:
+# - release-name: the name of the release
+# - Release description: detailed information about the release
+# - =--- END ---=: marks the end of the release 

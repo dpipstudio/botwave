@@ -1,0 +1,61 @@
+name: Auto Release
+
+on:
+  push:
+    paths:
+      - 'assets/releases.txt'
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Parse releases.txt and check for new release
+        id: parse
+        run: |
+          chmod +x .github/scripts/parse-release.sh
+          .github/scripts/parse-release.sh
+      
+      - name: Generate release notes
+        if: steps.parse.outputs.new_release == 'true'
+        id: notes
+        run: |
+          chmod +x .github/scripts/generate-release-notes.sh
+          .github/scripts/generate-release-notes.sh "${{ steps.parse.outputs.version }}" "${{ steps.parse.outputs.description }}" "${{ steps.parse.outputs.previous_commit }}"
+      
+      - name: Update installation.json
+        if: steps.parse.outputs.new_release == 'true'
+        run: |
+          chmod +x .github/scripts/update-installation.sh
+          .github/scripts/update-installation.sh "${{ steps.parse.outputs.version }}" "${{ github.sha }}"
+      
+      - name: Commit installation.json changes
+        if: steps.parse.outputs.new_release == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add assets/installation.json
+          git diff --staged --quiet || git commit -m "Update installation.json for release ${{ steps.parse.outputs.version }}"
+          git push
+      
+      - name: Create GitHub Release
+        if: steps.parse.outputs.new_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.parse.outputs.version }}
+          name: ${{ steps.parse.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

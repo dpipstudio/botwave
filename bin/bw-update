@@ -6,4 +6,4 @@
 # A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
-curl -sSL https://botwave.dpip.lol/update | sudo bash
+curl -sSL https://botwave.dpip.lol/update | sudo bash -s -- "$@"
