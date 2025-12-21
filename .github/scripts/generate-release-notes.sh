@@ -13,8 +13,8 @@ fi
 RELEASE_NOTES="release-notes.md"
 
 {
-    # Description at the top
-    echo "<p>$DESCRIPTION</p>"
+    # description at the top
+    echo "$DESCRIPTION"
     echo "<h3>Updating to this version</h3>"
     echo "<p> To update to this version, run the following command.</p>"
     echo "<pre>bw-update --to $VERSION</pre>"
@@ -23,7 +23,6 @@ RELEASE_NOTES="release-notes.md"
     if [ -n "$PREVIOUS_COMMIT" ]; then
         echo ""
 
-        # Start the collapsible block
         echo "<details>"
         echo "<summary><code>Commit history</code></summary>"
         echo "<ul>"
