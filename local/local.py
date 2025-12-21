@@ -172,8 +172,8 @@ class BotWaveCLI:
                 
                 output_wav = os.path.join(self.upload_dir, f"morse_{uuid.uuid4().hex[:8]}.wav")
                 
-                Log.morse(f"Generating Morse WAV ({wpm} WPM @ {frequency}Hz)...")
-                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=frequency)
+                Log.morse(f"Generating Morse WAV ({wpm} WPM @ 700Hz)...")
+                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=700)
                 
                 if not success or not os.path.exists(output_wav):
                     Log.error("Failed to generate Morse WAV")
