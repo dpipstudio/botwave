@@ -81,7 +81,7 @@ You can directly try BotWave `server` on Cloud Instances like Google Shell or Gi
 ## Hardware installation
 To use BotWave Client for broadcasting, you need to set up the hardware correctly. This involves connecting an antenna or a cable to the Raspberry Pi's GPIO 4 (pin 7).
 
-<div align="center"> <img src="assets/gpio.png" alt="BotWave" width="300"/></div>
+<div align="center"> <img src="assets/readme_assets/gpio.png" alt="BotWave" width="300"/></div>
 
 
 ## Updating BotWave
@@ -104,7 +104,7 @@ BotWave usage depends on the tool you're using. Here's a breakdown of each compo
 
 ### **Server**
 > This tool is included in the **SERVER** install.
-The BotWave Server lets you manage multiple Raspberry Pi clients remotely — upload audio files, control broadcasts, and more.
+The BotWave Server lets you manage multiple Raspberry Pi clients remotely, upload audio files, control broadcasts, and more.
 
 **Full documentation:** [server/server.md](server/server.md)
 
