@@ -25,6 +25,7 @@ import uuid
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.cat import check
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
 from shared.logger import Log
@@ -1509,6 +1510,8 @@ class BotWaveServer:
 
 def main():
     Log.header("BotWave - Server")
+
+    check() # from shared.cat !
     
     parser = argparse.ArgumentParser(description='BotWave Server')
     parser.add_argument('--host', default='0.0.0.0', help='Server host')

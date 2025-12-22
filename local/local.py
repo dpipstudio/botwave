@@ -23,6 +23,7 @@ import urllib.request
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
+from shared.cat import check
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
 from shared.morser import text_to_morse
@@ -523,6 +524,10 @@ class BotWaveCLI:
         Log.client("Client stopped")
 
 def main():
+    Log.header("BotWave Local Client")
+
+    check() #from shared.cat
+
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve l_ handlers from')
@@ -532,7 +537,6 @@ def main():
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
     args = parser.parse_args()
 
-    Log.header("BotWave Local Client")
     check_requirements(args.skip_checks)
 
     cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk)

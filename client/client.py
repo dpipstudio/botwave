@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.bw_custom import BWCustom
+from shared.cat import check
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
@@ -550,7 +551,9 @@ class BotWaveClient:
 
 def main():
     Log.header("BotWave - Client")
-    
+
+    check() # most important check
+
     parser = argparse.ArgumentParser(description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=9938, help='Server port')

@@ -35,6 +35,8 @@
   "always": {
     "files": [
       "autorun/autorun.py",
+      "shared/cat.py",
+      "shared/cat.jpg",
       "shared/handlers.py",
       "shared/http.py",
       "shared/logger.py",
