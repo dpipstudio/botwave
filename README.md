@@ -1,6 +1,6 @@
 <div align=center>
 
-<img src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave"/>
+<img src="https://togp.xyz/?repo=botwave&owner=dpipstudio&cache=false&svg=https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/assets/readme_assets/togp_logo.svg" alt="BotWave"/>
 
 <h1> BotWave - Your RPI FM Network </h1>
 <h4> <a href="https://botwave.dpip.lol">Website</a></h4>   
