@@ -56,6 +56,7 @@ curl -sSL https://botwave.dpip.lol/install | sudo bash
 ```
 <details>
 <summary><code>Installer options</code></summary>
+<p></p>
 <pre>
 Usage: curl -sSL https://botwave.dpip.lol/install | sudo bash [-s -- [MODE] [OPTIONS]]
 
@@ -143,14 +144,14 @@ curl -sSL https://botwave.dpip.lol/install | sudo bash -s <server, client or bot
 
 ## ETC
 **They talk about BotWave**: Here are some posts that talk about BotWave. Thanks to their creators !
+<div align="center"> <!-- centering a div ?? -->
 <details>
 <summary><code>They talk about us</code></summary>
 <p></p>
-<div align="center"> <!-- centering a div ?? -->
 <a href="https://korben.info/botwave-raspberry-pi-emetteur-fm-radio.html" target="_blank"><img src="assets/readme_assets/badge_le_site_de_korben.svg" alt="le site de korben"/></a>
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
-</div>
 </details>
+</div>
 
 ## License
 BotWave is licensed under [GPLv3.0](LICENSE).
