@@ -148,6 +148,7 @@ curl -sSL https://botwave.dpip.lol/install | sudo bash -s <server, client or bot
 <details>
 <summary><code>They talk about us</code></summary>
 <p></p>
+<a href="https://news.ycombinator.com/item?id=46305516" target="_blank"><img src="assets/readme_assets/badge_show_hn.svg" alt="show hn"/></a>
 <a href="https://korben.info/botwave-raspberry-pi-emetteur-fm-radio.html" target="_blank"><img src="assets/readme_assets/badge_le_site_de_korben.svg" alt="le site de korben"/></a>
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
 </details>
