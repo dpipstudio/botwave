@@ -550,24 +550,24 @@ def main():
     cli.onready_handlers(args.handlers_dir)
 
     if not args.daemon:
+        if HAS_READLINE:
+            readline.parse_and_bind('tab: complete')
+            readline.parse_and_bind('set editing-mode emacs')
+            readline.set_history_length(1000)
+            try:
+                readline.read_history_file("/opt/BotWave/.history")
+            except FileNotFoundError:
+                pass
+
         while cli.running:
             try:
-
                 cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
 
                 if not cmd_input:
                     continue
 
                 if HAS_READLINE:
-                    readline.parse_and_bind('tab: complete')
-                    readline.parse_and_bind('set editing-mode emacs')
-
-                    try:
-                        readline.read_history_file("/opt/BotWave/.history")
-                    except FileNotFoundError:
-                        pass
-
-                    readline.set_history_length(1000)
+                    readline.add_history(cmd_input)
 
                 exit = cli._execute_command(cmd_input)
 
