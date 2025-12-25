@@ -1551,7 +1551,6 @@ def main():
         server_thread = threading.Thread(target=run_async_server, daemon=True)
         server_thread.start()
         
-        # give server time to start
         time.sleep(2)
 
         if args.ws:
@@ -1560,13 +1559,11 @@ def main():
         if HAS_READLINE:
             readline.parse_and_bind('tab: complete')
             readline.parse_and_bind('set editing-mode emacs')
-
+            readline.set_history_length(1000)
             try:
                 readline.read_history_file("/opt/BotWave/.history")
             except FileNotFoundError:
                 pass
-
-            readline.set_history_length(1000)
         
         Log.print("Type 'help' for commands", 'bright_yellow')
         
@@ -1581,6 +1578,9 @@ def main():
                     
                     if not cmd_input:
                         continue
+                    
+                    if HAS_READLINE:
+                        readline.add_history(cmd_input)
                     
                     server.command_history.append(cmd_input)
 
