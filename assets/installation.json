@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.1-terminalia",
+      "commit": "59b3555240d3ef5e02c9f42d3af275b4ab2484e9"
+    },
+    {
       "codename": "v1.0.0-oak",
       "commit": "889e5c5899a698ec8afb87c69b600cc699726e1d"
     }
