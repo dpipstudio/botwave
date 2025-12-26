@@ -685,7 +685,6 @@ print_summary() {
     log INFO "  - Common utilities"
     log INFO ""
     if [[ "$SETUP_ALSA" == true ]]; then
-        log WARN ""
         log WARN "ALSA loopback card has been configured."
         log WARN "You must REBOOT for the changes to take effect!"
     fi
