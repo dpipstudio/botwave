@@ -120,10 +120,6 @@ class BotWaveCLI:
                 return True
             
             if cmd == 'live':
-                if len(cmd_parts) < 1:
-                    Log.error("Usage: live [frequency] [ps] [rt] [pi]")
-                    return True
-
                 frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else 90.0
                 ps = cmd_parts[2] if len(cmd_parts) > 2 else "RADIOOOO"
                 rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else "Broadcasting"
