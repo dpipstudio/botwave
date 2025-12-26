@@ -443,7 +443,7 @@ update_backends() {
 check_for_updates() {
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
-        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
+        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits?sha=livestream-test | \
             grep '"sha":' | \
             head -n 1 | \
             cut -d '"' -f 4)
