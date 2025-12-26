@@ -13,13 +13,11 @@
     "files": [
       "client/client.py",
       "local/local.py",
-      "shared/alsa.py",
       "shared/bw_custom.py",
       "shared/pw_monitor.py"
     ],
     "requirements": [
-      "piwave==2.1.10",
-      "pyalsaaudio==0.11.0"
+      "piwave==2.1.10"
     ],
     "binaries": [
       "bin/bw-client",
@@ -41,6 +39,7 @@
   "always": {
     "files": [
       "autorun/autorun.py",
+      "shared/alsa.py",
       "shared/cat.py",
       "shared/cat.jpg",
       "shared/handlers.py",
@@ -59,7 +58,8 @@
       "dlogger==1.0.4",
       "aiofiles==0.8.0",
       "aiohttp",
-      "morse-talk==0.2"
+      "morse-talk==0.2",
+      "pyalsaaudio==0.11.0"
     ],
     "binaries": [
       "bin/bw-autorun",
