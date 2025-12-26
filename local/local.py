@@ -22,6 +22,7 @@ import urllib.request
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.handlers import HandlerExecutor
@@ -57,6 +58,7 @@ class BotWaveCLI:
         self.handlers_dir = handlers_dir
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
         self.piwave_monitor = PWM()
+        self.alsa = Alsa()
         self.ws_port = ws_port
         self.ws_server = None
         self.ws_clients = set()
@@ -101,6 +103,7 @@ class BotWaveCLI:
                 return True
             
             cmd = cmd_parts[0].lower()
+
             if cmd == 'start':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
@@ -115,6 +118,21 @@ class BotWaveCLI:
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers()
                 return True
+            
+            if cmd == 'live':
+                if len(cmd_parts) < 1:
+                    Log.error("Usage: live [frequency] [ps] [rt] [pi]")
+                    return True
+
+                frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else 90.0
+                ps = cmd_parts[2] if len(cmd_parts) > 2 else "RADIOOOO"
+                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else "Broadcasting"
+                pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
+
+                self.start_live(frequency, ps, rt, pi)
+                self.onstart_handlers()
+                return True
+
 
             elif cmd == 'stop':
                 self.stop_broadcast()
@@ -342,7 +360,7 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Download error: {str(e)}")
             return False
-
+        
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
@@ -384,6 +402,45 @@ class BotWaveCLI:
             self.piwave = None
             return False
 
+    def start_live(self, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF"):
+        if not self.alsa.is_supported():
+            Log.alsa("Live broadcast is not supported on this installation.")
+            Log.alsa("Did you setup the loopback ALSA card correctly ?")
+            return False
+        
+        if self.broadcasting:
+            self.stop_broadcast()
+
+        try:
+            self.piwave = PiWave(
+                frequency=frequency,
+                ps=ps,
+                rt=rt,
+                pi=pi,
+                backend="bw_custom",
+                debug=False
+            )
+
+            self.alsa.start()
+
+            self.current_file = "live_playback"
+            self.broadcasting = True
+            self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.rate, chunk_size=self.alsa.period_size)
+            
+            Log.success(f"Live broadcast started on frequency {frequency} MHz")
+            Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
+            Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
+            return True
+        
+        except Exception as e:
+            Log.error(f"Error starting broadcast: {e}")
+            self.alsa.stop()
+            self.broadcasting = False
+            self.current_file = None
+            self.piwave = None
+            return False
+        
+
     def stop_broadcast(self):
         if not self.broadcasting:
             Log.warning("No broadcast is currently running")
@@ -397,6 +454,8 @@ class BotWaveCLI:
                 Log.error(f"Error stopping broadcast: {e}")
             finally:
                 self.piwave = None
+
+        self.alsa.stop()
 
         self.broadcasting = False
         self.current_file = None

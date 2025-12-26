@@ -13,11 +13,13 @@
     "files": [
       "client/client.py",
       "local/local.py",
+      "shared/alsa.py",
       "shared/bw_custom.py",
       "shared/pw_monitor.py"
     ],
     "requirements": [
-      "piwave==2.1.10"
+      "piwave==2.1.10",
+      "pyalsaaudio==0.11.0"
     ],
     "binaries": [
       "bin/bw-client",
