@@ -474,7 +474,7 @@ class BotWaveClient:
                     chunk_size=1024
                 )
                 
-                #self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
+                self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
                 
                 Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
                 return True

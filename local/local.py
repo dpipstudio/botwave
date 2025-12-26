@@ -399,6 +399,11 @@ class BotWaveCLI:
             return False
 
     def start_live(self, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF"):
+        def finished():
+            Log.info("Playback finished, stopping broadcast...")
+            self.stop_broadcast()
+            self.onstop_handlers()
+    
         if not self.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
             Log.alsa("Did you setup the loopback ALSA card correctly ?")
@@ -423,6 +428,9 @@ class BotWaveCLI:
             self.broadcasting = True
             self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.rate, chunk_size=self.alsa.period_size)
             
+            self.piwave_monitor.start(self.piwave, finished)
+
+
             Log.success(f"Live broadcast started on frequency {frequency} MHz")
             Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
             Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
