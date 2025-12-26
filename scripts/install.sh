@@ -35,6 +35,8 @@ readonly SYMLINK_DIR="/usr/local/bin"
 readonly TMP_DIR="/tmp/bw_install"
 readonly LOG_FILE="$TMP_DIR/install_$(date +%s).log"
 readonly VALID_MODES=("client" "server" "both")
+readonly ALSA_MODULES_CONF="/etc/modules-load.d/aloop.conf"
+readonly ALSA_MODPROBE_CONF="/etc/modprobe.d/aloop.conf"
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -67,7 +69,9 @@ parse_arguments() {
     TARGET_VERSION=""
     USE_LATEST=false
     INSTALL_MODE=""
-    
+    SETUP_ALSA=""
+
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             -l|--latest)
@@ -81,6 +85,14 @@ parse_arguments() {
                 fi
                 TARGET_VERSION="$2"
                 shift 2
+                ;;
+            --alsa)
+                SETUP_ALSA=true
+                shift
+                ;;
+            --no-alsa)
+                SETUP_ALSA=false
+                shift
                 ;;
             -h|--help)
                 show_help
@@ -98,6 +110,7 @@ parse_arguments() {
                 log INFO "  both                Install both client and server"
                 log INFO "  -l, --latest        Install from latest commit (unreleased)"
                 log INFO "  -t, --to <version>  Install specific release version"
+                log INFO "  --[no-]alsa          Setup ALSA loopback card"
                 log INFO "  -h, --help          Show help message"
                 exit 1
                 ;;
@@ -236,7 +249,7 @@ check_root_privileges() {
             log WARN "This script must be run as root. Please run it again with sudo."
             exit 1
         fi
-        
+
         log WARN "This script must be run as root. Re-run with sudo?"
         export MENU_SELECT_COLOR="$RED"
         select_option "Yes (sudo)" "No (exit)"
@@ -307,6 +320,26 @@ validate_hardware() {
     fi
 }
 
+prompt_alsa_setup() {
+    local mode="$1"
+    
+    if [[ -n "$SETUP_ALSA" ]]; then
+        return 0
+    fi
+    
+    log INFO "Setup ALSA loopback card for live streaming?"
+    log INFO "(This will create/overwrite /etc/modules-load.d/aloop.conf and /etc/modprobe.d/aloop.conf)"
+    select_option "No" "Yes"
+    
+    if [[ $? -eq 1 ]]; then
+        SETUP_ALSA=true
+    else
+        SETUP_ALSA=false
+    fi
+    
+    set -e
+}
+
 # ============================================================================
 # VERSION MANAGEMENT
 # ============================================================================
@@ -318,22 +351,22 @@ resolve_target_commit() {
             grep '"sha":' | \
             head -n 1 | \
             cut -d '"' -f 4)
-        
+
         if [[ -z "$latest_commit" ]]; then
             log ERROR "Failed to fetch latest commit"
             exit 1
         fi
-        
+
         log INFO "Latest commit: ${latest_commit:0:7}"
         echo "$latest_commit"
         return 0
     fi
-    
+
     if [[ -n "$TARGET_VERSION" ]]; then
         log INFO "Looking up release: $TARGET_VERSION"
         local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
         local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
-        
+
         if [[ -z "$commit" ]]; then
             log ERROR "Release '$TARGET_VERSION' not found"
             log INFO "Available releases:"
@@ -342,22 +375,22 @@ resolve_target_commit() {
             done
             exit 1
         fi
-        
+
         log INFO "Found commit: ${commit:0:7}"
         echo "$commit"
         return 0
     fi
-    
+
     # Default: latest release
     log INFO "Fetching latest release..."
     local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
     local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
-    
+
     if [[ -z "$latest_release_commit" ]]; then
         log ERROR "Failed to fetch latest release"
         exit 1
     fi
-    
+
     local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
     log INFO "Latest release: $codename (${latest_release_commit:0:7})"
     echo "$latest_release_commit"
@@ -376,6 +409,7 @@ install_system_dependencies() {
         python3-venv \
         python3-dev \
         libsndfile1-dev \
+        libasound2-dev \
         libffi-dev \
         libssl-dev \
         build-essential \
@@ -405,6 +439,24 @@ setup_python_environment() {
     else
         log INFO "Python virtual environment already exists."
     fi
+}
+
+setup_alsa_loopback() {
+    if [[ "$SETUP_ALSA" != true ]]; then
+        return 0
+    fi
+    
+    log INFO "Setting up ALSA loopback card..."
+    
+    log INFO "Creating $ALSA_MODULES_CONF"
+    mkdir -p "$(dirname "$ALSA_MODULES_CONF")"
+    echo "snd-aloop" > "$ALSA_MODULES_CONF"
+    
+    log INFO "Creating $ALSA_MODPROBE_CONF"
+    mkdir -p "$(dirname "$ALSA_MODPROBE_CONF")"
+    echo "options snd-aloop index=10 id=BotWave pcm_substreams=1,1" > "$ALSA_MODPROBE_CONF"
+    
+    log INFO "ALSA loopback card configuration complete"
 }
 
 # ============================================================================
@@ -609,7 +661,7 @@ save_version_info() {
     local commit="$1"
     log INFO "Saving version information..."
     echo "$commit" > "$INSTALL_DIR/last_commit"
-    
+
     # Save release info if applicable
     if [[ -n "$TARGET_VERSION" ]]; then
         echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
@@ -632,6 +684,11 @@ print_summary() {
     [[ "$mode" == "server" || "$mode" == "both" ]] && log INFO "  - Server mode"
     log INFO "  - Common utilities"
     log INFO ""
+    if [[ "$SETUP_ALSA" == true ]]; then
+        log WARN ""
+        log WARN "ALSA loopback card has been configured."
+        log WARN "You must REBOOT for the changes to take effect!"
+    fi
     log INFO "Installation directory: $INSTALL_DIR"
     log INFO "Log file: $LOG_FILE"
 }
@@ -672,6 +729,9 @@ main() {
     # Hardware validation
     validate_hardware "$mode"
 
+    # Setup sound card
+    prompt_alsa_setup "$mode"
+
     # System setup 1
     install_system_dependencies
 
@@ -682,6 +742,7 @@ main() {
     # System setup 2
     setup_directory_structure
     setup_python_environment
+    setup_alsa_loopback
 
     # Fetch configuration and install
     local install_json=$(fetch_installation_config "$target_commit")
