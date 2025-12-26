@@ -1,5 +1,10 @@
-import alsaaudio
 import time
+
+try:
+    import alsaaudio
+    ALSA_AVAILABLE = True
+except ImportError:
+    ALSA_AVAILABLE = False
 
 from .logger import Log
 
@@ -16,6 +21,9 @@ class Alsa:
         """
         Checks if the BotWave ALSA loopback device is available
         """
+        if not ALSA_AVAILABLE:
+            return False
+        
         try:
             cards = alsaaudio.cards()
             # Check for "BotWave" in the list of soundcard names
@@ -30,6 +38,9 @@ class Alsa:
         """
         Initializes the ALSA capture interface
         """
+        if not ALSA_AVAILABLE:
+            return False
+
         try:
             self.capture = alsaaudio.PCM(
                 type=alsaaudio.PCM_CAPTURE,
@@ -52,6 +63,9 @@ class Alsa:
         Generator that yields raw PCM data.
         It blocks when no audio is playing from the source
         """
+        if not ALSA_AVAILABLE:
+            return False
+
         if not self.capture:
             Log.alsa("Error: Capture not started.")
             return
@@ -74,6 +88,10 @@ class Alsa:
         """
         Stops the generator loop and releases the ALSA device.
         """
+
+        if not ALSA_AVAILABLE:
+            return False
+        
         self._running = False
         if self.capture:
             time.sleep(0.1) # wait gen loop
