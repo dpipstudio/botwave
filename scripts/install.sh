@@ -364,7 +364,7 @@ resolve_target_commit() {
 
     if [[ -n "$TARGET_VERSION" ]]; then
         log INFO "Looking up release: $TARGET_VERSION"
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/livestream-test/assets/installation.json?t=$(date +%s)")
         local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
 
         if [[ -z "$commit" ]]; then
@@ -383,7 +383,7 @@ resolve_target_commit() {
 
     # Default: latest release
     log INFO "Fetching latest release..."
-    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/livestream-test/assets/installation.json?t=$(date +%s)")
     local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
 
     if [[ -z "$latest_release_commit" ]]; then
@@ -666,7 +666,7 @@ save_version_info() {
     if [[ -n "$TARGET_VERSION" ]]; then
         echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
     elif [[ "$USE_LATEST" != true ]]; then
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/livestream-test/assets/installation.json?t=$(date +%s)")
         local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
         if [[ -n "$codename" ]]; then
             echo "$codename" > "$INSTALL_DIR/last_release"
