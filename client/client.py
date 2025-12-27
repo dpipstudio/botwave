@@ -234,6 +234,8 @@ class BotWaveClient:
                 return
             
             Log.warning(f"Unknown command: {command}")
+            response = ProtocolParser.build_response(Commands.ERROR, f"Unknown command: {command}. Perhaps a protocol mismatch ?")
+            await self.ws_client.send(response)
             
         except Exception as e:
             Log.error(f"Error handling message: {e}")
