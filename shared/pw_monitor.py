@@ -40,7 +40,8 @@ class PWM: #pwm hehehe
                     break
                 
                 status = self.piwave.get_status()
-                if not status.get("is_playing", False):
+                is_active = status.get("is_playing", False) or status.get("is_live_streaming", False)
+                if not is_active:
                     if self.on_finished_callback:
                         if self.event_loop and asyncio.iscoroutinefunction(self.on_finished_callback):
                             asyncio.run_coroutine_threadsafe(

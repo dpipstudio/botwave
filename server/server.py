@@ -25,6 +25,7 @@ import uuid
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.alsa import Alsa
 from shared.cat import check
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
@@ -73,6 +74,7 @@ class BotWaveServer:
         # main socket & file transfer
         self.ws_server = None
         self.http_server = None
+        self.alsa = Alsa()
         
         # state
         self.running = False
@@ -532,20 +534,19 @@ class BotWaveServer:
             return
         
         # BROADCAST CONTROL 
-        elif command_name == 'start':
-            if len(cmd) < 3:
-                Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
+        elif command_name == 'live':
+            if len(cmd) < 2:
+                Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
                 return
-            
-            frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
-            loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
-            ps = cmd[5] if len(cmd) > 5 else "BotWave"
-            rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
-            pi = cmd[7] if len(cmd) > 7 else "FFFF"
-            
-            await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
+
+            frequency = float(cmd[2]) if len(cmd) > 2 else 90.0
+            ps = cmd[3] if len(cmd) > 3 else "BotWave"
+            rt = cmd[4] if len(cmd) > 4 else "Broadcasting"
+            pi = cmd[5] if len(cmd) > 5 else "FFFF"
+
+            await self.start_live(cmd[1], frequency, ps, rt, pi)
             return
-        
+
         elif command_name == 'stop':
             if len(cmd) < 2:
                 Log.error("Usage: stop <targets>")
@@ -740,6 +741,7 @@ class BotWaveServer:
         
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         filename = os.path.basename(file_path)
@@ -806,10 +808,60 @@ class BotWaveServer:
         Log.broadcast(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
         return overall_success > 0
     
+
+    async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
+        
+        target_clients = self._parse_client_targets(client_targets)
+        if not target_clients:
+            Log.warning("No client(s) found matching the query")
+            return False
+
+        if not self.alsa.is_supported():
+            Log.alsa("Live broadcast is not supported on this installation.")
+            Log.alsa("Did you setup the loopback ALSA card correctly ?")
+            return False
+        
+        self.alsa.start()
+
+        Log.broadcast(f"Sending stream tokens to {len(target_clients)} client(s)...")
+        
+        success_count = 0
+        
+        for client_id in target_clients:
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
+                continue
+            
+            client = self.clients[client_id]
+            
+            token = self.http_server.create_stream_token(self.alsa.audio_generator(), self.alsa.rate, self.alsa.channels)
+            
+            command = ProtocolParser.build_command(
+                Commands.STREAM_TOKEN,
+                token=token,
+                rate=self.alsa.rate,
+                channels=self.alsa.channels,
+                frequency=frequency,
+                ps=ps,
+                rt=rt,
+                pi=pi
+            )
+            
+            await self.ws_server.send(client_id, command)
+            
+            Log.file(f"  {client.get_display_name()}: Download token sent")
+            
+            success_count += 1
+        
+        Log.broadcast(f"Stream tokens sent to {success_count}/{len(target_clients)} clients")
+        Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
+        Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
+        return success_count > 0
     
     async def download_file(self, client_targets: str, url: str):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         Log.broadcast(f"Requesting download from {len(target_clients)} client(s)...")
@@ -834,6 +886,7 @@ class BotWaveServer:
     async def remove_file(self, client_targets: str, filename: str):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         Log.broadcast(f"Removing '{filename}' from {len(target_clients)} client(s)...")
@@ -1182,6 +1235,7 @@ class BotWaveServer:
         target_clients = self._parse_client_targets(client_targets)
         
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         # calculate start_at timestamp if wait_start is enabled
@@ -1225,9 +1279,13 @@ class BotWaveServer:
         return success_count > 0
 
     async def stop_broadcast(self, client_targets: str):
+
+        self.alsa.stop()
+
         target_clients = self._parse_client_targets(client_targets)
         
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         command = ProtocolParser.build_command(Commands.STOP)
@@ -1253,6 +1311,7 @@ class BotWaveServer:
     async def kick_client(self, client_targets: str, reason: str = "Kicked by administrator"):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         Log.client(f"Kicking {len(target_clients)} client(s)...")
@@ -1283,6 +1342,7 @@ class BotWaveServer:
     async def restart_client(self, client_targets: str):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         Log.client(f"Requesting restart from {len(target_clients)} client(s)...")
@@ -1334,6 +1394,7 @@ class BotWaveServer:
     async def list_files(self, client_targets: str):
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
+            Log.warning("No client(s) found matching the query")
             return False
         
         Log.info(f"Listing files from {len(target_clients)} client(s)")
