@@ -54,6 +54,9 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `stop`: Stops broadcasting on specified client(s).  
     - Usage: `botwave> stop <targets>`  
 
+- `live`: Start a live broadcast to client(s).  
+    - Usage: `botwave> live <all> [frequency] [loop] [ps] [rt] [pi]`  
+
 `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
     - Usage: `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`  
 

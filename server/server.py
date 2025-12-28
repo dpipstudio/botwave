@@ -1493,6 +1493,11 @@ class BotWaveServer:
         Log.print("  Example: stop all", 'cyan')
         Log.print("")
 
+        Log.print("live <targets> [freq] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Start a live audio broadcast to client(s)", 'white')
+        Log.print("  Example: live all", 'cyan')
+        Log.print("")
+
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
