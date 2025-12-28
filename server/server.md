@@ -81,9 +81,6 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `kick`: Kicks specified client(s) from the server.  
     - Usage: `botwave> kick <targets> [reason]`  
 
-`restart`: Restarts specified client(s).  
-    - Usage: `botwave> restart <targets>`  
-
 `handlers`: List all handlers or commands in a specific handler file.  
     - Usage: `botwave> handlers [filename]`  
 
