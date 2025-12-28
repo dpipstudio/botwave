@@ -226,13 +226,6 @@ class BotWaveClient:
                 await self.stop()
                 return
             
-            if command == Commands.RESTART:
-                Log.info("Restart requested")
-                await self._handle_stop_broadcast()
-                response = ProtocolParser.build_response(Commands.OK, "Restart acknowledged")
-                await self.ws_client.send(response)
-                return
-            
             Log.warning(f"Unknown command: {command}")
             response = ProtocolParser.build_response(Commands.ERROR, f"Unknown command: {command}. Perhaps a protocol mismatch ?")
             await self.ws_client.send(response)

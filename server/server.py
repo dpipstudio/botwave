@@ -490,13 +490,6 @@ class BotWaveServer:
             await self.kick_client(cmd[1], reason)
             return
         
-        elif command_name == 'restart':
-            if len(cmd) < 2:
-                Log.error("Usage: restart <targets>")
-                return
-            await self.restart_client(cmd[1])
-            return
-        
         # FILE MANAGEMENT 
         elif command_name == 'upload':
             if len(cmd) < 3:
@@ -1339,29 +1332,6 @@ class BotWaveServer:
         # self.ondisconnect_handlers() (is alr handeled by self.ws_server)
         return True
 
-    async def restart_client(self, client_targets: str):
-        target_clients = self._parse_client_targets(client_targets)
-        if not target_clients:
-            Log.warning("No client(s) found matching the query")
-            return False
-        
-        Log.client(f"Requesting restart from {len(target_clients)} client(s)...")
-        
-        for client_id in target_clients:
-            if client_id not in self.clients:
-                Log.error(f"  {client_id}: Client not found")
-                continue
-            
-            client = self.clients[client_id]
-            
-            command = ProtocolParser.build_command(Commands.RESTART)
-            await self.ws_server.send(client_id, command)
-            
-            Log.client(f"  {client.get_display_name()}: Restart request sent")
-        
-        Log.client(f"Restart requests sent")
-        return True
-
     def _parse_client_targets(self, targets: str) -> List[str]:
         if not targets:
             Log.error("No targets specified")
@@ -1541,11 +1511,6 @@ class BotWaveServer:
         Log.print("kick <targets> [reason]", 'bright_green')
         Log.print("  Kick client(s) from the server", 'white')
         Log.print("  Example: kick pi1 Maintenance", 'cyan')
-        Log.print("")
-
-        Log.print("restart <targets>", 'bright_green')
-        Log.print("  Request client(s) to restart", 'white')
-        Log.print("  Example: restart all", 'cyan')
         Log.print("")
 
         Log.print("handlers [filename]", 'bright_green')

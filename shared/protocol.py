@@ -27,7 +27,6 @@ class Commands:
     
     # client managment
     KICK = 'KICK'
-    RESTART = 'RESTART'
     
     # file managment
     LIST_FILES = 'LIST_FILES'
