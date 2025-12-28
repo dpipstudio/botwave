@@ -72,6 +72,14 @@ Options:
 <p>Note that all this is optional and not needed for basic installation.</p>
 </details>
 
+### Review before install
+```bash
+curl -sSL https://botwave.dpip.lol/install -o bw_install.sh
+cat bw_install.sh
+sudo bash bw_install.sh
+```
+
+
 ### BotWave Server For Cloud Instances
 You can directly try BotWave `server` on Cloud Instances like Google Shell or GitHub Codespaces !  
 [![Run in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)  
