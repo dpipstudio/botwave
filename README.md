@@ -46,7 +46,7 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 > [!NOTE]
 > We have a W.I.P wiki that explains some basics about BotWave. We recommand reading it at least once: [`/wiki`](https://github.com/dpipstudio/botwave/wiki)
 
-For debian-like systems, we recommand using our automatic installation scripts, for other operating systems, you're on your own.
+For debian-like systems, we recommand using our automatic installation script, for other operating systems, you're on your own.
 
 ```bash
 curl -sSL https://botwave.dpip.lol/install | sudo bash
@@ -92,14 +92,14 @@ To use BotWave Client for broadcasting, you need to set up the hardware correctl
 
 
 ## Updating BotWave
-For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
+For debian-like systems, we recommand using our automatic update script, for other operating systems, you're on your own.
 
 ```bash
 sudo bw-update
 ```
 
 ## Uninstallation
-For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
+For debian-like systems, we recommand using our automatic uninstallation script, for other operating systems, you're on your own.
 
 ```bash
 curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
