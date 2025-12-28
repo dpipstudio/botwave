@@ -67,6 +67,7 @@ class BotWaveClient:
         self.broadcast_lock = asyncio.Lock() # using asyncio instead of thereading now
         self.alsa = Alsa()
         self.stream_task = None
+        self.stream_active = False
         
         # states
         self.running = False
@@ -443,17 +444,27 @@ class BotWaveClient:
                     channels=channels,
                     chunk_size=1024
                 )
+
+                self.stream_active = True
                 
                 def sync_generator_wrapper():
                     loop = asyncio.new_event_loop()
                     try:
-                        async_gen = stream_task.__aiter__()
-                        while True:
+                        async_gen = self.stream_task.__aiter__()
+                        while self.stream_active:
                             try:
-                                chunk = loop.run_until_complete(async_gen.__anext__())
+                                chunk = loop.run_until_complete(
+                                    asyncio.wait_for(async_gen.__anext__(), timeout=5.0)
+                                )
                                 yield chunk
+                            except asyncio.TimeoutError:
+                                if not self.stream_active:
+                                    break
+                                continue
                             except StopAsyncIteration:
                                 break
+                    except Exception as e:
+                        Log.error(f"Stream generator error: {e}")
                     finally:
                         loop.close()
                 
@@ -530,6 +541,10 @@ class BotWaveClient:
     async def _stop_broadcast(self):
         async with self.broadcast_lock:
             self.piwave_monitor.stop()
+
+            if self.stream_active:
+                self.stream_active = False
+                await asyncio.wait(0.2)
 
             if self.stream_task:
                 try:

@@ -5,7 +5,7 @@ import ssl
 import time
 import uuid
 from aiohttp import web, ClientSession, TCPConnector
-from typing import Dict, Optional, AsyncIterator
+from typing import Dict, Optional
 from shared.logger import Log
 
 CHUNK_SIZE = 65536 # 64KB, here so we have the value centralized
@@ -222,8 +222,12 @@ class BWHTTPFileServer:
             
             async for pcm_chunk in self._async_generator_wrapper(audio_generator, loop):
                 if pcm_chunk:
-                    await response.write(pcm_chunk)
-                    await response.drain()
+                    try:
+                        await response.write(pcm_chunk)
+                        await response.drain()
+                    except (ConnectionResetError, BrokenPipeError):
+                        Log.server("Client disconnected from PCM stream (connection lost)")
+                        break
                 
                 if request.transport is None or request.transport.is_closing():
                     Log.server("Client disconnected from PCM stream")
@@ -231,11 +235,14 @@ class BWHTTPFileServer:
                     
         except asyncio.CancelledError:
             Log.server("PCM stream cancelled")
+        except ConnectionError as e:
+            Log.server(f"PCM stream connection error: {e}")
         except Exception as e:
             Log.error(f"PCM stream error: {e}")
         finally:
             try:
-                await response.write_eof()
+                if not (request.transport is None or request.transport.is_closing()):
+                    await response.write_eof()
             except:
                 pass
             
