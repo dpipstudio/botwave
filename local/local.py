@@ -406,7 +406,7 @@ class BotWaveCLI:
     
         if not self.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
-            Log.alsa("Did you setup the loopback ALSA card correctly ?")
+            Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
         
         if self.broadcasting:
