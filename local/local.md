@@ -61,6 +61,9 @@ Once the client is running, you can use the following commands:
 
 - `stop`: Stop the current broadcast.  
     - Usage: `botwave> stop`
+  
+- `live`: Start a live broadcast.  
+    - Usage: `botwave> live [frequency] [loop] [ps] [rt] [pi]`
 
 - `sstv`: Start broadcasting an image converted to SSTV. For modes see [dnet/pySSTV](https://github.com/dnet/pySSTV/).  
     - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
@@ -80,7 +83,7 @@ Once the client is running, you can use the following commands:
 - `handlers`: List all handlers or commands in a specific handler file.  
     - Usage: `botwave> handlers [filename]`
 
-- `>`: Run a shell command on the main OS.  
+- `<`: Run a shell command on the main OS.  
     - Usage: `botwave> < <command>`
 
 - `help`: Display the help message.  

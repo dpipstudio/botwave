@@ -528,6 +528,11 @@ class BotWaveCLI:
         Log.print("  Stop the current broadcast", 'white')
         Log.print("")
 
+        Log.print("live [freq] [ps] [rt] [pi]", 'bright_green')
+        Log.print("  Start a live audio broadcast", 'white')
+        Log.print("  Example: live", 'cyan')
+        Log.print("")
+
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", 'bright_green')
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", 'white')
         Log.print("  Example: sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", 'cyan')
