@@ -1,12 +1,14 @@
-<div align=center>
+<div align="center">
 
 <img src="https://togp.xyz/?repo=botwave&owner=dpipstudio&cache=false&svg=https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/assets/readme_assets/togp_logo.svg&failurl=https://images.dpip.lol/bw-logo-big.png" alt="BotWave"/>
 
-<h1> BotWave - Your RPI FM Network </h1>
-<h4> <a href="https://botwave.dpip.lol">Website</a></h4>   
+<h1>BotWave - Your Raspberry Pi FM Network</h1>
+<h4> <a href="https://botwave.dpip.lol">Website</a> | <a href="#installation">Install</a> | <a href="#ETC">Mentions</a> </h4>
+
+
 </div>
 
-BotWave is a system for broadcasting audio files over FM radio using Raspberry Pi devices. It consists of a server and client application that work together to manage and broadcast audio files.  
+BotWave lets you broadcast audio over FM radio using Raspberry Pi devices, with server-client management, remote control, automated actions, and more!
 It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based on [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds).
 
 ## Features
@@ -17,6 +19,7 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 - **Remote Management**: Start, stop, and manage broadcasts remotely.
 - **Authentication**: Client-server authentication with passkeys.
 - **Protocol Versioning**: Ensure compatibility between server and clients.
+- **Live broadcasting**: Stream live output from any application in real time. (Still in development, see [`#24`](https://github.com/dpipstudio/botwave/issues/24))
 
 ## Requirements 
 > All requirements can be auto-installed with the automatic installer, see below.
@@ -31,20 +34,18 @@ It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based
 - [bw_custom](https://github.com/dpipstudio/bw_custom)
 - (Wire or antenna)
 
-## Installation
-
-> [!WARNING]
-> **Warning**: Using BotWave involves broadcasting signals which may be subject to local regulations and laws. It is your responsibility to ensure that your use of BotWave complies with all applicable legal requirements and regulations in your area. Unauthorized use of broadcasting equipment may result in legal consequences, including fines or penalties.
->
-> **Safety Note**: To minimize interference and stay within your intended frequency range, it is strongly recommended to use a band-pass filter when operating BotWave.
->
-> **Liability**: The author of BotWave is not responsible for any damage, loss, or legal issues that may arise from the use of this software. By using BotWave, you agree to accept all risks and liabilities associated with its operation and broadcasting capabilities.
->
-> Please exercise caution and ensure you have the proper permissions, equipment, and knowledge of regulations before using BotWave for broadcasting purposes.
-
-
 > [!NOTE]
 > We have a W.I.P wiki that explains some basics about BotWave. We recommand reading it at least once: [`/wiki`](https://github.com/dpipstudio/botwave/wiki)
+
+> [!WARNING]
+> - BotWave broadcasts FM signals, which may be regulated in your area.
+> - Always check local laws before use; unauthorized broadcasts may incur fines.
+> - Use a band-pass filter to minimize interference.
+> - Author not responsible for legal issues or hardware damage.
+> - Check the FAQ for more informations [`/wiki/FAQ`](https://github.com/dpipstudio/botwave/wiki/FAQ)
+
+
+# Installation
 
 For debian-like systems, we recommand using our automatic installation script, for other operating systems, you're on your own.
 
@@ -72,14 +73,6 @@ Options:
 <p>Note that all this is optional and not needed for basic installation.</p>
 </details>
 
-### Review before install
-```bash
-curl -sSL https://botwave.dpip.lol/install -o bw_install.sh
-cat bw_install.sh
-sudo bash bw_install.sh
-```
-
-
 ### BotWave Server For Cloud Instances
 You can directly try BotWave `server` on Cloud Instances like Google Shell or GitHub Codespaces !  
 [![Run in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)  
@@ -92,14 +85,14 @@ To use BotWave Client for broadcasting, you need to set up the hardware correctl
 
 
 ## Updating BotWave
-For debian-like systems, we recommand using our automatic update script, for other operating systems, you're on your own.
+For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
 
 ```bash
 sudo bw-update
 ```
 
 ## Uninstallation
-For debian-like systems, we recommand using our automatic uninstallation script, for other operating systems, you're on your own.
+For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
 
 ```bash
 curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
@@ -150,13 +143,10 @@ curl -sSL https://botwave.dpip.lol/install | sudo bash -s <server, client or bot
 ## ETC
 **They talk about BotWave**: Here are some posts that talk about BotWave. Thanks to their creators !
 <div align="center"> <!-- centering a div ?? -->
-<details>
-<summary><code>They talk about us</code></summary>
 <p></p>
 <a href="https://news.ycombinator.com/item?id=46305516" target="_blank"><img src="assets/readme_assets/badge_show_hn.svg" alt="show hn"/></a>
 <a href="https://korben.info/botwave-raspberry-pi-emetteur-fm-radio.html" target="_blank"><img src="assets/readme_assets/badge_le_site_de_korben.svg" alt="le site de korben"/></a>
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
-</details>
 </div>
 
 ## License
