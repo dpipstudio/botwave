@@ -8,7 +8,7 @@
 
 </div>
 
-BotWave lets you broadcast audio over FM radio using Raspberry Pi devices, with server-client management, remote control, automated actions, and more!
+BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It supports server-client management, remote control, automated actions, live streaming, and more ! That makes it ideal for learning, experimentation, and creative projects.
 
 
 ## Features
@@ -19,10 +19,10 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices, with 
 - **Remote Management**: Start, stop, and manage broadcasts remotely.
 - **Authentication**: Client-server authentication with passkeys.
 - **Protocol Versioning**: Ensure compatibility between server and clients.
-- **Live broadcasting**: Stream live output from any application in real time. (Still in development, see [`#24`](https://github.com/dpipstudio/botwave/issues/24))
+- **Live Broadcasting**: Stream live output from any application in real time. (Still in development, see [`#24`](https://github.com/dpipstudio/botwave/issues/24))
 
 ## Requirements 
-> All requirements can be auto-installed with the automatic installer, see below.
+> All requirements can be installed automatically via the installer, see below.
 
 ### Server
 - Python >= 3.6
@@ -35,19 +35,19 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices, with 
 - (Wire or antenna)
 
 > [!NOTE]
-> We have a W.I.P wiki that explains some basics about BotWave. We recommand reading it at least once: [`/wiki`](https://github.com/dpipstudio/botwave/wiki)
+> We have a W.I.P wiki that explains some basics about BotWave. We recommend reading it at least once: [`/wiki`](https://github.com/dpipstudio/botwave/wiki)
 
 > [!WARNING]
-> - BotWave broadcasts FM signals, which may be regulated in your area.
-> - Always check local laws before use; unauthorized broadcasts may incur fines.
-> - Use a band-pass filter to minimize interference.
-> - Author not responsible for legal issues or hardware damage.
-> - Check the FAQ for more informations [`/wiki/FAQ`](https://github.com/dpipstudio/botwave/wiki/FAQ)
+> - **BotWave broadcasts FM signals**, which may be regulated in your area.
+> - **Check local laws** before use, unauthorized broadcasts may incur fines.
+> - **Use a band-pass filter** to minimize interference.
+> - **Author not responsible** for legal issues or hardware damage.
+> - **See FAQ** for more information: [`/wiki/FAQ`](https://github.com/dpipstudio/botwave/wiki/FAQ)
 
 
 # Installation
 
-For debian-like systems, we recommand using our automatic installation script, for other operating systems, you're on your own.
+For debian-like systems, we recommend using our automatic installation script, for other operating systems, you're on your own.
 
 ```bash
 curl -sSL https://botwave.dpip.lol/install | sudo bash
@@ -85,14 +85,14 @@ To use BotWave Client for broadcasting, you need to set up the hardware correctl
 
 
 ## Updating BotWave
-For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
+For debian-like systems, we recommend using our automatic uninstallation scripts, for other operating systems, you're on your own.
 
 ```bash
 sudo bw-update
 ```
 
 ## Uninstallation
-For debian-like systems, we recommand using our automatic uninstallation scripts, for other operating systems, you're on your own.
+For debian-like systems, we recommend using our automatic uninstallation scripts, for other operating systems, you're on your own.
 
 ```bash
 curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
