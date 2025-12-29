@@ -9,7 +9,7 @@
 </div>
 
 BotWave lets you broadcast audio over FM radio using Raspberry Pi devices, with server-client management, remote control, automated actions, and more!
-It uses [bw_custom](https://github.com/dpipstudio/bw_custom) as a backend, based on [PiFmRds](https://github.com/ChristopheJacquet/PiFmRds).
+
 
 ## Features
 
