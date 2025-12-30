@@ -305,7 +305,7 @@ options:
 <summary><code>Hardware installation for clients</code></summary>
 <hr>
 <p>To use BotWave Client for broadcasting, you need to set up the hardware correctly. This involves eventually connecting an antenna or a cable to the Raspberry Pi's GPIO 4 (pin 7).</p>
-Management<div align="center">
+<div align="center">
 <img src="/assets/readme_assets/gpio.png" alt="BotWave" width="300"/>
 <img src="/assets/readme_assets/example_gpio.jpg" alt="BotWave" width="300""/>
 </div>
