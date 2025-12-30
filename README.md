@@ -11,60 +11,62 @@
 BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It supports server-client management, remote control, automated actions, live streaming, and more. That makes it ideal for learning, experimentation, and creative projects.
 
 <details>
-  <summary><strong>Table of Contents</strong></summary>
+<summary><strong>Table of Contents</strong></summary>
 
-  <ul>
-    <li><a href="#features">Features</a></li>
+<ul>
+<li><a href="#features">Features</a></li>
 
-    <li>
-      <a href="#requirements">Requirements</a>
-      <ul>
-        <li><a href="#server">Server</a></li>
-        <li><a href="#client">Client</a></li>
-      </ul>
-    </li>
+<li>
+<a href="#requirements">Requirements</a>
+<ul>
+<li><a href="#server">Server</a></li>
+<li><a href="#client">Client</a></li>
+</ul>
+</li>
 
-    <li>
-      <a href="#get-started">Get Started</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
+<li>
+<a href="#get-started">Get Started</a>
+<ul>
+<li><a href="#installation">Installation</a></li>
 
-        <li>
-          <a href="#using-the-client-server">Using The Client-Server</a>
-          <ul>
-            <li><a href="#1-connect-the-client-and-the-server-together">Connect the client and the server together</a></li>
-            <li><a href="#2-understanding-the-server-command-line-interface">Understanding the server command line interface</a></li>
-            <li><a href="#3-uploading-files-to-the-client">Uploading files to the client</a></li>
-            <li><a href="#4-starting-a-broadcast">Starting a broadcast</a></li>
-            <li><a href="#5-stopping-a-broadcast">Stopping a broadcast</a></li>
-            <li><a href="#6-exiting-properly">Exiting properly</a></li>
-          </ul>
-        </li>
+<li>
+<a href="#using-the-client-server">Using The Client-Server</a>
+<ul>
+<li><a href="#1-connect-the-client-and-the-server-together">Connect the client and the server together</a></li>
+<li><a href="#2-understanding-the-server-command-line-interface">Understanding the server command line interface</a></li>
+<li><a href="#3-uploading-files-to-the-client">Uploading files to the client</a></li>
+<li><a href="#4-starting-a-broadcast">Starting a broadcast</a></li>
+<li><a href="#5-stopping-a-broadcast">Stopping a broadcast</a></li>
+<li><a href="#6-exiting-properly">Exiting properly</a></li>
+</ul>
+</li>
 
-        <li>
-          <a href="#using-the-local-client">Using The Local Client</a>
-          <ul>
-            <li><a href="#1-starting-the-local-client">Starting the local client</a></li>
-            <li><a href="#2-understanding-the-local-client-command-line-interface">Understanding the local client command line interface</a></li>
-            <li><a href="#3-uploading-files-to-the-local-client">Uploading files to the local client</a></li>
-            <li><a href="#4-starting-a-broadcast-1">Starting a broadcast</a></li>
-            <li><a href="#5-stopping-a-broadcast-1">Stopping a broadcast</a></li>
-            <li><a href="#6-exiting-properly-1">Exiting properly</a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
+<li>
+<a href="#using-the-local-client">Using The Local Client</a>
+<ul>
+<li><a href="#1-starting-the-local-client">Starting the local client</a></li>
+<li><a href="#2-understanding-the-local-client-command-line-interface">Understanding the local client command line interface</a></li>
+<li><a href="#3-uploading-files-to-the-local-client">Uploading files to the local client</a></li>
+<li><a href="#4-starting-a-broadcast-1">Starting a broadcast</a></li>
+<li><a href="#5-stopping-a-broadcast-1">Stopping a broadcast</a></li>
+<li><a href="#6-exiting-properly-1">Exiting properly</a></li>
+</ul>
+</li>
 
-    <li><a href="#remote-management">Remote Management</a></li>
-    <li><a href="#advanced-usage">Advanced Usage</a></li>
-    <li><a href="#updating-botwave">Updating BotWave</a></li>
-    <li><a href="#uninstallation">Uninstallation</a></li>
-    <li><a href="#botwave-server-for-cloud-instances">BotWave Server For Cloud Instances</a></li>
-    <li><a href="#mentions">Mentions</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#credits">Credits</a></li>
-  </ul>
+</ul>
+</li>
+
+<li><a href="#remote-management">Remote Management</a></li>
+<li><a href="#advanced-usage">Advanced Usage</a></li>
+<li><a href="#updating-botwave">Updating BotWave</a></li>
+<li><a href="#uninstallation">Uninstallation</a></li>
+<li><a href="#botwave-server-for-cloud-instances">BotWave Server For Cloud Instances</a></li>
+<li><a href="#mentions">Mentions</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#credits">Credits</a></li>
+</ul>
 </details>
+
 
 ## Features
 
