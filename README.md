@@ -12,7 +12,7 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 
 <details>
 <summary><strong>Table of Contents</strong></summary>
-
+<hr>
 <ul>
 <li><a href="#features">Features</a></li>
 
@@ -65,6 +65,7 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 <li><a href="#license">License</a></li>
 <li><a href="#credits">Credits</a></li>
 </ul>
+<hr>
 </details>
 
 
@@ -122,7 +123,7 @@ sudo bash bw_install.sh
 
 <details>
 <summary><code>Installer options</code></summary>
-<p></p>
+<hr>
 <pre>
 Usage: curl -sSL https://botwave.dpip.lol/install | sudo bash [-s -- [MODE] [OPTIONS]]
 
@@ -139,6 +140,7 @@ Options:
 <p>Adding <code> -s &lt;server, client or both&gt;</code> at the end of the command skips the interactive menu and goes straight to installation.</p>
 <p>Use <code> -s -- &lt;server, client or both&gt; &lt;options&gt;</code> to add options flags.</p>
 <p>Note that all this is optional and not needed for basic installation.</p>
+<hr>
 </details>
 
 > [!TIP]
@@ -155,7 +157,7 @@ bw-server
 
 <details>
 <summary><code>Server options</code></summary>
-<p></p>
+<hr>
 <pre>
 Usage: bw-server [OPTIONS]
 
@@ -176,6 +178,7 @@ options:
   --ws WS               WebSocket port for remote shell access
   --daemon              Run in non-interactive daemon mode
 </pre>
+<hr>
 </details>
 
 Once you got your server running, run the `client` specifying the server IP:
@@ -189,7 +192,7 @@ sudo bw-client 192.168.1.10 # assuming that the server ip is the following
 
 <details>
 <summary><code>Client options</code></summary>
-<p></p>
+<hr>
 <pre>
 Usage: sudo bw-client [OPTIONS]
 
@@ -211,17 +214,18 @@ options:
   --pk PK               Passkey for authentication
   --skip-checks         Skip update and requirements checks
 </pre>
+<hr>
 </details>
 
 <details>
 <summary><code>Hardware installation for clients</code></summary>
-<p></p>
+<hr>
 <p>To use BotWave Client for broadcasting, you need to set up the hardware correctly. This involves eventually connecting an antenna or a cable to the Raspberry Pi's GPIO 4 (pin 7).</p>
 <div align="center">
 <img src="/assets/readme_assets/gpio.png" alt="BotWave" width="300"/>
 <img src="/assets/readme_assets/example_gpio.jpg" alt="BotWave" width="300""/>
 </div>
-
+<hr>
 </details>
 
 If everything went well, you should see a message telling that `<pi hostname>_<pi ip>` successfully connected.
@@ -276,7 +280,7 @@ sudo bw-local
 
 <details>
 <summary><code>Local client options</code></summary>
-<p></p>
+<hr>
 <pre>
 Usage: sudo bw-local [OPTIONS]
 
@@ -294,17 +298,18 @@ options:
   --ws WS               WebSocket port for remote control
   --pk PK               Optional passkey for WebSocket authentication
 </pre>
+<hr>
 </details>
 
 <details>
 <summary><code>Hardware installation for clients</code></summary>
-<p></p>
+<hr>
 <p>To use BotWave Client for broadcasting, you need to set up the hardware correctly. This involves eventually connecting an antenna or a cable to the Raspberry Pi's GPIO 4 (pin 7).</p>
 Management<div align="center">
 <img src="/assets/readme_assets/gpio.png" alt="BotWave" width="300"/>
 <img src="/assets/readme_assets/example_gpio.jpg" alt="BotWave" width="300""/>
 </div>
-
+<hr>
 </details>
 
 #### 2. Understanding the local client command line interface
@@ -404,7 +409,6 @@ You can directly try BotWave `server` on Cloud Instances like Google Shell or Gi
 ## Mentions
 **BotWave mentions**: Here are some posts that talk about BotWave. Thanks to their creators !
 <div align="center"> <!-- centering a div ?? -->
-<p></p>
 <a href="https://news.ycombinator.com/item?id=46305516" target="_blank"><img src="assets/readme_assets/badge_show_hn.svg" alt="show hn"/></a>
 <a href="https://korben.info/botwave-raspberry-pi-emetteur-fm-radio.html" target="_blank"><img src="assets/readme_assets/badge_le_site_de_korben.svg" alt="le site de korben"/></a>
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
