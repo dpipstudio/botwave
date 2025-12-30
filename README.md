@@ -142,7 +142,7 @@ Options:
 </details>
 
 > [!TIP]
-> If you plan to only use one raspberry pi (not a network of them), we offer a standalone client, that allows you to use BotWave without a server. If you wish to use the "local client", go to [`Using The Local Client`](#using-the-local-client)
+> If you plan to only use one raspberry pi (not a network of them), we offer a standalone client, that allows you to use BotWave without a server. If you wish to use the "local client", go to [`Using The Local Client`](#using-the-local-client).
 
 ### Using The Client-Server
 In those examples, it is assumed that you have one machine with the `server` component installed, and one Raspberry Pi with the `client` component installed. It is also assumed that both are on the same network. 
