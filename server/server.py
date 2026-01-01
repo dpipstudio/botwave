@@ -527,6 +527,20 @@ class BotWaveServer:
             return
         
         # BROADCAST CONTROL 
+        elif command_name == 'start':
+            if len(cmd) < 3:
+                Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
+                return
+            
+            frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
+            loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
+            ps = cmd[5] if len(cmd) > 5 else "BotWave"
+            rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
+            pi = cmd[7] if len(cmd) > 7 else "FFFF"
+            
+            await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
+            return
+
         elif command_name == 'live':
             if len(cmd) < 2:
                 Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
