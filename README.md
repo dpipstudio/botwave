@@ -320,7 +320,9 @@ The local client requires `wave` (`.wav`) files to play. To upload a file, you h
 
 **1. Upload a file stored on the local machine:** 
 ```sh
-botwave> upload /home/server/Downloads/ss.wav ss.wav
+botwave> upload /home/server/Downloads/ss.wav # a single file
+
+botwave> upload  /home/server/Downloads/bw_files/ # every .wav file in the given folder
 ```
 
 **2. Upload a file stored on an external server:**

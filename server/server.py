@@ -745,7 +745,7 @@ class BotWaveServer:
         filename = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         
-        Log.broadcast(f"Uploading {filename} to {len(target_clients)} client(s)...")
+        Log.file(f"Uploading {filename} to {len(target_clients)} client(s)...")
         
         success_count = 0
         
@@ -789,7 +789,7 @@ class BotWaveServer:
             Log.warning(f"No WAV files found in {folder_path}")
             return False
         
-        Log.broadcast(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
+        Log.file(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
         
         overall_success = 0
         
@@ -803,7 +803,7 @@ class BotWaveServer:
             if idx < len(wav_files):
                 await asyncio.sleep(0.5)
         
-        Log.broadcast(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
+        Log.file(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
         return overall_success > 0
     
     

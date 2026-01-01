@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.2-alfaroa ---=
+## What changed:
+- Improved `upload` on local client to add folder uploads
+- Fixed a small logging type issue in the server
+- Changed the README structure with clear instructions
+=--- END ---=
+
 =--- v1.0.1-terminalia ---=
 **What changed:**
 - Changed readme to add the ETC section and a dynamic hero image
