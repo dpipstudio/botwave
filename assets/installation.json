@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.2-alfaroa",
+      "commit": "6be1548069659469322be6817da60cd2dc0c4927"
+    },
+    {
       "codename": "v1.0.1-terminalia",
       "commit": "59b3555240d3ef5e02c9f42d3af275b4ab2484e9"
     },
