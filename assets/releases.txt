@@ -15,7 +15,7 @@
 # - =--- END ---=: marks the end of the release 
 
 =--- v1.0.2-alfaroa ---=
-**What changed:**
+## What changed:
 - Improved `upload` on local client to add folder uploads
 - Fixed a small logging type issue in the server
 - Changed the README structure with clear instructions
