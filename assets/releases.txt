@@ -16,7 +16,7 @@
 
 =--- v1.0.2-alfaroa ---=
 **What changed:**
-- Improved `upload` command usage for the local client
+- Improved `upload` on local client to add folder uploads
 - Fixed a small logging type issue in the server
 - Changed the README structure with clear instructions
 =--- END ---=
