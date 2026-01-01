@@ -789,7 +789,7 @@ class BotWaveServer:
             Log.warning(f"No WAV files found in {folder_path}")
             return False
         
-        Log.broadcast(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
+        Log.file(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
         
         overall_success = 0
         
