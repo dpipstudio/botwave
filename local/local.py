@@ -350,7 +350,7 @@ class BotWaveCLI:
             except Exception as e:
                 Log.error(f"  {filename} - {e}")
         
-        Log.broadcast(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
+        Log.file(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
         return overall_success > 0
 
     def download_file(self, url: str, dest_name: str):
