@@ -10,10 +10,10 @@
   <g clip-path="url(#rounded)">
     <image x="10" y="7.5" width="30" height="30" href="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjE4IiB2aWV3Qm94PSI0IDQgMTg4IDE4OCIgd2lkdGg9IjE4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Im00IDRoMTg4djE4OGgtMTg4eiIgZmlsbD0iI2Y2MCIvPjxwYXRoIGQ9Im03My4yNTIxNzU2IDQ1LjAxIDIyLjc0NzgyNDQgNDcuMzkxMzAwODMgMjIuNzQ3ODI0NC00Ny4zOTEzMDA4M2gxOS41NjU2OTYzMWwtMzQuMzIzNTIwNzEgNjQuNDg2NjE0Njh2NDEuNDkzMzg1MzJoLTE1Ljk4di00MS40OTMzODUzMmwtMzQuMzIzNTIwNzEtNjQuNDg2NjE0Njh6IiBmaWxsPSIjZmZmIi8+PC9zdmc+"/>
     
-    <text x="58.9" y="28.8" 
+    <text x="46.0" y="28.8" 
           font-family="Segoe UI, Arial, sans-serif" 
-          font-size="18" font-weight="600" fill="#ffffff">
-      Show HN
+          font-size="16" font-weight="600" fill="#ffffff">
+      Hacker News
     </text>
   </g>
 </svg>

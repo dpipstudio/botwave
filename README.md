@@ -412,7 +412,7 @@ You can directly try BotWave `server` on Cloud Instances like Google Shell or Gi
 **BotWave mentions**: Here are some posts that talk about BotWave. Thanks to their creators !
 <div align="center"> <!-- centering a div ?? -->
 <a href="https://peppe8o.com/?s=botwave" target="_blank"><img src="assets/readme_assets/badge_peppe8o.svg" alt="peppe8o"/></a>
-<a href="https://news.ycombinator.com/item?id=46305516" target="_blank"><img src="assets/readme_assets/badge_show_hn.svg" alt="show hn"/></a>
+<a href="https://hn.algolia.com/?dateRange=all&page=0&prefix=true&query=botwave%20radio&sort=byDate&type=all" target="_blank"><img src="assets/readme_assets/badge_hacker_news.svg" alt="show hn"/></a>
 <a href="https://korben.info/botwave-raspberry-pi-emetteur-fm-radio.html" target="_blank"><img src="assets/readme_assets/badge_le_site_de_korben.svg" alt="le site de korben"/></a>
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
 </div>
