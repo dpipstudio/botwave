@@ -37,16 +37,18 @@ jobs:
         if: steps.parse.outputs.new_release == 'true'
         run: |
           chmod +x .github/scripts/update-installation.sh
-          .github/scripts/update-installation.sh "${{ steps.parse.outputs.version }}" "${{ github.sha }}"
+          .github/scripts/update-installation.sh "${{ steps.parse.outputs.version }}" "${{ github.event.before }}"
       
       - name: Commit installation.json changes
         if: steps.parse.outputs.new_release == 'true'
+        id: commit_changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add assets/installation.json
           git diff --staged --quiet || git commit -m "Update installation.json for release ${{ steps.parse.outputs.version }}"
           git push
+          echo "new_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
       
       - name: Create GitHub Release
         if: steps.parse.outputs.new_release == 'true'
@@ -57,5 +59,6 @@ jobs:
           body_path: release-notes.md
           draft: false
           prerelease: false
+          target_commitish: ${{ steps.commit_changes.outputs.new_sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
