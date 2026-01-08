@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.3-Desmos ---=
+**What changed:**
+- Fixed the text overriding the prompt. We now have a clean prompt / logs structure
+- Changed defaults for radio name (ps) and radio description (rt). They now are "BotWave" and "file_name"
+- Added peppe8o.com to the README and replaced "show hn" with "hackernews"
+=--- END ---=
+
 =--- v1.0.2-alfaroa ---=
 ## What changed:
 - Improved `upload` on local client to add folder uploads
