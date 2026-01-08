@@ -540,7 +540,7 @@ class BotWaveServer:
             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
             ps = cmd[5] if len(cmd) > 5 else "BotWave"
-            rt = cmd[6] if len(cmd) > 6 else "Broadcasting"
+            rt = cmd[6] if len(cmd) > 6 else cmd[1] # file name
             pi = cmd[7] if len(cmd) > 7 else "FFFF"
             
             await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
@@ -565,8 +565,8 @@ class BotWaveServer:
             output_wav = cmd[4] if len(cmd) > 4 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
             frequency = float(cmd[5]) if len(cmd) > 5 else 90.0
             loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
-            ps = cmd[7] if len(cmd) > 7 else "RADIOOOO"
-            rt = cmd[8] if len(cmd) > 8 else "Broadcasting"
+            ps = cmd[7] if len(cmd) > 7 else "BotWave"
+            rt = cmd[8] if len(cmd) > 8 else "Live streaming !"
             pi = cmd[9] if len(cmd) > 9 else "FFFF"
             
             if not os.path.exists(img_path):

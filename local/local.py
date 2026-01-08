@@ -109,8 +109,8 @@ class BotWaveCLI:
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
                 frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
-                ps = cmd_parts[4] if len(cmd_parts) > 4 else "RADIOOOO"
-                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else "Broadcasting"
+                ps = cmd_parts[4] if len(cmd_parts) > 4 else "BotWave"
+                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
                 pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers()
@@ -131,8 +131,8 @@ class BotWaveCLI:
                 output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
                 frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
                 loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
-                ps = cmd_parts[6] if len(cmd_parts) > 6 else "RADIOOOO"
-                rt = cmd_parts[7] if len(cmd_parts) > 7 else "Broadcasting"
+                ps = cmd_parts[6] if len(cmd_parts) > 6 else "BotWave"
+                rt = cmd_parts[7] if len(cmd_parts) > 7 else output_wav
                 pi = cmd_parts[8] if len(cmd_parts) > 8 else "FFFF"
 
                 if not os.path.exists(img_path):
@@ -381,7 +381,7 @@ class BotWaveCLI:
             Log.error(f"Download error: {str(e)}")
             return False
 
-    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
