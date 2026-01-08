@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.3-desmos",
+      "commit": "e71320a4accc822c0adbb25cb9c01fda707086c4"
+    },
+    {
       "codename": "v1.0.3-Desmos",
       "commit": "61dd32c95741bebcf656b370f5490685b0cee68b"
     },
