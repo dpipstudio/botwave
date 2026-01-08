@@ -14,7 +14,7 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
-=--- v1.0.3-Desmos ---=
+=--- v1.0.3-desmos ---=
 **What changed:**
 - Fixed the text overriding the prompt. We now have a clean prompt / logs structure
 - Changed defaults for radio name (ps) and radio description (rt). They now are "BotWave" and "file_name"
