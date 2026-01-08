@@ -37,7 +37,7 @@ jobs:
         if: steps.parse.outputs.new_release == 'true'
         run: |
           chmod +x .github/scripts/update-installation.sh
-          .github/scripts/update-installation.sh "${{ steps.parse.outputs.version }}" "${{ github.event.before }}"
+          .github/scripts/update-installation.sh "${{ steps.parse.outputs.version }}" "${{ github.sha }}"
       
       - name: Commit installation.json changes
         if: steps.parse.outputs.new_release == 'true'
