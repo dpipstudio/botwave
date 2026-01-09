@@ -77,7 +77,7 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 - **Remote Management**: Start, stop, and manage broadcasts remotely.
 - **Authentication**: Client-server authentication with passkeys.
 - **Protocol Versioning**: Ensure compatibility between server and clients.
-- **Live Broadcasting**: Stream live output from any application in real time. (Still in development, see [`#24`](https://github.com/dpipstudio/botwave/issues/24))
+- **Live Broadcasting**: Stream live output from any application in real time.
 
 ## Requirements
 > All requirements can be installed automatically via the installer, see below.
