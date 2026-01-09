@@ -121,7 +121,7 @@ class BotWaveCLI:
             
             if cmd == 'live':
                 frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else 90.0
-                ps = cmd_parts[2] if len(cmd_parts) > 2 else "RADIOOOO"
+                ps = cmd_parts[2] if len(cmd_parts) > 2 else "BotWave"
                 rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else "Broadcasting"
                 pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
 
@@ -436,7 +436,7 @@ class BotWaveCLI:
             self.piwave = None
             return False
 
-    def start_live(self, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF"):
+    def start_live(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
