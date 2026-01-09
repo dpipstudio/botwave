@@ -14,6 +14,14 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.4-zanha ---=
+**What changed:**
+- Added live streaming (see issue #14)
+- Updated (un)installers / updaters. Now support the --[no-]alsa parameter
+- Added STREAM_TOKEN to protocol, and removed RESTART. Protocol is now 2.0.1
+- Enhanced error handling
+=--- END ---=
+
 =--- v1.0.3-desmos ---=
 **What changed:**
 - Fixed the text overriding the prompt. We now have a clean prompt / logs structure
