@@ -112,8 +112,8 @@ class BotWaveCLI:
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
                 frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
-                ps = cmd_parts[4] if len(cmd_parts) > 4 else "RADIOOOO"
-                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else "Broadcasting"
+                ps = cmd_parts[4] if len(cmd_parts) > 4 else "BotWave"
+                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
                 pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers()
@@ -145,8 +145,8 @@ class BotWaveCLI:
                 output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
                 frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
                 loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
-                ps = cmd_parts[6] if len(cmd_parts) > 6 else "RADIOOOO"
-                rt = cmd_parts[7] if len(cmd_parts) > 7 else "Broadcasting"
+                ps = cmd_parts[6] if len(cmd_parts) > 6 else "BotWave"
+                rt = cmd_parts[7] if len(cmd_parts) > 7 else output_wav
                 pi = cmd_parts[8] if len(cmd_parts) > 8 else "FFFF"
 
                 if not os.path.exists(img_path):
@@ -213,14 +213,12 @@ class BotWaveCLI:
                 return True
             
             elif cmd == 'upload':
-                if len(cmd_parts) < 3:
-                    Log.error("Usage: upload <source> <destination>")
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: upload <source>")
                     return True
                 
                 source = cmd_parts[1]
-                destination = cmd_parts[2]
-
-                self.upload_file(source, destination)
+                self.upload_file(source)
                 return True
             
             elif cmd == 'handlers':
@@ -311,14 +309,17 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
-    def upload_file(self, source_path: str, dest_name: str):
+    def upload_file(self, source_path: str):
         if not os.path.exists(source_path):
-            Log.error(f"Source file {source_path} not found")
+            Log.error(f"Source {source_path} not found")
             return False
 
-        if dest_name is None:
-            dest_name = os.path.basename(source_path)
+        if os.path.isdir(source_path):
+            return self._upload_folder_contents(source_path)
+        
+        dest_name = os.path.basename(source_path)
         dest_path = os.path.join(self.upload_dir, dest_name)
+        
         try:
             with open(source_path, 'rb') as src_file:
                 with open(dest_path, 'wb') as dest_file:
@@ -328,6 +329,43 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error uploading file: {e}")
             return False
+        
+
+    def _upload_folder_contents(self, folder_path: str):
+        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+            Log.error(f"Folder {folder_path} not found")
+            return False
+        
+        wav_files = [
+            f for f in os.listdir(folder_path)
+            if f.lower().endswith('.wav') and os.path.isfile(os.path.join(folder_path, f))
+        ]
+        
+        if not wav_files:
+            Log.warning(f"No WAV files found in {folder_path}")
+            return False
+        
+        Log.file(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
+        
+        overall_success = 0
+        
+        for idx, filename in enumerate(wav_files, 1):
+            full_path = os.path.join(folder_path, filename)
+            dest_path = os.path.join(self.upload_dir, filename)
+            
+            Log.file(f"[{idx}/{len(wav_files)}] Uploading {filename}...")
+            
+            try:
+                with open(full_path, 'rb') as src_file:
+                    with open(dest_path, 'wb') as dest_file:
+                        dest_file.write(src_file.read())
+                Log.success(f"  {filename}")
+                overall_success += 1
+            except Exception as e:
+                Log.error(f"  {filename} - {e}")
+        
+        Log.file(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
+        return overall_success > 0
 
     def download_file(self, url: str, dest_name: str):
         def _download_reporthook(block_num, block_size, total_size):
@@ -356,8 +394,8 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Download error: {str(e)}")
             return False
-        
-    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "RADIOOOO", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+
+    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
@@ -554,9 +592,10 @@ class BotWaveCLI:
         Log.print("  Example: rm broadcast.wav", 'cyan')
         Log.print("")
 
-        Log.print("upload <source> [destination]", 'bright_green')
-        Log.print("  Upload a file to the upload directory", 'white')
-        Log.print("  Example: upload /path/to/myfile.wav broadcast.wav", 'cyan')
+        Log.print("upload <targets> <file|folder>", 'bright_green')
+        Log.print("  Upload a file or folder to the upload directory", 'white')
+        Log.print("  Example: upload broadcast.wav", 'cyan')
+        Log.print("  Example: upload /home/bw/lib", 'cyan')
         Log.print("")
 
         Log.print("dl <url> [destination]", 'bright_green')

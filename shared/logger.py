@@ -1,5 +1,12 @@
 from dlogger import DLogger
 import asyncio
+import sys
+
+try:
+    import readline
+    HAS_READLINE = True
+except ImportError:
+    HAS_READLINE = False
 
 class Logger(DLogger):
     ICONS = {
@@ -52,7 +59,19 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
+        if HAS_READLINE:
+            if sys.stdin.isatty():
+                current_line = readline.get_line_buffer()
+                sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
+                sys.stdout.flush()
+        
+
         super().print(message=message, style=style, icon=icon, end=end)
+
+        if HAS_READLINE:
+            if sys.stdin.isatty() and current_line:
+                sys.stdout.write('\033[1;32mbotwave › \033[0m ' + current_line)
+                sys.stdout.flush()
 
         ws_message = f"[{icon}] {message}" if icon else message
 
