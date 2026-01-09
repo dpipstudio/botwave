@@ -1,7 +1,7 @@
 import shlex
 from typing import Dict, Tuple
 
-PROTOCOL_VERSION = "2.0.0"
+PROTOCOL_VERSION = "2.0.1"
 
 
 class Commands:
@@ -23,10 +23,10 @@ class Commands:
     UPLOAD_TOKEN = 'UPLOAD_TOKEN'
     DOWNLOAD_TOKEN = 'DOWNLOAD_TOKEN'
     DOWNLOAD_URL = 'DOWNLOAD_URL'
+    STREAM_TOKEN = 'STREAM_TOKEN'
     
     # client managment
     KICK = 'KICK'
-    RESTART = 'RESTART'
     
     # file managment
     LIST_FILES = 'LIST_FILES'

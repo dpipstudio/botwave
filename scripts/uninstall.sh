@@ -281,6 +281,33 @@ remove_installation_directory() {
     fi
 }
 
+remove_alsa_loopback() {
+    log INFO "Checking ALSA loopback configuration..."
+
+    local removed=false
+
+    for file in \
+        "/etc/modules-load.d/aloop.conf" \
+        "/etc/modprobe.d/aloop.conf"
+    do
+        if [[ -f "$file" ]] && grep -q "BotWave installer" "$file"; then
+            log INFO "  - Removing BotWave ALSA config: $file"
+            rm -f "$file"
+            removed=true
+        else
+            log INFO "  - Skipping $file (not BotWave-managed)"
+        fi
+    done
+
+    if [[ "$removed" == true ]]; then
+        log WARN "BotWave ALSA configuration removed."
+        log WARN "A reboot may be required for ALSA changes to fully apply."
+    else
+        log INFO "No BotWave ALSA configuration found."
+    fi
+}
+
+
 # ============================================================================
 # SUMMARY
 # ============================================================================
@@ -321,6 +348,7 @@ main() {
     stop_and_remove_services
     remove_binaries
     remove_installation_directory
+    remove_alsa_loopback
 
     # Summary
     print_summary

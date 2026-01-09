@@ -74,7 +74,7 @@ install_bore() {
 install_botwave() {
     log INFO "Installing BotWave server..."
     
-    curl -sSL https://botwave.dpip.lol/install | sudo bash -s server
+    curl -sSL https://botwave.dpip.lol/install | sudo bash -s -- server --no-alsa
     
     log INFO "BotWave server installed"
 }

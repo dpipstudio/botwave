@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.http import BWHTTPFileClient
@@ -64,6 +65,9 @@ class BotWaveClient:
         self.broadcasting = False
         self.current_file = None
         self.broadcast_lock = asyncio.Lock() # using asyncio instead of thereading now
+        self.alsa = Alsa()
+        self.stream_task = None
+        self.stream_active = False
         
         # states
         self.running = False
@@ -186,6 +190,10 @@ class BotWaveClient:
                 await self._handle_start_broadcast(kwargs)
                 return
             
+            if command == Commands.STREAM_TOKEN:
+                await self._handle_stream_token(kwargs)
+                return
+            
             if command == Commands.STOP:
                 await self._handle_stop_broadcast()
                 return
@@ -219,14 +227,9 @@ class BotWaveClient:
                 await self.stop()
                 return
             
-            if command == Commands.RESTART:
-                Log.info("Restart requested")
-                await self._handle_stop_broadcast()
-                response = ProtocolParser.build_response(Commands.OK, "Restart acknowledged")
-                await self.ws_client.send(response)
-                return
-            
             Log.warning(f"Unknown command: {command}")
+            response = ProtocolParser.build_response(Commands.ERROR, f"Unknown command: {command}. Perhaps a protocol mismatch ?")
+            await self.ws_client.send(response)
             
         except Exception as e:
             Log.error(f"Error handling message: {e}")
@@ -386,6 +389,107 @@ class BotWaveClient:
 
         await self.ws_client.send(response)
 
+    async def _handle_stream_token(self, kwargs: dict):
+        token = kwargs.get('token')
+        rate = int(kwargs.get('rate', 48000))
+        channels = int(kwargs.get('channels', 2))
+        
+        # Broadcast params
+        frequency = float(kwargs.get('frequency', 90.0))
+        ps = kwargs.get('ps', 'BotWave')
+        rt = kwargs.get('rt', 'Streaming')
+        pi = kwargs.get('pi', 'FFFF')
+        
+        if not token:
+            error = ProtocolParser.build_response(Commands.ERROR, "Missing token")
+            await self.ws_client.send(error)
+            return
+        
+        Log.broadcast(f"Received stream token (rate={rate}, channels={channels})")
+        
+        started = await self._start_stream_broadcast(token, rate, channels, frequency, ps, rt, pi)
+        
+        if isinstance(started, Exception):
+            response = ProtocolParser.build_response(Commands.ERROR, message=str(started))
+        else:
+            response = ProtocolParser.build_response(Commands.OK, "Stream broadcast started")
+        
+        await self.ws_client.send(response)
+
+    async def _start_stream_broadcast(self, token, rate, channels, frequency, ps, rt, pi):
+        async def finished():
+            Log.info("Stream finished, stopping broadcast...")
+            await self._stop_broadcast()
+        
+        async with self.broadcast_lock:
+            if self.broadcasting:
+                await self._stop_broadcast()
+            
+            try:
+                self.piwave = PiWave(
+                    frequency=frequency,
+                    ps=ps,
+                    rt=rt,
+                    pi=pi,
+                    loop=False,
+                    backend="bw_custom",
+                    debug=False
+                )
+                
+                stream_task = self.http_client.stream_pcm_generator(
+                    server_host=self.http_host,
+                    server_port=self.http_port,
+                    token=token,
+                    rate=rate,
+                    channels=channels,
+                    chunk_size=1024
+                )
+
+                self.stream_active = True
+                
+                def sync_generator_wrapper():
+                    loop = asyncio.new_event_loop()
+                    try:
+                        async_gen = self.stream_task.__aiter__()
+                        while self.stream_active:
+                            try:
+                                chunk = loop.run_until_complete(
+                                    asyncio.wait_for(async_gen.__anext__(), timeout=5.0)
+                                )
+                                yield chunk
+                            except asyncio.TimeoutError:
+                                if not self.stream_active:
+                                    break
+                                continue
+                            except StopAsyncIteration:
+                                break
+                    except Exception as e:
+                        Log.error(f"Stream generator error: {e}")
+                    finally:
+                        loop.close()
+                
+                self.broadcasting = True
+                self.current_file = f"stream:{token[:8]}"
+                
+                self.stream_task = stream_task
+                
+                self.piwave.play(
+                    sync_generator_wrapper(),
+                    sample_rate=rate,
+                    channels=channels,
+                    chunk_size=1024
+                )
+                
+                self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
+                
+                Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
+                return True
+                
+            except Exception as e:
+                Log.error(f"Stream broadcast error: {e}")
+                self.broadcasting = False
+                return e
+
     async def _delayed_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop, delay):
         await asyncio.sleep(delay)
         started = await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
@@ -437,6 +541,20 @@ class BotWaveClient:
     async def _stop_broadcast(self):
         async with self.broadcast_lock:
             self.piwave_monitor.stop()
+
+            if self.stream_active:
+                self.stream_active = False
+                await asyncio.wait(0.2)
+
+            if self.stream_task:
+                try:
+                    await asyncio.sleep(0.1)
+                    await self.stream_task.aclose()
+                    Log.broadcast("Stream closed")
+                except Exception as e:
+                    Log.error(f"Error closing stream: {e}")
+                finally:
+                    self.stream_task = None
 
             if self.piwave:
                 try:

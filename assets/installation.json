@@ -47,6 +47,7 @@
   "always": {
     "files": [
       "autorun/autorun.py",
+      "shared/alsa.py",
       "shared/cat.py",
       "shared/cat.jpg",
       "shared/handlers.py",
@@ -65,7 +66,8 @@
       "dlogger==1.0.4",
       "aiofiles==0.8.0",
       "aiohttp",
-      "morse-talk==0.2"
+      "morse-talk==0.2",
+      "pyalsaaudio==0.11.0"
     ],
     "binaries": [
       "bin/bw-autorun",

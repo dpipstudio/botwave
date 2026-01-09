@@ -18,7 +18,7 @@ class BWCustom(Backend):
 
     @property
     def supports_live_streaming(self):
-        return False
+        return True
 
     @property
     def supports_loop(self):
@@ -28,7 +28,7 @@ class BWCustom(Backend):
         return "bw_custom"
 
     def _get_search_paths(self):
-                return ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
+        return ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
 
     def build_command(self, wav_file: str, loop: bool):
         if not Path(wav_file).exists():
@@ -48,5 +48,16 @@ class BWCustom(Backend):
 
         return cmd
 
-    def build_live_command(self):
-        raise BackendError(f"{self.name} does not support live streaming")
+    def build_live_command(self, sample_rate=48000, channels=2):
+        cmd = [
+            self.required_executable,
+            "-freq", str(self.frequency),
+            "-audio", "-",
+            "-raw",
+            "-rate", str(sample_rate),
+            "-channels", str(channels),
+            "-pi", self.pi,
+            "-ps", self.ps,
+            "-rt", self.rt
+        ]
+        return cmd
