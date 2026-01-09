@@ -135,6 +135,7 @@ Modes:
 Options:
   -l, --latest        Install from the latest commit (even if unreleased)
   -t, --to &lt;version&gt;  Install a specific release version
+  --[no-]alsa         Setup ALSA loopback card
   -h, --help          Show this help message
 </pre>
 <p>Adding <code> -s &lt;server, client or both&gt;</code> at the end of the command skips the interactive menu and goes straight to installation.</p>
