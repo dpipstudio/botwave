@@ -61,6 +61,7 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 <li><a href="#updating-botwave">Updating BotWave</a></li>
 <li><a href="#uninstallation">Uninstallation</a></li>
 <li><a href="#botwave-server-for-cloud-instances">BotWave Server For Cloud Instances</a></li>
+<li><a href="#get-help">Get Help</a></li>
 <li><a href="#mentions">Mentions</a></li>
 <li><a href="#license">License</a></li>
 <li><a href="#credits">Credits</a></li>
@@ -407,6 +408,12 @@ curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
 You can directly try BotWave `server` on Cloud Instances like Google Shell or GitHub Codespaces.  
 [![Run in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)  
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/dpipstudio/botwave)
+
+
+### Get Help
+Got a question or an issue ? Feel free to ask for help !  
+- Open an [issue](https://github.com/dpipstudio/botwave/issues/new)
+- Join the [discord](https://discord.gg/r5ragNsQxp)
 
 
 ## Mentions
