@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.5-abuta",
+      "commit": "9bad180a950959c96bc077cb081052f851bd42ab"
+    },
+    {
       "codename": "v1.0.4-zanha",
       "commit": "c5f9d59e7e9dc23ff5fab4e0cbf7540810575a5e"
     },
