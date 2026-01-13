@@ -14,6 +14,15 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.5-abuta ---=
+**What changed:**
+- Replaced RDS defaults
+- Added the Get Help section to the README
+- Using custom user agent for version checks
+- Added --skip-checks flag to server
+- Edited help formatting on local client and server
+=--- END ---=
+
 =--- v1.0.4-zanha ---=
 **What changed:**
 - Added live streaming (see issue #14)
