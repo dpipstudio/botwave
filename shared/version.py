@@ -15,7 +15,14 @@ def parse_version(version_str: str) -> tuple:
 def check_for_updates() -> Optional[str]:
     #Check for protocol updates from remote URL
     try:
-        with urllib.request.urlopen(VERSION_CHECK_URL, timeout=10) as response:
+        req = urllib.request.Request(
+            VERSION_CHECK_URL,
+            headers={
+                "User-Agent": f"BotWaveVCheck/{PROTOCOL_VERSION}"
+            }
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as response:
             remote_version = response.read().decode('utf-8').strip()
         
         current_tuple = parse_version(PROTOCOL_VERSION)
