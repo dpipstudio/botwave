@@ -858,7 +858,7 @@ class BotWaveServer:
             
             await self.ws_server.send(client_id, command)
             
-            Log.file(f"  {client.get_display_name()}: Download token sent")
+            Log.file(f"  {client.get_display_name()}: Stream token sent")
             
             success_count += 1
         
