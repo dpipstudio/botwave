@@ -537,7 +537,7 @@ class BotWaveServer:
             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
             ps = cmd[5] if len(cmd) > 5 else "BotWave"
-            rt = cmd[6] if len(cmd) > 6 else cmd[1] # file name
+            rt = cmd[6] if len(cmd) > 6 else cmd[2] # file name
             pi = cmd[7] if len(cmd) > 7 else "FFFF"
             
             await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
