@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.6-citrus ---=
+**What changed:**
+- Updated default rt on server to reflect the filename, not the targets
+- Minor log changes
+- Fixed #31 for cleaner logging and user experience
+=--- END ---=
+
 =--- v1.0.5-abuta ---=
 **What changed:**
 - Replaced RDS defaults
