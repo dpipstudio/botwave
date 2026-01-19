@@ -8,6 +8,8 @@ try:
 except ImportError:
     HAS_READLINE = False
 
+INPUT_ACTIVE = False
+
 class Logger(DLogger):
     ICONS = {
         'success': 'OK',
@@ -59,19 +61,23 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
-        if HAS_READLINE:
-            if sys.stdin.isatty():
-                current_line = readline.get_line_buffer()
+        has_tty = HAS_READLINE and sys.stdin.isatty()
+        #print(INPUT_ACTIVE)
+
+        if has_tty:
+            current_line = readline.get_line_buffer()
+
+            if INPUT_ACTIVE:
                 sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
                 sys.stdout.flush()
         
 
         super().print(message=message, style=style, icon=icon, end=end)
 
-        if HAS_READLINE:
-            if sys.stdin.isatty() and current_line:
-                sys.stdout.write('\033[1;32mbotwave › \033[0m ' + current_line)
-                sys.stdout.flush()
+        if has_tty and INPUT_ACTIVE:
+            prompt = '\033[1;32mbotwave › \033[0m '
+            sys.stdout.write(prompt + current_line)
+            sys.stdout.flush()
 
         ws_message = f"[{icon}] {message}" if icon else message
 
@@ -86,5 +92,14 @@ class Logger(DLogger):
                 except Exception:
                     pass
 
+def toggle_input(is_active=None):
+    global INPUT_ACTIVE
+
+    if is_active is None:
+        INPUT_ACTIVE = not INPUT_ACTIVE
+    else:
+        INPUT_ACTIVE = bool(is_active)
+
+        
 
 Log = Logger()
