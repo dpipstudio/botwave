@@ -29,7 +29,7 @@ from shared.alsa import Alsa
 from shared.cat import check
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
-from shared.logger import Log
+from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.socket import BWWebSocketServer
@@ -1641,11 +1641,13 @@ def main():
         try:
 
             server.onready_handlers()
-
+            
             while server.running:
                 try:
                     print()
+                    toggle_input(True)
                     cmd_input = input("\033[1;32mbotwave › \033[0m ").strip()
+                    toggle_input(False)
                     
                     if not cmd_input:
                         continue
@@ -1661,9 +1663,18 @@ def main():
                     server._execute_command(cmd_input)
                     
                 except KeyboardInterrupt:
+                    toggle_input(False)
                     Log.warning("Use 'exit' to exit")
+
                 except EOFError:
-                    break
+                    toggle_input(False)
+                    Log.info("Exiting...")
+                    server.stop()
+
+                except Exception as e:
+                    toggle_input(False)
+                    Log.error(f"Error: {e}")
+
         finally:
             if HAS_READLINE:
                 try:

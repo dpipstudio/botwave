@@ -26,7 +26,7 @@ from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.handlers import HandlerExecutor
-from shared.logger import Log
+from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.pw_monitor import PWM
 from shared.sstv import make_sstv_wav
@@ -687,7 +687,10 @@ def main():
 
         while cli.running:
             try:
+                print()
+                toggle_input(True)
                 cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+                toggle_input(False)
 
                 if not cmd_input:
                     continue
@@ -701,12 +704,17 @@ def main():
                     break
 
             except KeyboardInterrupt:
+                toggle_input(False)
                 Log.warning("Use 'exit' to exit")
+
             except EOFError:
+                toggle_input(False)
                 Log.info("Exiting...")
                 cli.stop()
                 break
+
             except Exception as e:
+                toggle_input(False)
                 Log.error(f"Error: {e}")
 
         if HAS_READLINE:
@@ -720,7 +728,7 @@ def main():
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            cli.stop()
+            Log.warning()
 
 if __name__ == "__main__":
     main()
