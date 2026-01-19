@@ -425,6 +425,13 @@ Got a question or an issue ? Feel free to ask for help !
 <a href="https://www.cyberplanete.net/raspberry-pi-radio-botwave/" target="_blank"><img src="assets/readme_assets/badge_cyberplanete.svg" alt="cyberplanete"/></a>
 </div>
 
+## Supports
+**BotWave is supported by donations** from the following people and projects.
+Your contributions help with development, hosting, and hardware costs 🙏
+<div align="center"> <!-- centering a div ?? -->
+<a href="https://vocal.wtf" target="_blank"><img src="assets/readme_assets/badge_vocal.svg" alt="peppe8o"/></a>
+</div>
+
 ## License
 BotWave is licensed under [GPLv3.0](LICENSE).
 
