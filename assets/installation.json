@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.6-citrus",
+      "commit": "78995132bf5dc0ac9254908f4b079b9c61ade594"
+    },
+    {
       "codename": "v1.0.5-abuta",
       "commit": "9bad180a950959c96bc077cb081052f851bd42ab"
     },
