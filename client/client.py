@@ -505,6 +505,16 @@ class BotWaveClient:
     async def _start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
         async def finished():
             Log.info("Playback finished, stopping broadcast...")
+
+            try:
+                response = ProtocolParser.build_command(
+                    Commands.END,
+                    filename=filename
+                )
+                await self.ws_client.send(response)
+            except Exception as e:
+                Log.error(f"Error notifying server of broadcast end: {e}")
+
             await self._stop_broadcast()
 
         async with self.broadcast_lock:
