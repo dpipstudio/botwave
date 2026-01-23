@@ -32,6 +32,7 @@ from shared.http import BWHTTPFileServer
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.queue import Queue
 from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
 from shared.tls import gen_cert, save_cert
@@ -81,9 +82,7 @@ class BotWaveServer:
         self.running = False
         self.pending_responses: Dict[str, asyncio.Future] = {}
         self.file_list_responses: Dict[str, list] = {}
-        
-        # cmd history for interactive mode
-        self.command_history = []
+        self.queue = Queue(self)
         
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
         self.loop = None
@@ -241,6 +240,12 @@ class BotWaveServer:
                     self.pending_responses[f"{client_id}_files"].set_exception(Exception(msg))
                     del self.pending_responses[f"{client_id}_files"]
                 
+                return
+            
+            if command == Commands.END:
+                filename = kwargs.get('filename', 'unknown')
+                Log.broadcast(f"{self.clients[client_id].get_display_name()}: Finished broadcasting {filename}")
+                self.queue.on_broadcast_ended(client_id)
                 return
             
             Log.warning(f"Unexpected command from {client_id}: {command}")
@@ -561,6 +566,10 @@ class BotWaveServer:
                 Log.error("Usage: stop <targets>")
                 return
             await self.stop_broadcast(cmd[1])
+            return
+        
+        elif command_name == 'queue':
+            self.queue.parse(' '.join(cmd[1:]))
             return
         
         # OTHER MEDIA FORM
@@ -1654,11 +1663,6 @@ def main():
                     
                     if HAS_READLINE:
                         readline.add_history(cmd_input)
-                    
-                    server.command_history.append(cmd_input)
-
-                    if len(server.command_history) > 1000:
-                        server.command_history = server.command_history[-1000:]
 
                     server._execute_command(cmd_input)
                     
