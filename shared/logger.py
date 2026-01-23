@@ -27,7 +27,8 @@ class Logger(DLogger):
         'auth': 'AUTH',
         'tls': 'TLS',
         'morse': 'MORSE',
-        'alsa': 'ALSA'
+        'alsa': 'ALSA',
+        'queue': 'QUEUE'
     }
 
     STYLES = {
@@ -46,7 +47,8 @@ class Logger(DLogger):
         'auth': 'blue',
         'tls': 'red',
         'morse': 'purple',
-        'alsa': 'pink'
+        'alsa': 'pink',
+        'queue': 'orange'
     }
 
     ws_clients = set()
