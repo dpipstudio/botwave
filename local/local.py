@@ -412,6 +412,8 @@ class BotWaveCLI:
             Log.error(f"File {file_path} not found")
             return False
         
+        self.queue.manual_pause()
+        
         if self.broadcasting:
             self.stop_broadcast()
 
@@ -453,6 +455,8 @@ class BotWaveCLI:
             Log.alsa("Live broadcast is not supported on this installation.")
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
+        
+        self.queue.manual_pause()
         
         if self.broadcasting:
             self.stop_broadcast()

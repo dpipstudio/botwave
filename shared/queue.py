@@ -77,6 +77,19 @@ class Queue:
         
         command = command[1:].strip()
         action(command)
+
+
+    # MANUAL QUEUE PAUSE
+
+    def manual_pause(self):
+        """
+        Pauses the queue if it is playing.
+        To be used on manual 'start', 'live', etc. commands.
+        """
+
+        if not self.paused:
+            Log.queue("Auto-pausing queue due to manual action")
+            self.paused = True
     
     # ADD FILES TO QUEUE
     

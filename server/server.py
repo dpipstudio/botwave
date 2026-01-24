@@ -538,7 +538,7 @@ class BotWaveServer:
             if len(cmd) < 3:
                 Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
                 return
-            
+                
             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
             ps = cmd[5] if len(cmd) > 5 else "BotWave"
@@ -552,7 +552,7 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
                 return
-
+            
             frequency = float(cmd[2]) if len(cmd) > 2 else 90.0
             ps = cmd[3] if len(cmd) > 3 else "BotWave"
             rt = cmd[4] if len(cmd) > 4 else "Broadcasting"
@@ -565,6 +565,7 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: stop <targets>")
                 return
+            
             await self.stop_broadcast(cmd[1])
             return
         
@@ -838,6 +839,8 @@ class BotWaveServer:
             Log.alsa("Live broadcast is not supported on this installation.")
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
+        
+        self.queue.manual_pause()
         
         self.alsa.start()
 
@@ -1255,6 +1258,8 @@ class BotWaveServer:
         if not target_clients:
             Log.warning("No client(s) found matching the query")
             return False
+        
+        self.queue.manual_pause()
         
         # calculate start_at timestamp if wait_start is enabled
         if self.wait_start and len(target_clients) > 1:
