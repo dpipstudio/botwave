@@ -135,6 +135,8 @@ class BotWaveCLI:
             elif cmd == 'stop':
                 self.stop_broadcast()
                 self.onstop_handlers()
+
+                self.queue.manual_pause()
                 return True
             
             elif cmd == 'queue':
@@ -446,7 +448,7 @@ class BotWaveCLI:
             self.piwave = None
             return False
 
-    def start_live(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", trigger_manual: bool = False):
+    def start_live(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
@@ -457,8 +459,7 @@ class BotWaveCLI:
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
         
-        if trigger_manual:
-            self.queue.manual_pause()
+        self.queue.manual_pause()
         
         if self.broadcasting:
             self.stop_broadcast()

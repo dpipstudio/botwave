@@ -566,6 +566,8 @@ class BotWaveServer:
                 Log.error("Usage: stop <targets>")
                 return
             
+            self.queue.toggle()
+            
             await self.stop_broadcast(cmd[1])
             return
         
@@ -828,7 +830,7 @@ class BotWaveServer:
         return overall_success > 0
     
 
-    async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", trigger_manual: bool = True):
+    async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
         
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
@@ -840,8 +842,7 @@ class BotWaveServer:
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
         
-        if trigger_manual:
-            self.queue.manual_pause()
+        self.queue.manual_pause()
         
         self.alsa.start()
 
