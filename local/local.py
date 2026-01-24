@@ -29,6 +29,7 @@ from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.pw_monitor import PWM
+from shared.queue import Queue
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.ws_cmd import WSCMDH
@@ -59,6 +60,7 @@ class BotWaveCLI:
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
+        self.queue = Queue(client_instance=self, is_local=True, upload_dir=upload_dir)
         self.ws_port = ws_port
         self.ws_server = None
         self.ws_clients = set()
@@ -133,6 +135,10 @@ class BotWaveCLI:
             elif cmd == 'stop':
                 self.stop_broadcast()
                 self.onstop_handlers()
+                return True
+            
+            elif cmd == 'queue':
+                self.queue.parse(' '.join(cmd_parts[1:]))
                 return True
             
             elif cmd == 'sstv':
@@ -400,6 +406,7 @@ class BotWaveCLI:
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
             self.onstop_handlers()
+            self.queue.on_broadcast_ended()
 
         if not os.path.exists(file_path):
             Log.error(f"File {file_path} not found")
