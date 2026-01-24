@@ -828,7 +828,7 @@ class BotWaveServer:
         return overall_success > 0
     
 
-    async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
+    async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", trigger_manual: bool = True):
         
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
@@ -840,7 +840,8 @@ class BotWaveServer:
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
         
-        self.queue.manual_pause()
+        if trigger_manual:
+            self.queue.manual_pause()
         
         self.alsa.start()
 
@@ -1252,14 +1253,15 @@ class BotWaveServer:
         except Exception as e:
             Log.warning(f"Failed to remove temp directory {directory}: {e}")
 
-    async def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+    async def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual:bool = True):
         target_clients = self._parse_client_targets(client_targets)
         
         if not target_clients:
             Log.warning("No client(s) found matching the query")
             return False
         
-        self.queue.manual_pause()
+        if trigger_manual:
+            self.queue.manual_pause()
         
         # calculate start_at timestamp if wait_start is enabled
         if self.wait_start and len(target_clients) > 1:

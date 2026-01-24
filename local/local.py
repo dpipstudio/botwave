@@ -401,7 +401,7 @@ class BotWaveCLI:
             Log.error(f"Download error: {str(e)}")
             return False
 
-    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+    def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual: bool = True):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
@@ -412,7 +412,8 @@ class BotWaveCLI:
             Log.error(f"File {file_path} not found")
             return False
         
-        self.queue.manual_pause()
+        if trigger_manual:
+            self.queue.manual_pause()
         
         if self.broadcasting:
             self.stop_broadcast()
@@ -445,7 +446,7 @@ class BotWaveCLI:
             self.piwave = None
             return False
 
-    def start_live(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
+    def start_live(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", trigger_manual: bool = False):
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
@@ -456,7 +457,8 @@ class BotWaveCLI:
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
         
-        self.queue.manual_pause()
+        if trigger_manual:
+            self.queue.manual_pause()
         
         if self.broadcasting:
             self.stop_broadcast()

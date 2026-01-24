@@ -544,7 +544,8 @@ class Queue:
             ps=self.broadcast_settings['ps'],
             rt=self.broadcast_settings['rt'],
             pi=self.broadcast_settings['pi'],
-            loop=False
+            loop=False,
+            trigger_manual=False
         )
     
     async def _play_all_clients(self, target_clients: List[str]):
@@ -569,7 +570,8 @@ class Queue:
                 ps=self.broadcast_settings['ps'],
                 rt=self.broadcast_settings['rt'],
                 pi=self.broadcast_settings['pi'],
-                loop=False
+                loop=False,
+                trigger_manual=False
             )
     
     # AUTO-ADVANCE (NEXT TRACK)
@@ -629,5 +631,6 @@ class Queue:
             ps=self.broadcast_settings['ps'],
             rt=self.broadcast_settings['rt'],
             pi=self.broadcast_settings['pi'],
-            loop=False
+            loop=False,
+            trigger_manual=False
         )
