@@ -78,8 +78,6 @@ class Alsa:
                     yield data
             except alsaaudio.ALSAAudioError:
                 # Xruns
-                if self.capture:
-                    self.capture.prepare()
                 continue
             except Exception:
                 break
