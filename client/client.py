@@ -578,8 +578,6 @@ class BotWaveClient:
             self.broadcasting = False
             self.current_file = None
 
-            Log.success("Broadcast stopped")
-
     async def _handle_list_files(self):
         try:
             wav_files = []
