@@ -32,7 +32,7 @@ We highly recommand using the official installer (Check the [main README](/READM
 
 To start the BotWave Local Client, use the following command:
 ```bash
-sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--ws PORT] [--pk PASSKEY]
+sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--ws PORT] [--pk PASSKEY] [--talk]
 ```
 
 ### Arguments
@@ -43,6 +43,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-ch
 - `--daemon`: Run in daemon mode (non-interactive).
 - `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
 - `--pk`: Optional passkey for websocket authentication.
+- `--talk`: Makes PiWave (broadcast manager) output logs visible.
 
 
 
