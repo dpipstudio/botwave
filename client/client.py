@@ -487,7 +487,7 @@ class BotWaveClient:
                 if success:
                     Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
                 else:
-                    Log.warn(f"PiWave returned a non-true status ?")
+                    Log.warning(f"PiWave returned a non-true status ?")
                 
                 return True
                 
@@ -540,7 +540,7 @@ class BotWaveClient:
                 if success:
                     Log.broadcast(f"Currently broadcasting {filename} on {frequency} MHz")
                 else:
-                    Log.warn(f"PiWave returned a non-true status ?")
+                    Log.warning(f"PiWave returned a non-true status ?")
 
                 return True
 
