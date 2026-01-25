@@ -472,7 +472,8 @@ class BotWaveCLI:
 
             self.current_file = "live_playback"
             self.broadcasting = True
-            success = self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.rate, chunk_size=self.alsa.period_size)
+            
+            success = self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.channels, chunk_size=self.alsa.period_size)
             
             self.piwave_monitor.start(self.piwave, finished)
 
