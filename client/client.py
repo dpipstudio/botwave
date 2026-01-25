@@ -47,7 +47,7 @@ except ImportError:
 
 
 class BotWaveClient:
-    def __init__(self, server_host: str, ws_port: int, http_port: int, http_host: str = None, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None):
+    def __init__(self, server_host: str, ws_port: int, http_port: int, http_host: str = None, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None, talk: bool = False):
         self.server_host = server_host
         self.http_host = http_host or server_host
         self.ws_port = ws_port
@@ -61,6 +61,7 @@ class BotWaveClient:
         
         # broadcast
         self.piwave = None
+        self.silent = not talk # if silent = True, piwave wont output any logs
         self.piwave_monitor = PWM()
         self.broadcasting = False
         self.current_file = None
@@ -433,7 +434,8 @@ class BotWaveClient:
                     pi=pi,
                     loop=False,
                     backend="bw_custom",
-                    debug=False
+                    debug=not self.silent,
+                    silent=self.silent
                 )
                 
                 stream_task = self.http_client.stream_pcm_generator(
@@ -473,7 +475,7 @@ class BotWaveClient:
                 
                 self.stream_task = stream_task
                 
-                self.piwave.play(
+                success = self.piwave.play(
                     sync_generator_wrapper(),
                     sample_rate=rate,
                     channels=channels,
@@ -481,8 +483,12 @@ class BotWaveClient:
                 )
                 
                 self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
+
+                if success:
+                    Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
+                else:
+                    Log.warn(f"PiWave returned a non-true status ?")
                 
-                Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
                 return True
                 
             except Exception as e:
@@ -519,10 +525,11 @@ class BotWaveClient:
                     pi=pi,
                     loop=loop,
                     backend="bw_custom",
-                    debug=False
+                    debug=not self.silent,
+                    silent=self.silent
                 )
 
-                self.piwave.play(file_path, blocking=False)
+                success = self.piwave.play(file_path, blocking=False)
 
                 self.broadcasting = True
                 self.current_file = filename
@@ -530,7 +537,11 @@ class BotWaveClient:
                 if not loop:
                     self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
 
-                Log.broadcast(f"Broadcasting: {filename} on {frequency} MHz")
+                if success:
+                    Log.broadcast(f"Currently broadcasting {filename} on {frequency} MHz")
+                else:
+                    Log.warn(f"PiWave returned a non-true status ?")
+
                 return True
 
             except Exception as e:
@@ -559,7 +570,6 @@ class BotWaveClient:
             if self.piwave:
                 try:
                     self.piwave.cleanup() # stops AND cleanups
-                    Log.broadcast("PiWave stopped")
                 except Exception as e:
                     Log.error(f"Error stopping PiWave: {e}")
                 finally:
@@ -567,6 +577,8 @@ class BotWaveClient:
             
             self.broadcasting = False
             self.current_file = None
+
+            Log.success("Broadcast stopped")
 
     async def _handle_list_files(self):
         try:
@@ -680,6 +692,7 @@ def main():
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Uploads directory')
     parser.add_argument('--pk', help='Passkey for authentication')
     parser.add_argument('--skip-checks', action='store_true', help='Skip update and requirements checks')
+    parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
     args = parser.parse_args()
     
     if not args.server_host:
@@ -704,7 +717,8 @@ def main():
         http_port=args.fport,
         http_host=args.fhost,
         upload_dir=args.upload_dir,
-        passkey=args.pk
+        passkey=args.pk,
+        talk=args.talk
     )
     
     try:
