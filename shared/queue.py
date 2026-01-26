@@ -327,7 +327,8 @@ class Queue:
             Log.queue("Queue is empty")
             return
         
-        status = "PAUSED" if self.paused else "PLAYING"
+        looping = " (LOOPING)" if self.broadcast_settings['loop'] else ""
+        status = "PAUSED" if self.paused else f"PLAYING{looping}"
         
         if self.is_local:
             # Local mode: show simple list with current position
