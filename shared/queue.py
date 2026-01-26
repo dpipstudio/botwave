@@ -357,22 +357,22 @@ class Queue:
     def help(self, command: str):
         """Display queue command help."""
         Log.queue("Queue Commands:")
-        Log.print("  queue +file                - Add file to queue", 'white')
-        Log.print("  queue +file1,file2         - Add multiple files", 'white')
-        Log.print("  queue +pattern_*           - Add files matching pattern", 'white')
-        Log.print("  queue +*                   - Add all files", 'white')
-        Log.print("  queue +file!               - Force add (skip availability checks)", 'white')
-        Log.print("  queue -file                - Remove file from queue", 'white')
-        Log.print("  queue -*                   - Clear queue", 'white')
-        Log.print("  queue *                    - Show queue", 'white')
-        Log.print("  queue !                    - Toggle play/pause with defaults", 'white')
+        Log.print("  queue +file                       - Add file to queue", 'white')
+        Log.print("  queue +file1,file2                - Add multiple files", 'white')
+        Log.print("  queue +pattern_*                  - Add files matching pattern", 'white')
+        Log.print("  queue +*                          - Add all files", 'white')
+        Log.print("  queue +file!                      - Force add (skip availability checks)", 'white')
+        Log.print("  queue -file                       - Remove file from queue", 'white')
+        Log.print("  queue -*                          - Clear queue", 'white')
+        Log.print("  queue *                           - Show queue", 'white')
+        Log.print("  queue !                           - Toggle play/pause with defaults", 'white')
 
         if not self.is_local:
-            Log.print("  queue !targets             - Toggle on specific targets", 'white')
+            Log.print("  queue !targets                    - Toggle on specific targets", 'white')
             Log.print("  queue !targets,freq,loop,ps,rt,pi - Toggle with custom settings", 'white')
             Log.print('    Example: queue !all,100.5,false,"My Radio","Live",ABCD', 'white')
         else:
-            Log.print("  queue !freq,loop,ps,rt,pi - Toggle with custom settings", 'white')
+            Log.print("  queue !freq,loop,ps,rt,pi         - Toggle with custom settings", 'white')
             Log.print('    Example: queue !100.5,false"My Radio","Live",ABCD', 'white')
     
     # TOGGLE PLAY/PAUSE
