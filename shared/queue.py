@@ -36,6 +36,7 @@ class Queue:
         self.active_targets = "all"
         self.broadcast_settings = {
             'frequency': 90.0,
+            'loop': False,
             'ps': 'BotWave',
             'rt': 'Broadcasting',
             'pi': 'FFFF'
@@ -366,11 +367,11 @@ class Queue:
 
         if not self.is_local:
             Log.print("  queue !targets             - Toggle on specific targets", 'white')
-            Log.print("  queue !targets,freq,ps,rt,pi - Toggle with custom settings", 'white')
-            Log.print('    Example: queue !all,100.5,"My Radio","Live",ABCD', 'white')
+            Log.print("  queue !targets,freq,loop,ps,rt,pi - Toggle with custom settings", 'white')
+            Log.print('    Example: queue !all,100.5,false,"My Radio","Live",ABCD', 'white')
         else:
-            Log.print("  queue !freq,ps,rt,pi - Toggle with custom settings", 'white')
-            Log.print('    Example: queue !100.5,"My Radio","Live",ABCD', 'white')
+            Log.print("  queue !freq,loop,ps,rt,pi - Toggle with custom settings", 'white')
+            Log.print('    Example: queue !100.5,false"My Radio","Live",ABCD', 'white')
     
     # TOGGLE PLAY/PAUSE
     
@@ -382,9 +383,9 @@ class Queue:
             Local:  queue !freq,ps,rt,pi
         
         Examples:
-            queue !                                    # Defaults
-            queue !all,100.5                           # Custom frequency
-            queue !all,90.0,"My Radio","Live",ABCD     # Full custom settings
+            queue !                                        # Defaults
+            queue !all,100.5                               # Custom frequency
+            queue !all,90.0,false,"My Radio","Live",ABCD   # Full custom settings
         """
         args = self._parse_toggle_args(command)
         
@@ -396,29 +397,30 @@ class Queue:
     def _parse_toggle_args(self, command: str) -> dict:
         """Parse toggle command arguments with support for quoted strings.
         
-        Server format: targets,freq,ps,rt,pi
-        Local format:  freq,ps,rt,pi
-        
-        Returns dict with: targets, frequency, ps, rt, pi
+        Server format: targets,freq,loop,ps,rt,pi
+        Local format:  freq,loop,ps,rt,pi
         """
         defaults = {
             'targets': 'all',
             'frequency': 90.0,
+            'loop': False,
             'ps': 'BotWave',
             'rt': 'Broadcasting',
             'pi': 'FFFF'
         }
-        
+
         if not command.strip():
             return defaults
-        
+
+        def parse_bool(value: str) -> bool:
+            return value.lower() == 'true'
+
         try:
-            # Parse comma-separated values respecting quoted strings
             parts = []
             current = []
             in_quotes = False
             quote_char = None
-            
+
             for char in command:
                 if char in ('"', "'") and not in_quotes:
                     in_quotes = True
@@ -430,45 +432,47 @@ class Queue:
                     parts.append(''.join(current).strip())
                     current = []
                     continue
-                
+
                 current.append(char)
-            
-            # Add the last part
+
             if current:
                 parts.append(''.join(current).strip())
-            
-            # Remove quotes from parts
+
             parts = [p.strip('"').strip("'") for p in parts]
-            
-            # Parse based on mode
+
             if not self.is_local:
-                # Server mode: targets,freq,ps,rt,pi
+                # Server: targets,freq,loop,ps,rt,pi
                 if len(parts) > 0 and parts[0]:
                     defaults['targets'] = parts[0]
                 if len(parts) > 1 and parts[1]:
                     defaults['frequency'] = float(parts[1])
+                if len(parts) > 2 and parts[2]:
+                    defaults['loop'] = parse_bool(parts[2])
+                if len(parts) > 3 and parts[3]:
+                    defaults['ps'] = parts[3]
+                if len(parts) > 4 and parts[4]:
+                    defaults['rt'] = parts[4]
+                if len(parts) > 5 and parts[5]:
+                    defaults['pi'] = parts[5]
+            else:
+                # Local: freq,loop,ps,rt,pi
+                if len(parts) > 0 and parts[0]:
+                    defaults['frequency'] = float(parts[0])
+                if len(parts) > 1 and parts[1]:
+                    defaults['loop'] = parse_bool(parts[1])
                 if len(parts) > 2 and parts[2]:
                     defaults['ps'] = parts[2]
                 if len(parts) > 3 and parts[3]:
                     defaults['rt'] = parts[3]
                 if len(parts) > 4 and parts[4]:
                     defaults['pi'] = parts[4]
-            else:
-                # Local mode: freq,ps,rt,pi
-                if len(parts) > 0 and parts[0]:
-                    defaults['frequency'] = float(parts[0])
-                if len(parts) > 1 and parts[1]:
-                    defaults['ps'] = parts[1]
-                if len(parts) > 2 and parts[2]:
-                    defaults['rt'] = parts[2]
-                if len(parts) > 3 and parts[3]:
-                    defaults['pi'] = parts[3]
-            
+
             return defaults
-        
+
         except Exception as e:
             Log.error(f"Error parsing toggle args: {e}")
             return defaults
+
     
     def _toggle_local(self, args: dict):
         """Toggle queue playback in local mode."""
@@ -518,7 +522,7 @@ class Queue:
     def _play_current_local(self):
         """Play current file in local mode."""
         if self.current_index >= len(self.queue):
-            Log.queue("End of queue reached")
+            Log.queue(f"End of queue reached")
             self.paused = True
             self.current_index = 0
             return
@@ -595,10 +599,12 @@ class Queue:
         self.current_index += 1
         
         if self.current_index >= len(self.queue):
-            Log.queue("Queue finished")
+            startagain = ", starting over" if self.broadcast_settings['loop'] else ""
+            Log.queue(f"Queue finished{startagain}")
             self.current_index = 0
-            self.paused = True
-            return
+            if not startagain:
+                self.paused = True
+                return
         
         self._play_current_local()
     
@@ -614,8 +620,13 @@ class Queue:
         
         if client_index >= len(self.queue):
             client_name = self.server.clients[client_id].get_display_name()
-            Log.queue(f"{client_name}: Queue finished")
-            return
+            startagain = ", starting over" if self.broadcast_settings['loop'] else ""
+            Log.queue(f"{client_name}: Queue finished{startagain}")
+            self.client_indices[client_id] = 0
+            client_index = 0
+
+            if not startagain:
+                return
         
         # Play next file for this client
         filename = self.queue[client_index]
