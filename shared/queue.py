@@ -3,6 +3,7 @@ import os
 from typing import List, Dict, Set
 import asyncio
 import fnmatch
+import shlex
 
 
 class Queue:
@@ -416,30 +417,8 @@ class Queue:
             return value.lower() == 'true'
 
         try:
-            parts = []
-            current = []
-            in_quotes = False
-            quote_char = None
-
-            for char in command:
-                if char in ('"', "'") and not in_quotes:
-                    in_quotes = True
-                    quote_char = char
-                elif char == quote_char and in_quotes:
-                    in_quotes = False
-                    quote_char = None
-                elif char == ',' and not in_quotes:
-                    parts.append(''.join(current).strip())
-                    current = []
-                    continue
-
-                current.append(char)
-
-            if current:
-                parts.append(''.join(current).strip())
-
-            parts = [p.strip('"').strip("'") for p in parts]
-
+            parts = shlex.split(command.replace(',', ' '))
+            
             if not self.is_local:
                 # Server: targets,freq,loop,ps,rt,pi
                 if len(parts) > 0 and parts[0]:
