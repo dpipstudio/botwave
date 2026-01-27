@@ -590,6 +590,11 @@ class BotWaveCLI:
         Log.print("    live", "cyan")
         Log.print("")
 
+        Log.print("queue [+|-|*|!|?]", "bright_green")
+        Log.print("  Manage broadcast queue", "white")
+        Log.print("  Use 'queue ?' for detailed help", "white")
+        Log.print("")
+
         Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", "white")
         Log.print("  Example:", "white")

@@ -1504,6 +1504,11 @@ class BotWaveServer:
         Log.print("    stop all", "cyan")
         Log.print("")
 
+        Log.print("queue [+|-|*|!|?]", "bright_green")
+        Log.print("  Manage broadcast queue", "white")
+        Log.print("  Use 'queue ?' for detailed help", "white")
+        Log.print("")
+
         Log.print("live <targets> [freq] [ps] [rt] [pi]", "bright_green")
         Log.print("  Start a live audio broadcast to client(s)", "white")
         Log.print("  Example:", "white")
