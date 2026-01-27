@@ -244,7 +244,11 @@ class BotWaveServer:
             
             if command == Commands.END:
                 filename = kwargs.get('filename', 'unknown')
-                Log.broadcast(f"{self.clients[client_id].get_display_name()}: Finished broadcasting {filename}")
+                msg = kwargs.get('message')
+                if msg:
+                    Log.error(f"{self.clients[client_id].get_display_name()}: {msg}")
+                else:
+                    Log.broadcast(f"{self.clients[client_id].get_display_name()}: Finished broadcasting {filename}")
                 self.queue.on_broadcast_ended(client_id)
                 return
             
