@@ -32,6 +32,7 @@ from shared.http import BWHTTPFileServer
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.queue import Queue
 from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
 from shared.tls import gen_cert, save_cert
@@ -81,9 +82,7 @@ class BotWaveServer:
         self.running = False
         self.pending_responses: Dict[str, asyncio.Future] = {}
         self.file_list_responses: Dict[str, list] = {}
-        
-        # cmd history for interactive mode
-        self.command_history = []
+        self.queue = Queue(self)
         
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
         self.loop = None
@@ -241,6 +240,16 @@ class BotWaveServer:
                     self.pending_responses[f"{client_id}_files"].set_exception(Exception(msg))
                     del self.pending_responses[f"{client_id}_files"]
                 
+                return
+            
+            if command == Commands.END:
+                filename = kwargs.get('filename', 'unknown')
+                msg = kwargs.get('message')
+                if msg:
+                    Log.error(f"{self.clients[client_id].get_display_name()}: {msg}")
+                else:
+                    Log.broadcast(f"{self.clients[client_id].get_display_name()}: Finished broadcasting {filename}")
+                self.queue.on_broadcast_ended(client_id)
                 return
             
             Log.warning(f"Unexpected command from {client_id}: {command}")
@@ -533,7 +542,7 @@ class BotWaveServer:
             if len(cmd) < 3:
                 Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
                 return
-            
+                
             frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
             ps = cmd[5] if len(cmd) > 5 else "BotWave"
@@ -547,7 +556,7 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
                 return
-
+            
             frequency = float(cmd[2]) if len(cmd) > 2 else 90.0
             ps = cmd[3] if len(cmd) > 3 else "BotWave"
             rt = cmd[4] if len(cmd) > 4 else "Broadcasting"
@@ -560,7 +569,14 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: stop <targets>")
                 return
+            
+            self.queue.toggle()
+            
             await self.stop_broadcast(cmd[1])
+            return
+        
+        elif command_name == 'queue':
+            self.queue.parse(' '.join(cmd[1:]))
             return
         
         # OTHER MEDIA FORM
@@ -829,6 +845,8 @@ class BotWaveServer:
             Log.alsa("Live broadcast is not supported on this installation.")
             Log.alsa("Did you setup the ALSA loopback card correctly ?")
             return False
+        
+        self.queue.manual_pause()
         
         self.alsa.start()
 
@@ -1240,12 +1258,15 @@ class BotWaveServer:
         except Exception as e:
             Log.warning(f"Failed to remove temp directory {directory}: {e}")
 
-    async def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False):
+    async def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual:bool = True):
         target_clients = self._parse_client_targets(client_targets)
         
         if not target_clients:
             Log.warning("No client(s) found matching the query")
             return False
+        
+        if trigger_manual:
+            self.queue.manual_pause()
         
         # calculate start_at timestamp if wait_start is enabled
         if self.wait_start and len(target_clients) > 1:
@@ -1483,6 +1504,11 @@ class BotWaveServer:
         Log.print("    stop all", "cyan")
         Log.print("")
 
+        Log.print("queue [+|-|*|!|?]", "bright_green")
+        Log.print("  Manage broadcast queue", "white")
+        Log.print("  Use 'queue ?' for detailed help", "white")
+        Log.print("")
+
         Log.print("live <targets> [freq] [ps] [rt] [pi]", "bright_green")
         Log.print("  Start a live audio broadcast to client(s)", "white")
         Log.print("  Example:", "white")
@@ -1654,11 +1680,6 @@ def main():
                     
                     if HAS_READLINE:
                         readline.add_history(cmd_input)
-                    
-                    server.command_history.append(cmd_input)
-
-                    if len(server.command_history) > 1000:
-                        server.command_history = server.command_history[-1000:]
 
                     server._execute_command(cmd_input)
                     

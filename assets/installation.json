@@ -67,6 +67,7 @@
       "shared/logger.py",
       "shared/morser.py",
       "shared/protocol.py",
+      "shared/queue.py",
       "shared/socket.py",
       "shared/sstv.py",
       "shared/syscheck.py",

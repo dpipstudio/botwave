@@ -353,7 +353,7 @@ class BotWaveClient:
         
         file_path = os.path.join(self.upload_dir, filename)
         if not os.path.exists(file_path):
-            response = ProtocolParser.build_response(Commands.ERROR, f"File not found: {filename}")
+            response = ProtocolParser.build_response(Commands.END, f"File not found: {filename}")
             await self.ws_client.send(response)
             return
         
@@ -511,6 +511,16 @@ class BotWaveClient:
     async def _start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
         async def finished():
             Log.info("Playback finished, stopping broadcast...")
+
+            try:
+                response = ProtocolParser.build_command(
+                    Commands.END,
+                    filename=filename
+                )
+                await self.ws_client.send(response)
+            except Exception as e:
+                Log.error(f"Error notifying server of broadcast end: {e}")
+
             await self._stop_broadcast()
 
         async with self.broadcast_lock:

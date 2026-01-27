@@ -1,7 +1,7 @@
 import shlex
 from typing import Dict, Tuple
 
-PROTOCOL_VERSION = "2.0.1"
+PROTOCOL_VERSION = "2.0.2"
 
 
 class Commands:
@@ -18,6 +18,7 @@ class Commands:
     # broadcast
     START = 'START'
     STOP = 'STOP'
+    END = 'END'
     
     # files
     UPLOAD_TOKEN = 'UPLOAD_TOKEN'
