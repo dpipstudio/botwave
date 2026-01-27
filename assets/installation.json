@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.7-annea",
+      "commit": "7ec7d768e715dca46fdb8ac8fee9d198a900551c"
+    },
+    {
       "codename": "v1.0.6-citrus",
       "commit": "78995132bf5dc0ac9254908f4b079b9c61ade594"
     },
