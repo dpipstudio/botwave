@@ -14,6 +14,25 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.7-annea ---=
+**What changed:**
+- **Protocol**:
+    - New `Commands.END` for the client to report a broadcast end or failure
+    - Version `2.0.2`
+
+- **New features**:
+    - `queue` command to manage your playlist. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Queue-system)
+
+- **Usage changes**:
+    - Now local client and client can take the `--talk` argument to show [`PiWave`](https://git.douxx.tech/piwave) debug logs. Disabled by default.
+
+---
+
+Related:
+- #33
+- #37
+=--- END ---=
+
 =--- v1.0.6-citrus ---=
 **What changed:**
 - Updated default rt on server to reflect the filename, not the targets
