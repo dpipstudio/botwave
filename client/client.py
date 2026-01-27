@@ -321,7 +321,14 @@ class BotWaveClient:
             Log.file(f"Downloading from URL: {url}")
             
             def download_with_progress():
-                urllib.request.urlretrieve(url, filepath)
+                headers = {
+                    "User-Agent": f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)"
+                }
+
+                request = urllib.request.Request(url, headers=headers)
+
+                with urllib.request.urlopen(request) as response, open(filepath, "wb") as out_file:
+                    out_file.write(response.read())
             
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, download_with_progress)
