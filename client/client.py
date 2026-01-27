@@ -352,7 +352,7 @@ class BotWaveClient:
         
         file_path = os.path.join(self.upload_dir, filename)
         if not os.path.exists(file_path):
-            response = ProtocolParser.build_response(Commands.ERROR, f"File not found: {filename}")
+            response = ProtocolParser.build_response(Commands.END, f"File not found: {filename}")
             await self.ws_client.send(response)
             return
         
