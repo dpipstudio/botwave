@@ -48,7 +48,7 @@ except ImportError:
     sys.exit(1)
 
 class BotWaveCLI:
-    def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers", ws_port: int = None, passkey: str = None):
+    def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers", ws_port: int = None, passkey: str = None, talk: bool = False):
         self.piwave = None
         self.running = False
         self.current_file = None
@@ -58,6 +58,7 @@ class BotWaveCLI:
         self.upload_dir = upload_dir
         self.handlers_dir = handlers_dir
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
+        self.silent = not talk # if silent = True, piwave wont output any logs
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
         self.queue = Queue(client_instance=self, is_local=True, upload_dir=upload_dir)
@@ -135,8 +136,8 @@ class BotWaveCLI:
             elif cmd == 'stop':
                 self.stop_broadcast()
                 self.onstop_handlers()
-
                 self.queue.manual_pause()
+                Log.broadcast("Broadcast stopped")
                 return True
             
             elif cmd == 'queue':
@@ -428,17 +429,22 @@ class BotWaveCLI:
                 pi=pi,
                 loop=loop,
                 backend="bw_custom",
-                debug=False
+                debug=not self.silent,
+                silent=self.silent
             )
 
             self.current_file = file_path
             self.broadcasting = True
-            self.piwave.play(file_path)
+            success = self.piwave.play(file_path)
 
             if not loop:
                 self.piwave_monitor.start(self.piwave, finished)
             
-            Log.success(f"Broadcast started for {file_path} on frequency {frequency} MHz")
+            if success:
+                Log.success(f"Started broadcasting {file_path} on {frequency}MHz")
+            else:
+                Log.warning(f"PiWave returned a non-true status ?")
+
             return True
         
         except Exception as e:
@@ -471,19 +477,24 @@ class BotWaveCLI:
                 rt=rt,
                 pi=pi,
                 backend="bw_custom",
-                debug=False
+                debug=not self.silent,
+                silent=self.silent
             )
 
             self.alsa.start()
 
             self.current_file = "live_playback"
             self.broadcasting = True
-            self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.rate, chunk_size=self.alsa.period_size)
+            
+            success = self.piwave.play(self.alsa.audio_generator(), sample_rate=self.alsa.rate, channels=self.alsa.channels, chunk_size=self.alsa.period_size)
             
             self.piwave_monitor.start(self.piwave, finished)
 
+            if success:
+                Log.success(f"Live broadcast started on {frequency}MHz")
+            else:
+                Log.warning(f"PiWave returned a non-true status ?")
 
-            Log.success(f"Live broadcast started on frequency {frequency} MHz")
             Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
             Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
             return True
@@ -680,11 +691,13 @@ def main():
     parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
+    parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
+
     args = parser.parse_args()
 
     check_requirements(args.skip_checks)
 
-    cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk)
+    cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk, args.talk)
     cli._setup_signal_handlers()
     cli.running = True
 

@@ -3,7 +3,7 @@
 <img src="https://togp.xyz/?repo=botwave&owner=dpipstudio&cache=false&svg=https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/assets/readme_assets/togp_logo.svg&failurl=https://images.dpip.lol/bw-logo-big.png" alt="BotWave"/>
 
 <h1>BotWave - Your Raspberry Pi FM Network</h1>
-<h4> <a href="https://botwave.dpip.lol">Website</a> | <a href="#installation">Install</a> | <a href="#mentions">Mentions</a> </h4>
+<h4> <a href="https://botwave.dpip.lol">Website</a> | <a href="#installation">Install</a> | <a href="#mentions">Mentions</a> | <a href="https://github.com/dpipstudio/botwave/wiki">Wiki</a></h4>
 
 
 </div>
