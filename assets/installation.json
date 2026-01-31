@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.8-senna",
+      "commit": "b73a2cd5293ea5e471bf109f892397cb8a1ca8b5"
+    },
+    {
       "codename": "v1.0.7-annea",
       "commit": "7ec7d768e715dca46fdb8ac8fee9d198a900551c"
     },
