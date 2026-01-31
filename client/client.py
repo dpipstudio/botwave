@@ -33,6 +33,7 @@ from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.pw_monitor import PWM
+from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.version import check_for_updates
@@ -246,6 +247,15 @@ class BotWaveClient:
             return
         
         Log.file(f"Received upload token for: {filename} ({size if size > 0 else '?'} bytes)")
+
+        try:
+            filename = PathValidator.sanitize_filename(filename)
+            filepath = PathValidator.safe_join(self.upload_dir, filename)
+        except SecurityError as e:
+            Log.error(f"Invalid filename from server: {e}")
+            error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
+            await self.ws_client.send(error)
+            return
         
         def progress(bytes_sent, total):
             if total > 0:
@@ -255,7 +265,7 @@ class BotWaveClient:
             server_host=self.http_host,
             server_port=self.http_port,
             token=token,
-            filepath=os.path.join(self.upload_dir, filename),
+            filepath=filepath,
             progress_callback=progress
         )
         
@@ -279,8 +289,15 @@ class BotWaveClient:
             return
         
         Log.file(f"Received download token for: {filename}")
-        
-        save_path = os.path.join(self.upload_dir, filename)
+
+        try:
+            filename = PathValidator.sanitize_filename(filename)
+            save_path = PathValidator.safe_join(self.upload_dir, filename)
+        except SecurityError as e:
+            Log.error(f"Invalid filename from server: {e}")
+            error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
+            await self.ws_client.send(error)
+            return
         
         def progress(bytes_received, total):
             if total > 1024 * 1024:
@@ -315,7 +332,14 @@ class BotWaveClient:
             await self.ws_client.send(error)
             return
         
-        filepath = os.path.join(self.upload_dir, filename)
+        try:
+            filename = PathValidator.sanitize_filename(filename)
+            filepath = PathValidator.safe_join(self.upload_dir, filename)
+        except SecurityError as e:
+            Log.error(f"Invalid filename from server: {e}")
+            error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
+            await self.ws_client.send(error)
+            return
         
         try:
             Log.file(f"Downloading from URL: {url}")
@@ -353,12 +377,21 @@ class BotWaveClient:
         
     async def _handle_start_broadcast(self, kwargs: dict):
         filename = kwargs.get('filename')
+
         if not filename:
             response = ProtocolParser.build_response(Commands.ERROR, "Missing filename")
             await self.ws_client.send(response)
             return
         
-        file_path = os.path.join(self.upload_dir, filename)
+        try:
+            filename = PathValidator.sanitize_filename(filename)
+            file_path = PathValidator.safe_join(self.upload_dir, filename)
+        except SecurityError as e:
+            Log.error(f"Invalid filename from server: {e}")
+            response = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
+            await self.ws_client.send(response)
+            return
+
         if not os.path.exists(file_path):
             response = ProtocolParser.build_response(Commands.END, f"File not found: {filename}")
             await self.ws_client.send(response)
@@ -644,7 +677,15 @@ class BotWaveClient:
                 Log.success(f"Removed {removed} files")
                 response = ProtocolParser.build_response(Commands.OK, f"Removed {removed} files")
             else:
-                file_path = os.path.join(self.upload_dir, filename)
+                try:
+                    filename = PathValidator.sanitize_filename(filename)
+                    file_path = PathValidator.safe_join(self.upload_dir, filename)
+                except SecurityError as e:
+                    Log.error(f"Security violation in remove: {e}")
+                    response = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
+                    await self.ws_client.send(response)
+                    return
+                
                 if not os.path.exists(file_path):
                     response = ProtocolParser.build_response(Commands.ERROR, "File not found")
                 else:

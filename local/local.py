@@ -30,6 +30,7 @@ from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.pw_monitor import PWM
 from shared.queue import Queue
+from shared.security import PathValidator, SecurityError
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.ws_cmd import WSCMDH
@@ -319,6 +320,14 @@ class BotWaveCLI:
             Log.error(f"Error executing shell command: {e}")
 
     def upload_file(self, source_path: str):
+        allowed_source_dirs = ['/tmp', '/home', '/opt/BotWave', self.upload_dir, os.path.expanduser('~')]
+
+        try:
+            source_path = PathValidator.validate_read(source_path, allowed_source_dirs)
+        except SecurityError as e:
+            Log.error(f"Access denied: {e}")
+            return False
+
         if not os.path.exists(source_path):
             Log.error(f"Source {source_path} not found")
             return False
@@ -326,8 +335,12 @@ class BotWaveCLI:
         if os.path.isdir(source_path):
             return self._upload_folder_contents(source_path)
         
-        dest_name = os.path.basename(source_path)
-        dest_path = os.path.join(self.upload_dir, dest_name)
+        try:
+            dest_name = PathValidator.sanitize_filename(os.path.basename(source_path))
+            dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+        except SecurityError as e:
+            Log.error(f"Invalid destination: {e}")
+            return False
         
         try:
             with open(source_path, 'rb') as src_file:
@@ -387,13 +400,25 @@ class BotWaveCLI:
 
         try:
             if not dest_name:
-                dest_name = url.split('/')[-1]
+                url_path = urllib.parse.urlparse(url).path
+                dest_name = os.path.basename(url_path)
+
+            try:
+                dest_name = PathValidator.sanitize_filename(dest_name)
+            except SecurityError as e:
+                Log.error(f"Invalid destination filename: {e}")
+                return False
 
             if not dest_name.lower().endswith('.wav'):
                 Log.error("Only WAV files are supported")
                 return False
             
-            dest_path = os.path.join(self.upload_dir, dest_name)
+            try:
+                dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+            except SecurityError as e:
+                Log.error(f"Invalid destination path: {e}")
+                return False
+            
             Log.file(f"Downloading file from {url}...")
             urllib.request.urlretrieve(url, dest_path, reporthook=_download_reporthook)
 
@@ -564,8 +589,13 @@ class BotWaveCLI:
                 Log.error(f"Error removing WAV files: {str(e)}")
             
         else:
+            try:
+                filename = PathValidator.sanitize_filename(filename)
+                file_path = PathValidator.safe_join(self.upload_dir, filename)
+            except SecurityError as e:
+                Log.error(f"Invalid filename: {e}")
+                return
 
-            file_path = os.path.join(self.upload_dir, filename)
 
             if not os.path.exists(file_path):
                 Log.error(f"File {filename} not found")

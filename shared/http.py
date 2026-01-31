@@ -6,7 +6,9 @@ import time
 import uuid
 from aiohttp import web, ClientSession, TCPConnector
 from typing import Dict, Optional
+
 from shared.logger import Log
+from shared.security import PathValidator, SecurityError
 
 CHUNK_SIZE = 65536 # 64KB, here so we have the value centralized
 
@@ -104,9 +106,19 @@ class BWHTTPFileServer:
             del self.upload_tokens[token]
             return web.Response(status=403, text="Token expired")
         
-        filename = token_data['filename']
+        try:
+            filename = PathValidator.sanitize_filename(token_data['filename'])
+        except SecurityError as e:
+            Log.error(f"Security violation in upload: {e}")
+            return web.Response(status=403, text="Invalid filename")
+        
         expected_size = token_data['size']
-        filepath = os.path.join(self.upload_dir, filename)
+        
+        try:
+            filepath = PathValidator.safe_join(self.upload_dir, filename)
+        except SecurityError as e:
+            Log.error(f"Path traversal attempt in upload: {e}")
+            return web.Response(status=403, text="Invalid file path")
         
         try:
             bytes_received = 0

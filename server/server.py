@@ -33,6 +33,7 @@ from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.queue import Queue
+from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
 from shared.tls import gen_cert, save_cert
@@ -570,7 +571,7 @@ class BotWaveServer:
                 Log.error("Usage: stop <targets>")
                 return
             
-            self.queue.toggle()
+            self.queue.manual_pause()
             
             await self.stop_broadcast(cmd[1])
             return
@@ -984,13 +985,24 @@ class BotWaveServer:
             
             for file_info in files:
                 filename = file_info.get('name')
+
+                try:
+                    filename = PathValidator.sanitize_filename(filename)
+                except SecurityError as e:
+                    Log.error(f"Invalid filename from client: {e}")
+                    continue
                 
                 try:
                     temp_suffix = uuid.uuid4().hex[:8]
                     temp_filename = f".sync_temp_{source_client_id}_{temp_suffix}_{filename}"
-                    temp_path = os.path.join(target_dir, temp_filename)
-                    final_path = os.path.join(target_dir, filename)
                     
+                    try:
+                        temp_path = PathValidator.safe_join(target_dir, temp_filename)
+                        final_path = PathValidator.safe_join(target_dir, filename)
+                    except SecurityError as e:
+                        Log.error(f"Path traversal attempt in sync: {e}")
+                        continue
+                                    
                     # FIX 1: Use size 0 instead of 1GB for upload token
                     token = self.http_server.create_upload_token(temp_filename, 0)
                     
