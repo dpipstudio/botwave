@@ -22,12 +22,12 @@ class PathValidator:
             raise SecurityError("Filename cannot be empty")
         
         filename = filename.replace('\x00', '')
+
+        for char in ['..', '/', '\\']:
+            if char in filename:
+                raise SecurityError(f"Illegal character sequence in filename: {char}")
         
         basename = os.path.basename(filename)
-        
-        for char in ['..', '/', '\\']:
-            if char in basename:
-                raise SecurityError(f"Illegal character sequence in filename: {char}")
         
         if not basename or basename in ('.', '..'):
             raise SecurityError("Invalid filename after sanitization")
