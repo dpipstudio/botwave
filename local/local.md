@@ -64,7 +64,7 @@ Once the client is running, you can use the following commands:
     - Usage: `botwave> stop`
   
 - `live`: Start a live broadcast.  
-    - Usage: `botwave> live [frequency] [loop] [ps] [rt] [pi]`
+    - Usage: `botwave> live [frequency] [ps] [rt] [pi]`
   
 - `queue`: Manages the queue. See the [`Main/Queue system`](https://github.com/dpipstudio/botwave/wiki/Queue-system) wiki page for more details.  
     - Usage: `botwave> queue ?`

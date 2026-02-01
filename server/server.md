@@ -55,7 +55,7 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
     - Usage: `botwave> stop <targets>`  
 
 `live`: Start a live broadcast to client(s).  
-    - Usage: `botwave> live <all> [frequency] [loop] [ps] [rt] [pi]`  
+    - Usage: `botwave> live <all> [frequency] [ps] [rt] [pi]`  
 
 `queue`: Manages the queue. See the [`Main/Queue system`](https://github.com/dpipstudio/botwave/wiki/Queue-system) wiki page for more details.  
     - Usage: `botwave> queue ?`  
