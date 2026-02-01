@@ -230,16 +230,15 @@ def main():
 Examples:
   sudo bw-autorun client 192.168.1.100 --port 9938 --pk mypasskey
   sudo bw-autorun server --pk mypasskey
-  sudo bw-autorun local --daemon
-  sudo bw-autorun all 192.168.1.100 --port 9938
+  sudo bw-autorun local
 Service Management:
   sudo bw-autorun --start client
   sudo bw-autorun --stop server
-  sudo bw-autorun --status all
+  sudo bw-autorun --status local
   sudo bw-autorun --uninstall client
         """
     )
-    parser.add_argument('mode', nargs='?', choices=['client', 'server', 'all', 'local'],
+    parser.add_argument('mode', nargs='?', choices=['client', 'server', 'local'],
                        help='Service type to manage')
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments to pass to the service')
     parser.add_argument('--start', action='store_true', help='Start service(s)')
@@ -259,16 +258,16 @@ Service Management:
 
     if args.start or args.stop or args.restart or args.status or args.uninstall:
         if not args.mode:
-            Log.error("Mode (client/server/all/local) required for service management")
+            Log.error("Mode (client/server/local) required for service management")
             sys.exit(1)
 
         services = []
-        if args.mode in ['client', 'all']:
-            services.append(SystemdService('bw-client', CLIENT_SCRIPT, [], True))
-        if args.mode in ['server', 'all']:
-            services.append(SystemdService('bw-server', SERVER_SCRIPT, [], False, current_user))
+        if args.mode == 'client':
+            services.append(SystemdService('bw-client', CLIENT_SCRIPT, ['--skip-checks'], True))
+        if args.mode == 'server':
+            services.append(SystemdService('bw-server', SERVER_SCRIPT, ['--daemon', '--skip-checks'], False, current_user))
         if args.mode == 'local':
-            services.append(SystemdService('bw-local', LOCAL_SCRIPT, ['--daemon'], False, current_user))
+            services.append(SystemdService('bw-local', LOCAL_SCRIPT, ['--daemon', '--skip-checks'], False, current_user))
 
         for service in services:
             if args.start:
@@ -290,18 +289,21 @@ Service Management:
 
     success = True
 
-    if args.mode in ['client', 'all']:
+    if args.mode == 'client':
         if not check_script_exists(CLIENT_SCRIPT, 'Client'):
             success = False
         else:
             Log.info("Installing BotWave Client service...")
-            client_service = SystemdService('bw-client', CLIENT_SCRIPT, args.args, True)
+            client_args = args.args.copy()
+            if '--skip-checks' not in client_args:
+                client_args.append('--skip-checks')
+            client_service = SystemdService('bw-client', CLIENT_SCRIPT, client_args, True)
             if client_service.install():
                 client_service.start()
             else:
                 success = False
 
-    if args.mode in ['server', 'all']:
+    if args.mode == 'server':
         if not check_script_exists(SERVER_SCRIPT, 'Server'):
             success = False
         else:
@@ -309,6 +311,9 @@ Service Management:
             server_args = args.args.copy()
             if '--daemon' not in server_args:
                 server_args.append('--daemon')
+
+            if '--skip-checks' not in server_args:
+                server_args.append('--skip-checks')
 
             server_service = SystemdService('bw-server', SERVER_SCRIPT, server_args, False, current_user)
             if server_service.install():
@@ -324,6 +329,9 @@ Service Management:
             local_args = args.args.copy()
             if '--daemon' not in local_args:
                 local_args.append('--daemon')
+
+            if '--skip-checks' not in local_args:
+                local_args.append('--skip-checks')
 
             local_service = SystemdService('bw-local', LOCAL_SCRIPT, local_args, True, current_user)
             if local_service.install():
