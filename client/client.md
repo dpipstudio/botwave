@@ -45,8 +45,3 @@ sudo bw-client [server_host] [--port PORT] [--fhost HTTP_HOST] [--fport HTTP_POR
 ```bash
 sudo bw-client 9.9.9.9 --port 9939 --upload-dir /tmp/my_uploads --pk mypasskey
 ```
-
----
-
-![a DPIP Studio Project](https://madeby.dpip.lol)
-![Made by Douxx](https://madeby.douxx.tech)

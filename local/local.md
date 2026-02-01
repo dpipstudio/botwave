@@ -105,9 +105,3 @@ Once the client is running, you can use the following commands:
 - `l_onstop`: When a broadcast has been stopped (manually).
 
 Check [misc_doc/handlers.md](/misc_doc/handlers.md) for a better documentation.
-
----
-
-![A DPIP Studio Project](https://madeby.dpip.lol)
-
-![Made by Douxx](https://madeby.douxx.tech)

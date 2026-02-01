@@ -110,9 +110,3 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 - `s_onwsleave`: When a websocket client leaves the server (buggy).
 
 Check [misc_doc/handlers.md](/misc_doc/handlers.md) for a better documentation.
-
----
-
-![a DPIP Studio Project](https://madeby.dpip.lol)
-![Made by Douxx](https://madeby.douxx.tech)
-
