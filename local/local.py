@@ -769,7 +769,7 @@ def main():
     parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
-    parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
+    parser.add_argument('--talk', action='store_true', help='Show output logs')
 
     args = parser.parse_args()
 
