@@ -336,7 +336,7 @@ class BotWaveClient:
             filepath = PathValidator.safe_join(self.upload_dir, filename)
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
-            error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation" )
+            error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
             await self.ws_client.send(error)
             return
 
@@ -387,7 +387,7 @@ class BotWaveClient:
                 response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}{" (converted)" if converted else ""}")
             else:
                 Log.error("Download failed: file not created")
-                response = ProtocolParser.build_response(Commands.ERROR, "File not created" )
+                response = ProtocolParser.build_response(Commands.ERROR, "File not created")
 
         except urllib.error.URLError as e:
             Log.error(f"Network error: {e}")
