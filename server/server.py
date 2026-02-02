@@ -1158,16 +1158,17 @@ class BotWaveServer:
             if not target_clients:
                 return False
             
-            wav_files = [
+            supported_files = [
                 f for f in os.listdir(source_dir)
-                if f.lower().endswith('.wav') and os.path.isfile(os.path.join(source_dir, f))
+                if os.path.isfile(os.path.join(source_dir, f)) and
+                (f.lower().endswith('.wav') or os.path.splitext(f)[1].lower().lstrip(".") in SUPPORTED_EXTENSIONS)
             ]
-            
-            if not wav_files:
-                Log.warning(f"No WAV files found in {source_dir}")
+
+            if not supported_files:
+                Log.warning(f"No supported files found in {source_dir}")
                 return False
             
-            Log.broadcast(f"Syncing from local folder: {source_dir} ({len(wav_files)} files)")
+            Log.broadcast(f"Syncing from local folder: {source_dir} ({len(supported_files)} files)")
             Log.broadcast(f"Targets: {', '.join(target_clients)}")
             
             # Clear files
