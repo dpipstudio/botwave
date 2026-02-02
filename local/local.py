@@ -18,6 +18,8 @@ import subprocess
 import shlex
 import sys
 import time
+import tempfile
+import urllib.parse
 import urllib.request
 
 # using this to access to the shared dir files
@@ -439,43 +441,62 @@ class BotWaveCLI:
 
     def download_file(self, url: str, dest_name: str):
         def _download_reporthook(block_num, block_size, total_size):
+            downloaded = block_num * block_size
             if total_size > 0:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+                Log.progress_bar(downloaded, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False )
 
-            if block_num * block_num >= total_size:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
-
+            if downloaded >= total_size:
+                Log.progress_bar(total_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE' )
 
         try:
             if not dest_name:
                 url_path = urllib.parse.urlparse(url).path
                 dest_name = os.path.basename(url_path)
 
-            try:
-                dest_name = PathValidator.sanitize_filename(dest_name)
-            except SecurityError as e:
-                Log.error(f"Invalid destination filename: {e}")
-                return False
+            dest_name = PathValidator.sanitize_filename(dest_name)
+            ext = os.path.splitext(dest_name)[1].lower().lstrip(".")
 
-            if not dest_name.lower().endswith('.wav'):
-                Log.error("Only WAV files are supported")
-                return False
-            
+            final_name = (
+                dest_name if ext == "wav"
+                else os.path.splitext(dest_name)[0] + ".wav"
+            )
+
             try:
-                dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+                final_path = PathValidator.safe_join(self.upload_dir, final_name)
             except SecurityError as e:
                 Log.error(f"Invalid destination path: {e}")
                 return False
-            
-            Log.file(f"Downloading file from {url}...")
-            urllib.request.urlretrieve(url, dest_path, reporthook=_download_reporthook)
 
-            Log.success(f"File {dest_name} downloaded successfully to {dest_path}")
-            return True
-        
-        except Exception as e:
-            Log.error(f"Download error: {str(e)}")
+            # already wav = download directly
+            if ext == "wav":
+                Log.file(f"Downloading WAV file from {url}...")
+                urllib.request.urlretrieve(url, final_path, reporthook=_download_reporthook)
+                Log.success(f"File {final_name} downloaded successfully to {final_path}")
+                return True
+
+            # supported but not wav = temp download + convert
+            if ext in SUPPORTED_EXTENSIONS:
+                Log.file(f"Downloading {ext.upper()} file and converting to WAV...")
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
+                    tmp_path = tmp.name
+
+                urllib.request.urlretrieve(url, tmp_path, reporthook=_download_reporthook)
+
+                Converter.convert_wav(tmp_path, final_path)
+
+                os.unlink(tmp_path)
+
+                Log.success(f"File converted and saved to {final_path}")
+                return True
+
+            Log.error(f"Unsupported file type: .{ext}")
             return False
+
+        except (ConvertError, OSError, urllib.error.URLError) as e:
+            Log.error(f"Download error: {e}")
+            return False
+
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual: bool = True):
         def finished():
