@@ -435,7 +435,7 @@ class BotWaveCLI:
             except (ConvertError, SecurityError, OSError) as e:
                 Log.error(f"  {filename} - {e}")
 
-        Log.file(f"Folder upload completed: {success}/{len(files)} files processed")
+        Log.file(f"Folder upload completed: {success} successful, {len(files) - success} skipped/failed")
         return success > 0
 
 
