@@ -332,7 +332,7 @@ class BotWaveCLI:
         try:
             source_path = PathValidator.validate_read(source_path, allowed_source_dirs)
         except SecurityError as e:
-            Log.error(f"Access denied: {e}")
+            Log.error(str(e))
             return False
 
         if not os.path.exists(source_path):

@@ -50,7 +50,7 @@ class Logger(DLogger):
         'morse': 'purple',
         'alsa': 'pink',
         'queue': 'orange',
-        'converter': 'rgb(0, 255, 180)'
+        'converter': 'rgb(50,215,165)'
     }
 
     ws_clients = set()

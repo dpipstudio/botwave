@@ -15,8 +15,8 @@ class ConvertError(Exception):
 
 class Converter:
     @staticmethod
-    def convert_wav(self, source: str, destination: str, talk: bool = False):
-        if not source.lower().endswith(tuple(SUPPORTED_EXTENSIONS)):
+    def convert_wav(source: str, destination: str, talk: bool = False):
+        if os.path.splitext(source)[1].lower().lstrip(".") not in SUPPORTED_EXTENSIONS:
             raise ConvertError("The source file does not seem to be a supported filetype for conversion.")
 
         if not destination.lower().endswith(".wav"):
