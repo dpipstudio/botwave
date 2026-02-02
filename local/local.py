@@ -425,7 +425,7 @@ class BotWaveCLI:
                     dest_name = PathValidator.sanitize_filename(name + ".wav")
                     dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
 
-                    Converter.convert_wav(source_path, dest_path)
+                    Converter.convert_wav(source_path, dest_path, not self.silent)
                     Log.success(f"  Converted & uploaded {dest_name}")
                     success += 1
 
@@ -483,7 +483,7 @@ class BotWaveCLI:
 
                 urllib.request.urlretrieve(url, tmp_path, reporthook=_download_reporthook)
 
-                Converter.convert_wav(tmp_path, final_path)
+                Converter.convert_wav(tmp_path, final_path, not self.silent)
 
                 os.unlink(tmp_path)
 
