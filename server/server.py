@@ -27,6 +27,7 @@ import uuid
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.alsa import Alsa
 from shared.cat import check
+from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
 from shared.logger import Log, toggle_input
@@ -756,84 +757,155 @@ class BotWaveServer:
             Log.print(f"  Last seen: {client.last_seen.strftime('%Y-%m-%d %H:%M:%S')}", 'cyan')
             Log.print("")
 
-    async def upload_file(self, client_targets: str, file_path: str):
-        
-        if not os.path.exists(file_path):
-            Log.error(f"File {file_path} not found")
-            return False
-        
-        if os.path.isdir(file_path):
-            return await self._upload_folder_contents(client_targets, file_path)
-        
+    async def upload_file(self, client_targets, filepath):
+        ALLOWED_SOURCE_DIRS = [
+            "/tmp",
+            "/opt/BotWave",
+            os.path.expanduser("~")
+        ]
+
         target_clients = self._parse_client_targets(client_targets)
         if not target_clients:
             Log.warning("No client(s) found matching the query")
             return False
-        
-        filename = os.path.basename(file_path)
-        file_size = os.path.getsize(file_path)
-        
-        Log.file(f"Uploading {filename} to {len(target_clients)} client(s)...")
-        
+
+        try:
+            filepath = PathValidator.validate_read(filepath, ALLOWED_SOURCE_DIRS)
+        except Exception as e:
+            Log.error(str(e))
+            return False
+
+        if os.path.isdir(filepath):
+            return await self._upload_folder_contents(client_targets, filepath)
+
+        if not os.path.exists(filepath):
+            Log.error(f"File does not exist: {filepath}")
+            return False
+
+        MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB
+        try:
+            filesize = os.path.getsize(filepath)
+        except OSError as e:
+            Log.error(f"Failed to stat file: {e}")
+            return False
+
+        if filesize > MAX_UPLOAD_SIZE:
+            Log.error(f"File too large ({filesize} bytes)")
+            return False
+
+        try:
+            filename = PathValidator.sanitize_filename(os.path.basename(filepath))
+        except Exception as e:
+            Log.error(f"Invalid filename: {e}")
+            return False
+
+        name, ext = os.path.splitext(filename)
+        ext = ext.lower().lstrip(".")
+
+        converted_path = None
+
+        # not wav = convert
+        if ext != "wav":
+            if ext not in SUPPORTED_EXTENSIONS:
+                Log.error(f"Unsupported file type: .{ext}")
+                return False
+
+            tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+            tmp.close()
+
+            try:
+                Converter.convert_wav(filepath, tmp.name)
+                converted_path = tmp.name
+                filepath = converted_path
+                filename = PathValidator.sanitize_filename(name + ".wav")
+            except Exception as e:
+                try:
+                    os.unlink(tmp.name)
+                except Exception:
+                    pass
+                Log.error(f"Conversion failed: {e}")
+                return False
+
+        try:
+            filesize = os.path.getsize(filepath)
+        except OSError as e:
+            Log.error(f"Failed to get file size: {e}")
+            if converted_path:
+                try:
+                    os.unlink(converted_path)
+                except Exception:
+                    pass
+            return False
+
+        try:
+            token = self.http_server.create_download_token(filepath)
+        except Exception as e:
+            Log.error(f"Failed to create download token: {e}")
+            if converted_path:
+                try:
+                    os.unlink(converted_path)
+                except Exception:
+                    pass
+            return False
+
         success_count = 0
-        
+
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
                 continue
-            
+
             client = self.clients[client_id]
-            
-            token = self.http_server.create_download_token(file_path)
-            
+
             command = ProtocolParser.build_command(
                 Commands.DOWNLOAD_TOKEN,
                 token=token,
                 filename=filename,
-                size=file_size
+                size=filesize
             )
-            
+
             await self.ws_server.send(client_id, command)
-            
             Log.file(f"  {client.get_display_name()}: Download token sent")
-            
+
             success_count += 1
-        
+
         Log.broadcast(f"Upload tokens sent to {success_count}/{len(target_clients)} clients")
         return success_count > 0
     
     async def _upload_folder_contents(self, client_targets: str, folder_path: str):
-        
         if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
             Log.error(f"Folder {folder_path} not found")
             return False
-        
-        wav_files = [
+
+        files = [
             f for f in os.listdir(folder_path)
-            if f.lower().endswith('.wav') and os.path.isfile(os.path.join(folder_path, f))
+            if os.path.isfile(os.path.join(folder_path, f))
         ]
-        
-        if not wav_files:
-            Log.warning(f"No WAV files found in {folder_path}")
+
+        if not files:
+            Log.warning(f"No files found in {folder_path}")
             return False
-        
-        Log.file(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
-        
+
+        Log.file(f"Found {len(files)} file(s) in {folder_path}")
         overall_success = 0
-        
-        for idx, filename in enumerate(wav_files, 1):
+
+        for idx, filename in enumerate(files, 1):
             full_path = os.path.join(folder_path, filename)
-            Log.file(f"[{idx}/{len(wav_files)}] Uploading {filename}...")
-            
-            if await self.upload_file(client_targets, full_path):
-                overall_success += 1
-            
-            if idx < len(wav_files):
+            ext = os.path.splitext(filename)[1].lower().lstrip(".")
+
+            if ext == "wav" or ext in SUPPORTED_EXTENSIONS:
+                Log.file(f"[{idx}/{len(files)}] Processing {filename}...")
+                if await self.upload_file(client_targets, full_path):
+                    overall_success += 1
+            else:
+                Log.warning(f"Skipping unsupported file: {filename}")
+
+            if idx < len(files):
                 await asyncio.sleep(0.5)
-        
-        Log.file(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
+
+        Log.file(f"Folder upload completed: {overall_success}/{len(files)} files")
         return overall_success > 0
-    
+
 
     async def start_live(self, client_targets: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
         
