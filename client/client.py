@@ -599,7 +599,7 @@ class BotWaveClient:
 
             if self.stream_active:
                 self.stream_active = False
-                await asyncio.wait(0.2)
+                await asyncio.sleep(0.2)
 
             if self.stream_task:
                 try:
