@@ -464,7 +464,7 @@ class BotWaveClient:
         
         async with self.broadcast_lock:
             if self.broadcasting:
-                await self._stop_broadcast()
+                await self._stop_broadcast(acquire_lock=False)
             
             try:
                 self.piwave = PiWave(
@@ -559,7 +559,7 @@ class BotWaveClient:
 
         async with self.broadcast_lock:
             if self.broadcasting:
-                await self._stop_broadcast()
+                await self._stop_broadcast(acquire_lock=False)
 
             try:
                 self.piwave = PiWave(
@@ -593,8 +593,8 @@ class BotWaveClient:
                 self.broadcasting = False
                 return e
 
-    async def _stop_broadcast(self):
-        async with self.broadcast_lock:
+    async def _stop_broadcast(self, acquire_lock=True):
+        async def _cleanup():
             self.piwave_monitor.stop()
 
             if self.stream_active:
@@ -613,7 +613,7 @@ class BotWaveClient:
 
             if self.piwave:
                 try:
-                    self.piwave.cleanup() # stops AND cleanups
+                    self.piwave.cleanup()  # stops AND cleanups
                 except Exception as e:
                     Log.error(f"Error stopping PiWave: {e}")
                 finally:
@@ -621,6 +621,12 @@ class BotWaveClient:
             
             self.broadcasting = False
             self.current_file = None
+
+        if acquire_lock:
+            async with self.broadcast_lock:
+                await _cleanup()
+        else:
+            await _cleanup()
 
     async def _handle_list_files(self):
         try:
