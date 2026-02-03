@@ -495,14 +495,8 @@ class BotWaveClient:
                         async_gen = self.stream_task.__aiter__()
                         while self.stream_active:
                             try:
-                                chunk = loop.run_until_complete(
-                                    asyncio.wait_for(async_gen.__anext__(), timeout=5.0)
-                                )
+                                chunk = loop.run_until_complete(async_gen.__anext__())
                                 yield chunk
-                            except asyncio.TimeoutError:
-                                if not self.stream_active:
-                                    break
-                                continue
                             except StopAsyncIteration:
                                 break
                     except Exception as e:
