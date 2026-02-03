@@ -42,6 +42,9 @@ class Alsa:
             return False
 
         try:
+            if self._running:
+                self.stop()
+
             self.capture = alsaaudio.PCM(
                 type=alsaaudio.PCM_CAPTURE,
                 mode=alsaaudio.PCM_NORMAL,
@@ -53,6 +56,7 @@ class Alsa:
             )
             self._running = True
             return True
+        
         except alsaaudio.ALSAAudioError:
             Log.alsa(f"ALSA Error: Could not open {self.device_name}.")
             Log.alsa("Has the loopback device been set up correctly ?")
