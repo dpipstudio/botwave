@@ -1,40 +1,42 @@
-# BotWave Server For Google Shell
+# BotWave Server for Google Shell
 
 ## Intro
 
-Welcome to BotWave Server For Google Shell.  
-In this tutorial, we'll see how to install and start a server, how to connect a client, and basic commands.
+Welcome to **BotWave Server for Google Shell**.
+In this tutorial, we'll learn how to install and start a server, connect a client, and use the basic commands.
 
-### Additional ressources
+## Additional resources
 
-Of course, this tutorial will be a recap, to find more advanced informations, here are some ressources:
+This tutorial is a recap. For more advanced information, check out these resources:
 
-- [Github repo](https://github.com/dpipstudio/botwave)
-- [Github wiki](https://github.com/dpipstudio/botwave/wiki)
-- [Website](https://botwave.dpip.lol)
+* [GitHub repo](https://github.com/dpipstudio/botwave)
+* [GitHub wiki](https://github.com/dpipstudio/botwave/wiki)
+* [Website](https://botwave.dpip.lol)
 
-> Google shells are ephemeral. Every created file will be deleted once your session end. Don't store important files.
+> **Note:** Google Shell sessions are ephemeral. Every file you create will be deleted once your session ends. Do not store important files there.
+
 
 ## Installation
 
-To install BotWave on your Google Shell, please be sure to be in the `botwave` directory, and run the following command:
+To install BotWave on your Google Shell, make sure you are in the `botwave` directory, then run the following command:
 
 ```sh
 bash misc_doc/cloud-install.sh
 ```
 
-It should automatically install all required components.
-> Note: This can take some time, don't worry, it didn't crash ;)
+This will automatically install all required components.
+
+> **Note:** This can take some time. Don't worry, it hasn't crashed ;)
 
 ## Usage
 
-Once installed successfully, you should be able to run botwave server with the following command.
+Once the installation is complete, you can start the BotWave server with the following command:
 
 ```sh
 bw-server
 ```
 
-If everything goes well, you should be able to see some instructions and a prompt, like here.
+If everything works correctly, you should see instructions and a prompt like this:
 
 ```terminal
 BotWave - Server
@@ -53,8 +55,7 @@ BotWave Server Started!
 
 Launching tunnels, please wait.
 Starting bore.pub tunnels...
-This will expose your BotWave server to the internet.
-
+This will expose your BotWave server to the the internet.
 
 ==========================================
 WebSocket: bore.pub:23254 (local 9938)
@@ -70,8 +71,11 @@ botwave ›
 
 ## Connecting a client
 
-Once your server launched, you'll be able to connect one or multiple clients. Simply launch the given command on a raspberry pi.  
-The output should be the following:
+Once your server is running, you can connect one or more clients.
+Simply run the provided command on a Raspberry Pi.
+
+The client output should look like this:
+
 ```terminal
 BotWave - Client
 
@@ -83,7 +87,8 @@ BotWave - Client
 [OK] Registered as: tina_127.0.0.1
 ```
 
-The server should show this.
+The server should then display:
+
 ```terminal
 [INFO] Registration attempt from tina
 [OK] Client registered: tina (tina_127.0.0.1)
@@ -91,22 +96,26 @@ The server should show this.
 
 ## Basic usage
 
-Let's start by taking a look at the commands.
-Run
+Let's start by looking at the available commands.
+
+Run:
+
 ```sh
 help
 ```
 
-A list of availble commands will be shown.
+A list of available commands will be displayed.
 
 ## Download a file
-Let's start by download a wav file to broadcast on all clients.
+
+Let's start by downloading a WAV file to broadcast on all clients.
 
 ```sh
 dl all https://cdn.douxx.tech/files/plasticbeach.wav
 ```
 
-Here is the excpected output:
+Expected output:
+
 ```terminal
 [BCAST] Requesting download from 1 client(s)...
 [FILE]   tina (tina_127.0.0.1): Download request sent
@@ -115,13 +124,15 @@ Here is the excpected output:
 ```
 
 ## Broadcast a file
-Let's broadcast the file we just downloaded, on a radio named "BWSFGS" on 90MHz, on loop.
+
+Now let's broadcast the file we just downloaded on a radio station named **"BWSFGS"** at **90 MHz**, on loop.
 
 ```sh
 start all plasticbeach.wav 90 true "BWSFGS"
 ```
 
-Excpected output:
+Expected output:
+
 ```terminal
 [BCAST] Starting broadcast ASAP
 [BCAST] Starting broadcast on 1 client(s)...
@@ -133,15 +144,16 @@ Excpected output:
 
 
 ## Stopping the broadcast
-Once we had enough, let's stop this broadcast.
+
+Once you've had enough, you can stop the broadcast with:
 
 ```sh
 stop all
 ```
 
-Additionally, if you want to stop the server, use the `exit` command.
-
+If you want to stop the server, use the `exit` command.
 
 ## Finally
-Now you know the basic usage of BotWave on Google Shell.  
-Feel free to explore more possibilites with BotWave !
+
+You now know the basics of using BotWave on Google Shell.
+Feel free to explore more possibilities with BotWave!
