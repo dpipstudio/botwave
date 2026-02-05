@@ -849,7 +849,8 @@ class BotWaveServer:
         
         self.queue.manual_pause()
         
-        self.alsa.start()
+        if not self.alsa.start():
+            return False
 
         Log.broadcast(f"Sending stream tokens to {len(target_clients)} client(s)...")
         
