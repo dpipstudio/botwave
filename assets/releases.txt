@@ -14,6 +14,11 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.9-axinaea ---=
+**What changed:**
+- Minor bug fixes reguarding client-server live broadcasing.
+=--- END ---=
+
 =--- v1.0.8-senna ---=
 **What changed:**
 - Important fixes reguarding path traversal, most of them reguarding client <-> server.
