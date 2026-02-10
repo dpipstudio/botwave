@@ -31,7 +31,7 @@ jobs:
         id: notes
         run: |
           chmod +x .github/scripts/generate-release-notes.sh
-          .github/scripts/generate-release-notes.sh "${{ steps.parse.outputs.version }}" "${{ steps.parse.outputs.description }}" "${{ steps.parse.outputs.previous_commit }}"
+          .github/scripts/generate-release-notes.sh "${{ steps.parse.outputs.version }}" "${{ steps.parse.outputs.previous_commit }}"
       
       - name: Update installation.json
         if: steps.parse.outputs.new_release == 'true'
