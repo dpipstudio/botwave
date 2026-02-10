@@ -31,6 +31,7 @@ from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
+from shared.protocol import PROTOCOL_VERSION
 from shared.pw_monitor import PWM
 from shared.queue import Queue
 from shared.security import PathValidator, SecurityError
@@ -449,6 +450,10 @@ class BotWaveCLI:
                 Log.progress_bar(total_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE' )
 
         try:
+            headers = {
+                "User-Agent": f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)"
+            }
+
             if not dest_name:
                 url_path = urllib.parse.urlparse(url).path
                 dest_name = os.path.basename(url_path)
@@ -470,6 +475,9 @@ class BotWaveCLI:
             # already wav = download directly
             if ext == "wav":
                 Log.file(f"Downloading WAV file from {url}...")
+                opener = urllib.request.build_opener()
+                opener.addheaders = [(k, v) for k, v in headers.items()]
+                urllib.request.install_opener(opener)
                 urllib.request.urlretrieve(url, final_path, reporthook=_download_reporthook)
                 Log.success(f"File {final_name} downloaded successfully to {final_path}")
                 return True
@@ -481,6 +489,9 @@ class BotWaveCLI:
                 with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
                     tmp_path = tmp.name
 
+                opener = urllib.request.build_opener()
+                opener.addheaders = [(k, v) for k, v in headers.items()]
+                urllib.request.install_opener(opener)
                 urllib.request.urlretrieve(url, tmp_path, reporthook=_download_reporthook)
 
                 Converter.convert_wav(tmp_path, final_path, not self.silent)
@@ -496,7 +507,7 @@ class BotWaveCLI:
         except (ConvertError, OSError, urllib.error.URLError) as e:
             Log.error(f"Download error: {e}")
             return False
-
+        
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual: bool = True):
         def finished():
