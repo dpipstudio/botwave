@@ -14,6 +14,22 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.10-umtiza ---=
+**What changed:**
+- Audio format conversion:
+    - Added automatic conversion of common audio/video formats to WAV
+    - Supports MP3, AAC, M4A, OGG, FLAC, OPUS, MP4, MKV, and many more formats
+    - Conversion happens automatically during upload and download operations
+
+- **Bug fixes**:
+    - Fixed imports in client.py
+    - Improved error handling in file operations
+    - Better exception catching in history file loading
+
+- **Misc**:
+    - Updated `--talk` flag description for clarity
+=--- END ---=
+
 =--- v1.0.9-axinaea ---=
 **What changed:**
 - Minor bug fixes reguarding client-server live broadcasing.
