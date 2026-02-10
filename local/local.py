@@ -813,7 +813,7 @@ def main():
             readline.set_history_length(1000)
             try:
                 readline.read_history_file("/opt/BotWave/.history")
-            except FileNotFoundError:
+            except:
                 pass
 
         while cli.running:
