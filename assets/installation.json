@@ -74,6 +74,7 @@
       "shared/alsa.py",
       "shared/cat.py",
       "shared/cat.jpg",
+      "shared/converter.py",
       "shared/handlers.py",
       "shared/http.py",
       "shared/logger.py",

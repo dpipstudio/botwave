@@ -12,23 +12,22 @@
 
 
 import argparse
+import asyncio
 from datetime import datetime, timezone
 import json
 import os
 import platform
-import sys
-import urllib.request
-import asyncio
 import ssl
 import sys
-import os
-from datetime import datetime, timezone
+import tempfile
+import urllib.request
 
 # using this to access to the shared dir files
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
+from shared.converter import Converter, SUPPORTED_EXTENSIONS
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
@@ -340,41 +339,66 @@ class BotWaveClient:
             error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
             await self.ws_client.send(error)
             return
-        
+
+        ext = os.path.splitext(filename)[1].lower().lstrip(".")
+        converted = False
+
         try:
             Log.file(f"Downloading from URL: {url}")
-            
-            def download_with_progress():
+
+            def download_with_progress(dest_path):
                 headers = {
                     "User-Agent": f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)"
                 }
 
                 request = urllib.request.Request(url, headers=headers)
 
-                with urllib.request.urlopen(request) as response, open(filepath, "wb") as out_file:
+                with urllib.request.urlopen(request) as response, open(dest_path, "wb") as out_file:
                     out_file.write(response.read())
-            
+
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, download_with_progress)
-            
+
+            # wav = direct download
+            if ext == "wav":
+                await loop.run_in_executor(None, download_with_progress, filepath)
+
+            elif ext in SUPPORTED_EXTENSIONS:
+                filepath = os.path.splitext(filepath)[0] + ".wav"
+                filename = os.path.splitext(filename)[0] + ".wav"
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
+                    tmp_path = tmp.name
+
+                try:
+                    await loop.run_in_executor(None, download_with_progress, tmp_path)
+                    Converter.convert_wav(tmp_path, filepath, not self.silent)
+                finally:
+                    converted = True
+                    if os.path.exists(tmp_path):
+                        os.unlink(tmp_path)
+
+            # unsuèèprted
+            else:
+                raise ValueError(f"Unsupported file type from URL: .{ext}")
+
             if os.path.exists(filepath):
                 file_size = os.path.getsize(filepath)
-                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes)")
-                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}")
-
+                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes{", converted" if converted else ""})")
+                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}{" (converted)" if converted else ""}")
             else:
-                Log.error(f"Download failed: file not created")
+                Log.error("Download failed: file not created")
                 response = ProtocolParser.build_response(Commands.ERROR, "File not created")
-                
+
         except urllib.error.URLError as e:
             Log.error(f"Network error: {e}")
             response = ProtocolParser.build_response(Commands.ERROR, f"Network error: {str(e)}")
+
         except Exception as e:
             Log.error(f"Download failed: {e}")
-            response = ProtocolParser.build_response(Commands.ERROR, str(e))
-        
+            response = ProtocolParser.build_response(Commands.ERROR, f"Error: {str(e)}")
+
         await self.ws_client.send(response)
-        
+
     async def _handle_start_broadcast(self, kwargs: dict):
         filename = kwargs.get('filename')
 

@@ -18,6 +18,8 @@ import subprocess
 import shlex
 import sys
 import time
+import tempfile
+import urllib.parse
 import urllib.request
 
 # using this to access to the shared dir files
@@ -25,6 +27,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
+from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
@@ -320,12 +323,18 @@ class BotWaveCLI:
             Log.error(f"Error executing shell command: {e}")
 
     def upload_file(self, source_path: str):
-        allowed_source_dirs = ['/tmp', '/home', '/opt/BotWave', self.upload_dir, os.path.expanduser('~')]
+        allowed_source_dirs = [
+            '/tmp',
+            '/home',
+            '/opt/BotWave',
+            self.upload_dir,
+            os.path.expanduser('~')
+        ]
 
         try:
             source_path = PathValidator.validate_read(source_path, allowed_source_dirs)
         except SecurityError as e:
-            Log.error(f"Access denied: {e}")
+            Log.error(str(e))
             return False
 
         if not os.path.exists(source_path):
@@ -334,100 +343,160 @@ class BotWaveCLI:
 
         if os.path.isdir(source_path):
             return self._upload_folder_contents(source_path)
-        
+
         try:
-            dest_name = PathValidator.sanitize_filename(os.path.basename(source_path))
+            filename = os.path.basename(source_path)
+            ext = os.path.splitext(filename)[1].lower()
+
+            if ext != ".wav":
+                if ext.lstrip(".") not in SUPPORTED_EXTENSIONS:
+                    Log.error(f"Unsupported file type: {ext}")
+                    return False
+
+                # convert to wav
+                dest_name = PathValidator.sanitize_filename(os.path.splitext(filename)[0] + ".wav")
+                dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+
+                Converter.convert_wav(source_path, dest_path, not self.silent)
+                Log.success(f"File converted and uploaded to {dest_path}")
+                return True
+
+            # already wav = just copy
+            dest_name = PathValidator.sanitize_filename(filename)
             dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+
         except SecurityError as e:
             Log.error(f"Invalid destination: {e}")
             return False
-        
+        except ConvertError as e:
+            Log.error(str(e))
+            return False
+
         try:
-            with open(source_path, 'rb') as src_file:
-                with open(dest_path, 'wb') as dest_file:
-                    dest_file.write(src_file.read())
+            with open(source_path, 'rb') as src_file, open(dest_path, 'wb') as dest_file:
+                dest_file.write(src_file.read())
+
             Log.success(f"File uploaded successfully to {dest_path}")
             return True
+
         except Exception as e:
             Log.error(f"Error uploading file: {e}")
             return False
+
         
 
     def _upload_folder_contents(self, folder_path: str):
         if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
             Log.error(f"Folder {folder_path} not found")
             return False
-        
-        wav_files = [
+
+        files = [
             f for f in os.listdir(folder_path)
-            if f.lower().endswith('.wav') and os.path.isfile(os.path.join(folder_path, f))
+            if os.path.isfile(os.path.join(folder_path, f))
         ]
-        
-        if not wav_files:
-            Log.warning(f"No WAV files found in {folder_path}")
+
+        if not files:
+            Log.warning(f"No files found in {folder_path}")
             return False
-        
-        Log.file(f"Found {len(wav_files)} WAV file(s) in {folder_path}")
-        
-        overall_success = 0
-        
-        for idx, filename in enumerate(wav_files, 1):
-            full_path = os.path.join(folder_path, filename)
-            dest_path = os.path.join(self.upload_dir, filename)
-            
-            Log.file(f"[{idx}/{len(wav_files)}] Uploading {filename}...")
-            
+
+        Log.file(f"Found {len(files)} file(s) in {folder_path}")
+
+        success = 0
+
+        for idx, filename in enumerate(files, 1):
+            source_path = os.path.join(folder_path, filename)
+            name, ext = os.path.splitext(filename)
+            ext = ext.lower()
+
+            Log.file(f"[{idx}/{len(files)}] Processing {filename}...")
+
             try:
-                with open(full_path, 'rb') as src_file:
-                    with open(dest_path, 'wb') as dest_file:
-                        dest_file.write(src_file.read())
-                Log.success(f"  {filename}")
-                overall_success += 1
-            except Exception as e:
+                if ext == ".wav":
+                    dest_name = PathValidator.sanitize_filename(filename)
+                    dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+
+                    with open(source_path, 'rb') as src, open(dest_path, 'wb') as dst:
+                        dst.write(src.read())
+
+                    Log.success(f"  Uploaded {filename}")
+                    success += 1
+
+                elif ext.lstrip(".") in SUPPORTED_EXTENSIONS:
+                    dest_name = PathValidator.sanitize_filename(name + ".wav")
+                    dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+
+                    Converter.convert_wav(source_path, dest_path, not self.silent)
+                    Log.success(f"  Converted & uploaded {dest_name}")
+                    success += 1
+
+                else:
+                    Log.warning(f"  Skipped unsupported file: {filename}")
+
+            except (ConvertError, SecurityError, OSError) as e:
                 Log.error(f"  {filename} - {e}")
-        
-        Log.file(f"Folder upload completed: {overall_success}/{len(wav_files)} files")
-        return overall_success > 0
+
+        Log.file(f"Folder upload completed: {success} successful, {len(files) - success} skipped/failed")
+        return success > 0
+
 
     def download_file(self, url: str, dest_name: str):
         def _download_reporthook(block_num, block_size, total_size):
+            downloaded = block_num * block_size
             if total_size > 0:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+                Log.progress_bar(downloaded, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False )
 
-            if block_num * block_num >= total_size:
-                Log.progress_bar(block_num * block_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE')
-
+            if downloaded >= total_size:
+                Log.progress_bar(total_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE' )
 
         try:
             if not dest_name:
                 url_path = urllib.parse.urlparse(url).path
                 dest_name = os.path.basename(url_path)
 
-            try:
-                dest_name = PathValidator.sanitize_filename(dest_name)
-            except SecurityError as e:
-                Log.error(f"Invalid destination filename: {e}")
-                return False
+            dest_name = PathValidator.sanitize_filename(dest_name)
+            ext = os.path.splitext(dest_name)[1].lower().lstrip(".")
 
-            if not dest_name.lower().endswith('.wav'):
-                Log.error("Only WAV files are supported")
-                return False
-            
+            final_name = (
+                dest_name if ext == "wav"
+                else os.path.splitext(dest_name)[0] + ".wav"
+            )
+
             try:
-                dest_path = PathValidator.safe_join(self.upload_dir, dest_name)
+                final_path = PathValidator.safe_join(self.upload_dir, final_name)
             except SecurityError as e:
                 Log.error(f"Invalid destination path: {e}")
                 return False
-            
-            Log.file(f"Downloading file from {url}...")
-            urllib.request.urlretrieve(url, dest_path, reporthook=_download_reporthook)
 
-            Log.success(f"File {dest_name} downloaded successfully to {dest_path}")
-            return True
-        
-        except Exception as e:
-            Log.error(f"Download error: {str(e)}")
+            # already wav = download directly
+            if ext == "wav":
+                Log.file(f"Downloading WAV file from {url}...")
+                urllib.request.urlretrieve(url, final_path, reporthook=_download_reporthook)
+                Log.success(f"File {final_name} downloaded successfully to {final_path}")
+                return True
+
+            # supported but not wav = temp download + convert
+            if ext in SUPPORTED_EXTENSIONS:
+                Log.file(f"Downloading {ext.upper()} file and converting to WAV...")
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
+                    tmp_path = tmp.name
+
+                urllib.request.urlretrieve(url, tmp_path, reporthook=_download_reporthook)
+
+                Converter.convert_wav(tmp_path, final_path, not self.silent)
+
+                os.unlink(tmp_path)
+
+                Log.success(f"File converted and saved to {final_path}")
+                return True
+
+            Log.error(f"Unsupported file type: .{ext}")
             return False
+
+        except (ConvertError, OSError, urllib.error.URLError) as e:
+            Log.error(f"Download error: {e}")
+            return False
+
 
     def start_broadcast(self, file_path: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual: bool = True):
         def finished():
@@ -721,7 +790,7 @@ def main():
     parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
-    parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
+    parser.add_argument('--talk', action='store_true', help='Show output logs')
 
     args = parser.parse_args()
 
