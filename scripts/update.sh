@@ -514,9 +514,8 @@ check_for_updates() {
 }
 
 fetch_installation_config() {
-    local commit="$1"
     log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/${commit}/assets/installation.json?t=$(date +%s)")
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
         log ERROR "Failed to fetch installation.json"
@@ -617,7 +616,7 @@ main() {
     fi
 
     # Fetch configuration and update
-    local install_json=$(fetch_installation_config "$latest_commit")
+    local install_json=$(fetch_installation_config)
     update_components "$install_json" "$latest_commit"
 
     # Save version and complete

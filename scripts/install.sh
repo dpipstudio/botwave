@@ -477,9 +477,8 @@ EOF
 # ============================================================================
 
 fetch_installation_config() {
-    local commit="$1"
     log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/${commit}/assets/installation.json?t=$(date +%s)")
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
         log ERROR "Failed to fetch installation.json"
@@ -757,7 +756,7 @@ main() {
     setup_alsa_loopback
 
     # Fetch configuration and install
-    local install_json=$(fetch_installation_config "$target_commit")
+    local install_json=$(fetch_installation_config)
     install_components "$mode" "$install_json" "$target_commit"
 
     # Finalize
