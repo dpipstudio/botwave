@@ -50,7 +50,7 @@ EDITOR="${EDITOR:-nano}"
 
 # supported handlers and commands
 VALID_PREFIXES=("l_onready" "l_onstart" "l_onstop" "s_onready" "s_onstart" "s_onstop" "s_onconnect" "s_ondisconnect" "s_onwsjoin" "s_onwsleave")
-VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit" "kick" "rm" "sync" "lf" "sstv" "morse" "live" "queue")
+VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit" "kick" "rm" "sync" "lf" "sstv" "morse" "live" "queue", "|")
 
 list_handlers() {
     echo ""
