@@ -444,15 +444,12 @@ class BotWaveServer:
         self.ws_handler.start()
 
     def _execute_command(self, command: str):
-        # this is only a bridge to _execute_command_async
         try:
             if "#" in command:
                 command = command.split("#", 1)[0]
-            
             command = command.strip()
             if not command:
                 return True
-            
             try:
                 cmd = shlex.split(command)
             except ValueError as e:
@@ -460,31 +457,37 @@ class BotWaveServer:
                 return True
             
             command_name = cmd[0].lower()
+            env = os.environ.copy()
             
             if self.loop and self.loop.is_running():
                 try:
-                    future = asyncio.run_coroutine_threadsafe(
-                        self._execute_command_async(command_name, cmd),
-                        self.loop
-                    )
-                    future.result(timeout=300)
+                    try:
+                        running_loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        running_loop = None
+
+                    if running_loop is self.loop:
+                        asyncio.create_task(self._execute_command_async(command_name, cmd, env))
+                    else:
+                        future = asyncio.run_coroutine_threadsafe(
+                            self._execute_command_async(command_name, cmd, env),
+                            self.loop
+                        )
+                        future.result(timeout=300)
                 except asyncio.TimeoutError:
                     Log.error("Command timeout")
                 except Exception as e:
                     Log.error(f"Command error: {e}")
-                    import traceback
-                    traceback.print_exc()
             else:
                 Log.error("Server not running")
             
             return command_name != 'exit'
-            
         except Exception as e:
             Log.error(f"Error executing command: {e}")
             return True
 
 
-    async def _execute_command_async(self, command_name: str, cmd: list):
+    async def _execute_command_async(self, command_name: str, cmd: list, env: Dict[str, str] = None):
         
         # SERVER CONTROL 
         if command_name == 'exit':
@@ -677,7 +680,7 @@ class BotWaveServer:
                 return
             
             shell_command = ' '.join(cmd[1:])
-            await self.run_shell_command(shell_command)
+            await self.run_shell_command(shell_command, env)
             return
         
         elif command_name == '|':
@@ -686,7 +689,7 @@ class BotWaveServer:
                 return
             
             shell_command = ' '.join(cmd[1:])
-            await self.run_pipe_command(shell_command)
+            await self.run_pipe_command(shell_command, env)
             return
         
         elif command_name == 'help':
@@ -750,14 +753,15 @@ class BotWaveServer:
     def onwsleave_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("s_onwsleave", dir_path, context or self._build_context())
 
-    async def run_shell_command(self, command: str):
+    async def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
             #Log.info(f"Executing: {command}")
             
             process = await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                env=env
             )
             
             try:
@@ -781,23 +785,26 @@ class BotWaveServer:
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
-    async def run_pipe_command(self, command: str):
+    async def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
-
             process = await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                env=env
             )
             stdout, _ = await process.communicate()
             
             for line in stdout.decode('utf-8').splitlines():
                 line = line.strip()
                 if line:
-                    await self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+                    # schedule each command as a task instead of awaiting directly to prevent blocking
+                    asyncio.create_task(
+                        self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+                    )
 
         except Exception as e:
-            Log.error(f"Error executing shell command: {e}")
+            Log.error(f"Error executing pipe command: {e}")
 
     def list_clients(self):
         if not self.clients:
