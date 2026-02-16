@@ -675,8 +675,18 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: < <shell command>")
                 return
+            
             shell_command = ' '.join(cmd[1:])
             await self.run_shell_command(shell_command)
+            return
+        
+        elif command_name == '|':
+            if len(cmd) < 2:
+                Log.error("Usage: | <shell command>")
+                return
+            
+            shell_command = ' '.join(cmd[1:])
+            await self.run_pipe_command(shell_command)
             return
         
         elif command_name == 'help':
@@ -768,6 +778,24 @@ class BotWaveServer:
                 await process.wait()
                 Log.error("Command execution timeout")
         
+        except Exception as e:
+            Log.error(f"Error executing shell command: {e}")
+
+    async def run_pipe_command(self, command: str):
+        try:
+
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await process.communicate()
+            
+            for line in stdout.decode('utf-8').splitlines():
+                line = line.strip()
+                if line:
+                    await self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
@@ -1696,6 +1724,12 @@ class BotWaveServer:
         Log.print("  Run a shell command on the main OS", "white")
         Log.print("  Example:", "white")
         Log.print("    < df -h", "cyan")
+        Log.print("")
+
+        Log.print("| <command>", "bright_green")
+        Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
+        Log.print("  Example:", "white")
+        Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
         Log.print("exit", "bright_green")

@@ -258,6 +258,15 @@ class BotWaveCLI:
 
                 return True
             
+            elif cmd == '|':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: | <shell command>")
+                    return True
+                
+                shell_command = ' '.join(cmd_parts[1:])
+                self.run_pipe_command(shell_command)
+                return True
+            
             elif cmd == 'dl':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: dl <url> [destination]")
@@ -282,16 +291,21 @@ class BotWaveCLI:
             return True
         
     def _build_context(self) -> dict:
-        ctx = {
-            "BW_CLIENT_HOSTNAME": os.uname().nodename,
-            "BW_CLIENT_MACHINE": os.uname().machine,
-            "BW_CLIENT_SYSTEM": os.uname().sysname,
-            "BW_CLIENT_PROTO": PROTOCOL_VERSION,
-            "BW_UPLOAD_DIR": self.upload_dir,
-            "BW_HANDLERS_DIR": self.handlers_dir,
-            "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
-            "BW_PASSKEY_SET": "true" if self.passkey else "false",
-        }
+        ctx = {}
+        try:
+            ctx = {
+                "BW_CLIENT_HOSTNAME": os.uname().nodename,
+                "BW_CLIENT_MACHINE": os.uname().machine,
+                "BW_CLIENT_SYSTEM": os.uname().sysname,
+                "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+                "BW_UPLOAD_DIR": self.upload_dir,
+                "BW_HANDLERS_DIR": self.handlers_dir,
+                "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
+                "BW_PASSKEY_SET": "true" if self.passkey else "false",
+            }
+        except:
+            ...
+
         return ctx
 
 
@@ -319,6 +333,20 @@ class BotWaveCLI:
                     Log.print(line, end='')
 
                 Log.error(f"Command failed with return code {return_code}")
+
+        except Exception as e:
+            Log.error(f"Error executing shell command: {e}")
+
+    
+    def run_pipe_command(self, command: str):
+        try:
+            process = subprocess.run(command, shell=True, capture_output=True, text=True)
+            
+            for line in process.stdout.splitlines():
+                line = line.strip()
+                if line:
+                    self._execute_command(line)
+
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
@@ -763,6 +791,12 @@ class BotWaveCLI:
         Log.print("  Run a shell command on the main OS", "white")
         Log.print("  Example:", "white")
         Log.print("    < df -h", "cyan")
+        Log.print("")
+
+        Log.print("| <command>", "bright_green")
+        Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
+        Log.print("  Example:", "white")
+        Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
         Log.print("help", "bright_green")
