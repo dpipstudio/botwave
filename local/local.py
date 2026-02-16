@@ -13,6 +13,7 @@
 import argparse
 import os
 import uuid
+import re
 import signal
 import subprocess
 import shlex
@@ -97,7 +98,7 @@ class BotWaveCLI:
         )
         self.ws_handler.start()
 
-    def _execute_command(self, command: str):
+    def _execute_command(self, command: str, interpolate: bool = True):
         try:
 
             if "#" in command:
@@ -106,10 +107,18 @@ class BotWaveCLI:
             command = command.strip()
             env = os.environ.copy()
 
+            if interpolate:
+                command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
+                    r'\{(\w+)\}',
+                    lambda m: env.get(m.group(1), ''),
+                    command
+                )
+
             if not command:
                 return True
 
             cmd_parts = shlex.split(command)
+
             if not cmd_parts:
                 return True
             
