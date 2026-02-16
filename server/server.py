@@ -185,8 +185,9 @@ class BotWaveServer:
         if client_id in self.clients:
             client = self.clients[client_id]
             Log.warning(f"Client disconnected: {client.get_display_name()}")
+            ctx = self._build_context(client_id)
             del self.clients[client_id]
-            self.ondisconnect_handlers()
+            self.ondisconnect_handlers(context=ctx)
 
     async def _handle_client_message(self, client_id: Optional[str], message: str, websocket):
         try:
@@ -428,7 +429,7 @@ class BotWaveServer:
             Log.version(f"  Client protocol version: {protocol_version}. Some features may not work correctly.")
         
         delattr(websocket, 'reg_data')
-        self.onconnect_handlers()
+        self.onconnect_handlers(context=self._build_context(client_id))
 
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
@@ -685,27 +686,53 @@ class BotWaveServer:
         else:
             Log.error(f"Unknown command: {command_name}")
             return
+        
 
-    def onready_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onready", dir_path)
+    def _build_context(self, client_id: str = None) -> dict:
+        # Returns a context for handlers execution
+        ctx = {
+            "BW_CLIENT_COUNT": str(len(self.clients)),
+            "BW_ALL_CLIENT_IDS": ",".join(self.clients.keys()),
+            "BW_HOST": self.host,
+            "BW_WS_PORT": str(self.ws_port),
+            "BW_HTTP_PORT": str(self.http_port),
+            "BW_PASSKEY_SET": "true" if self.passkey else "false",
+        }
 
-    def onstart_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onstart", dir_path)
+        if client_id and client_id in self.clients:
+            client = self.clients[client_id]
+            info = client.machine_info
+            ctx.update({
+                "BW_CLIENT_ID": client_id,
+                "BW_CLIENT_HOSTNAME": info.get("hostname", "unknown"),
+                "BW_CLIENT_MACHINE": info.get("machine", "unknown"),
+                "BW_CLIENT_SYSTEM": info.get("system", "unknown"),
+                "BW_CLIENT_PROTO": client.protocol_version,
+                "BW_CLIENT_CONNECTED_AT": client.connected_at.strftime("%Y-%m-%d %H:%M:%S"),
+            })
 
-    def onstop_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onstop", dir_path)
+        return ctx
 
-    def onconnect_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onconnect", dir_path)
+    def onready_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onready", dir_path, context or self._build_context())
 
-    def ondisconnect_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_ondisconnect", dir_path)
+    def onstart_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onstart", dir_path, context or self._build_context())
 
-    def onwsjoin_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onwsjoin", dir_path)
+    def onstop_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onstop", dir_path, context or self._build_context())
 
-    def onwsleave_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onwsleave", dir_path)
+    def onconnect_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onconnect", dir_path, context or self._build_context())
+
+    def ondisconnect_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_ondisconnect", dir_path, context or self._build_context())
+
+    def onwsjoin_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onwsjoin", dir_path, context or self._build_context())
+
+    def onwsleave_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onwsleave", dir_path, context or self._build_context())
 
     async def run_shell_command(self, command: str):
         try:
@@ -1391,7 +1418,7 @@ class BotWaveServer:
             success_count += 1
         
         Log.broadcast(f"Broadcast start commands sent: {success_count}/{total_count}")
-        self.onstart_handlers()
+        self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": filename, "BW_BROADCAST_FREQ": str(frequency)})
         return success_count > 0
 
     async def stop_broadcast(self, client_targets: str):
