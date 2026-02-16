@@ -70,6 +70,7 @@ parse_arguments() {
     USE_LATEST=false
     INSTALL_MODE=""
     SETUP_ALSA=""
+    TARGET_BRANCH="main"
 
 
     while [[ $# -gt 0 ]]; do
@@ -84,6 +85,14 @@ parse_arguments() {
                     exit 1
                 fi
                 TARGET_VERSION="$2"
+                shift 2
+                ;;
+            -b|--branch)
+                if [[ -z "$2" ]] || [[ "$2" == -* ]]; then
+                    log ERROR "Option --branch requires a branch name"
+                    exit 1
+                fi
+                TARGET_BRANCH="$2"
                 shift 2
                 ;;
             --alsa)
@@ -110,6 +119,7 @@ parse_arguments() {
                 log INFO "  both                Install both client and server"
                 log INFO "  -l, --latest        Install from latest commit (unreleased)"
                 log INFO "  -t, --to <version>  Install specific release version"
+                log INFO "  -b, --branch <name> Install from a specific branch (default: main)"
                 log INFO "  --[no-]alsa          Setup ALSA loopback card"
                 log INFO "  -h, --help          Show help message"
                 exit 1
@@ -347,7 +357,7 @@ prompt_alsa_setup() {
 resolve_target_commit() {
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
-        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
+        local latest_commit=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/commits?sha=${TARGET_BRANCH}"" | \
             grep '"sha":' | \
             head -n 1 | \
             cut -d '"' -f 4)
@@ -364,7 +374,7 @@ resolve_target_commit() {
 
     if [[ -n "$TARGET_VERSION" ]]; then
         log INFO "Looking up release: $TARGET_VERSION"
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
         local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
 
         if [[ -z "$commit" ]]; then
@@ -383,7 +393,7 @@ resolve_target_commit() {
 
     # Default: latest release
     log INFO "Fetching latest release..."
-    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
     local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
 
     if [[ -z "$latest_release_commit" ]]; then
@@ -478,7 +488,7 @@ EOF
 
 fetch_installation_config() {
     log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
         log ERROR "Failed to fetch installation.json"
@@ -678,7 +688,7 @@ save_version_info() {
     if [[ -n "$TARGET_VERSION" ]]; then
         echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
     elif [[ "$USE_LATEST" != true ]]; then
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
         local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
         if [[ -n "$codename" ]]; then
             echo "$codename" > "$INSTALL_DIR/last_release"

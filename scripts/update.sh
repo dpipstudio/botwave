@@ -64,6 +64,7 @@ silent() {
 parse_arguments() {
     TARGET_VERSION=""
     USE_LATEST=false
+    TARGET_BRANCH="main"
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -79,6 +80,14 @@ parse_arguments() {
                 TARGET_VERSION="$2"
                 shift 2
                 ;;
+            -b|--branch)
+                if [[ -z "$2" ]] || [[ "$2" == -* ]]; then
+                    log ERROR "Option --branch requires a branch name"
+                    exit 1
+                fi
+                TARGET_BRANCH="$2"
+                shift 2
+                ;;
             -h|--help)
                 show_help
                 exit 0
@@ -88,6 +97,7 @@ parse_arguments() {
                 log INFO "Did you mean one of these?"
                 log INFO "  -l, --latest        Update to latest commit (unreleased)"
                 log INFO "  -t, --to <version>  Update to specific release version"
+                log INFO "  -b, --branch <name> Update from a specific branch (default: main)"
                 log INFO "  -h, --help          Show help message"
                 exit 1
                 ;;
@@ -443,7 +453,7 @@ update_backends() {
 check_for_updates() {
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
-        local latest_commit=$(curl -sSL https://api.github.com/repos/dpipstudio/botwave/commits | \
+        local latest_commit=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/commits?sha=${TARGET_BRANCH}" | \
             grep '"sha":' | \
             head -n 1 | \
             cut -d '"' -f 4)
@@ -467,7 +477,7 @@ check_for_updates() {
     
     if [[ -n "$TARGET_VERSION" ]]; then
         log INFO "Looking up release: $TARGET_VERSION"
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
         local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
         
         if [[ -z "$commit" ]]; then
@@ -493,7 +503,7 @@ check_for_updates() {
     
     # Default: latest release
     log INFO "Checking for updates..."
-    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
     local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
     
     if [[ -z "$latest_release_commit" ]]; then
@@ -515,7 +525,7 @@ check_for_updates() {
 
 fetch_installation_config() {
     log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+    local config=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
         log ERROR "Failed to fetch installation.json"
@@ -534,7 +544,7 @@ save_version_info() {
     if [[ -n "$TARGET_VERSION" ]]; then
         echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
     elif [[ "$USE_LATEST" != true ]]; then
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/main/assets/installation.json?t=$(date +%s)")
+        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
         local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
         if [[ -n "$codename" ]]; then
             echo "$codename" > "$INSTALL_DIR/last_release"
