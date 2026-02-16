@@ -690,14 +690,20 @@ class BotWaveServer:
 
     def _build_context(self, client_id: str = None) -> dict:
         # Returns a context for handlers execution
-        ctx = {
-            "BW_CLIENT_COUNT": str(len(self.clients)),
-            "BW_ALL_CLIENT_IDS": ",".join(self.clients.keys()),
-            "BW_HOST": self.host,
-            "BW_WS_PORT": str(self.ws_port),
-            "BW_HTTP_PORT": str(self.http_port),
-            "BW_PASSKEY_SET": "true" if self.passkey else "false",
-        }
+        ctx = {}
+        try:
+            ctx = {
+                "BW_CLIENT_HOSTNAME": os.uname().nodename,
+                "BW_CLIENT_MACHINE": os.uname().machine,
+                "BW_CLIENT_SYSTEM": os.uname().sysname,
+                "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+                "BW_UPLOAD_DIR": self.upload_dir,
+                "BW_HANDLERS_DIR": self.handlers_dir,
+                "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
+                "BW_PASSKEY_SET": "true" if self.passkey else "false",
+            }
+        except:
+            ...
 
         if client_id and client_id in self.clients:
             client = self.clients[client_id]
