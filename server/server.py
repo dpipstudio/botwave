@@ -1803,6 +1803,10 @@ def main():
         
         time.sleep(2)
 
+        if not server.running:
+            Log.error("Server failed to start. Please open an issue on the GitHub.")
+            sys.exit(1)
+
         if args.ws:
             server._start_websocket_server()
 
