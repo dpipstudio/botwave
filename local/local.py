@@ -290,22 +290,6 @@ class BotWaveCLI:
     def onstop_handlers(self, dir_path: str = None):
         self.handlers_executor.run_handlers("l_onstop", dir_path)
 
-    def _execute_handler(self, file_path: str, silent: bool = False):
-        try:
-            if not silent:
-                Log.handler(f"Running handler on {file_path}")
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-
-                    if line:
-                        if line[0] != "#":
-                            if not silent:
-                                Log.handler(f"Executing command: {line}")
-                            self._execute_command(line)
-        except Exception as e:
-            Log.error(f"Error executing command from {file_path}: {e}")
-
     def run_shell_command(self, command: str):
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
