@@ -124,7 +124,7 @@ class BotWaveCLI:
                 rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
                 pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
             
             if cmd == 'live':
@@ -134,7 +134,7 @@ class BotWaveCLI:
                 pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
 
                 self.start_live(frequency, ps, rt, pi)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
                 return True
 
 
@@ -280,15 +280,30 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error executing command '{command}': {e}")
             return True
+        
+    def _build_context(self) -> dict:
+        ctx = {
+            "BW_CLIENT_HOSTNAME": os.uname().nodename,
+            "BW_CLIENT_MACHINE": os.uname().machine,
+            "BW_CLIENT_SYSTEM": os.uname().sysname,
+            "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+            "BW_UPLOAD_DIR": self.upload_dir,
+            "BW_HANDLERS_DIR": self.handlers_dir,
+            "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
+            "BW_PASSKEY_SET": "true" if self.passkey else "false",
+        }
+        return ctx
 
-    def onready_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onready", dir_path)
 
-    def onstart_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onstart", dir_path)
+    def onready_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onready", dir_path, context or self._build_context())
 
-    def onstop_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onstop", dir_path)
+    def onstart_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onstart", dir_path, context or self._build_context())
+
+    def onstop_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onstop", dir_path, context or self._build_context())
+
 
     def run_shell_command(self, command: str):
         try:
