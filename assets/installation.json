@@ -1,16 +1,8 @@
 {
   "releases": [
     {
-      "codename": "END",
-      "commit": "a8065097118f71b68f35965a8f9a2d04544ae478"
-    },
-    {
       "codename": "v1.0.10-umtiza",
       "commit": "69c0ad19df838f328a414b087e424ae9dd13bd10"
-    },
-    {
-      "codename": "v1.0.10-umtiza",
-      "commit": "ede437c7e9539345c700120be20ad2a2edeb048c"
     },
     {
       "codename": "v1.0.9-axinaea",
