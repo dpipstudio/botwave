@@ -14,7 +14,7 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
-=-- v1.0.11-redbud --=
+=--- v1.0.11-redbud ---=
 *This release was supposed to be for valentines day, oops*
 
 ### What changed
