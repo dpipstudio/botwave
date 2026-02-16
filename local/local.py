@@ -19,6 +19,7 @@ import shlex
 import sys
 import time
 import tempfile
+from typing import Dict
 import urllib.parse
 import urllib.request
 
@@ -103,6 +104,8 @@ class BotWaveCLI:
                 command = command.split("#", 1)[0]
 
             command = command.strip()
+            env = os.environ.copy()
+
             if not command:
                 return True
 
@@ -254,7 +257,7 @@ class BotWaveCLI:
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])
-                self.run_shell_command(shell_command)
+                self.run_shell_command(shell_command, env)
 
                 return True
             
@@ -264,7 +267,7 @@ class BotWaveCLI:
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])
-                self.run_pipe_command(shell_command)
+                self.run_pipe_command(shell_command, env)
                 return True
             
             elif cmd == 'dl':
@@ -319,9 +322,9 @@ class BotWaveCLI:
         self.handlers_executor.run_handlers("l_onstop", dir_path, context or self._build_context())
 
 
-    def run_shell_command(self, command: str):
+    def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
             for line in process.stdout:
                 Log.print(line, end='')
 
@@ -338,9 +341,9 @@ class BotWaveCLI:
             Log.error(f"Error executing shell command: {e}")
 
     
-    def run_pipe_command(self, command: str):
+    def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
-            process = subprocess.run(command, shell=True, capture_output=True, text=True)
+            process = subprocess.run(command, shell=True, capture_output=True, text=True, env=env)
             
             for line in process.stdout.splitlines():
                 line = line.strip()
