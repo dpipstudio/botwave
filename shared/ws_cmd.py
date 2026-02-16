@@ -27,7 +27,7 @@ class WSCMDH: # WebSocket Command Handler
         self.command_history = []
         self.history_index = 0
         
-        self.blocked_commands = ['<', 'exit'] # only for server
+        self.blocked_commands = ['<', '|', 'exit'] # only for server
     
     def start(self):
         
@@ -96,6 +96,7 @@ class WSCMDH: # WebSocket Command Handler
                 cmd_parts = message.strip().split()
                 if cmd_parts:
                     command = cmd_parts[0].lower()
+
                     if command in self.blocked_commands:
                         Log.warning(f"Hmmm, you can't do that. ;)")
                         return
@@ -103,6 +104,6 @@ class WSCMDH: # WebSocket Command Handler
                     if command == '#':
                         return
 
-            self.command_executor(message)
+            self.command_executor(message, interpolate=False)
         
         asyncio.get_event_loop().call_soon_threadsafe(execute)
