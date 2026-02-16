@@ -14,6 +14,38 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=-- v1.0.11-redbud --=
+*This release was supposed to be for valentines day, oops*
+
+### What changed
+- Handler context injection:
+    - Handlers now receive environment variables at execution time (`BW_CLIENT_HOSTNAME`, `BW_BROADCAST_FILE`, `BW_BROADCAST_FREQ`, etc.)
+    - Event-specific variables available where relevant (e.g. client info on `onconnect`/`ondisconnect`, broadcast info on `onstart`/`onstop`)
+    - Environment is fully restored after each handler execution
+
+- `{VAR}` interpolation in commands:
+    - Commands inside handlers now support `{VAR}` syntax, resolved against the current environment
+    - Allows using injected context directly in BotWave commands, not just shell calls
+
+- New `|` pipe command:
+    - Available on both server and local client
+    - Runs a shell command and feeds each line of its stdout back as a BotWave command
+    - Blocked from remote WebSocket execution for security
+
+- **Bug fixes**:
+    - Fixed potential deadlock in server async command execution
+    - Server now exits cleanly with an error message if startup fails
+
+- **Misc**:
+    - Install and update scripts now support the `-b,--brach <name>` flag to pull from a specific branch
+    - Updated docs for `handlers.md`, `local.md`, `server.md`, and `README.md`
+
+### Related
+The [`Main/Automate Your Setup`](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup) has been updated to document dynamic handlers using env variables.  
+
+Related PRs: #42, #43
+=--- END ---=
+
 =--- v1.0.10-umtiza ---=
 **What changed:**
 - Audio format conversion:
