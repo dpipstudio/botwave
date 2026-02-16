@@ -13,6 +13,7 @@ import asyncio
 from datetime import datetime, timezone
 import json
 import os
+import re
 import shlex
 import sys
 import ssl
@@ -185,8 +186,9 @@ class BotWaveServer:
         if client_id in self.clients:
             client = self.clients[client_id]
             Log.warning(f"Client disconnected: {client.get_display_name()}")
+            ctx = self._build_context(client_id)
             del self.clients[client_id]
-            self.ondisconnect_handlers()
+            self.ondisconnect_handlers(context=ctx)
 
     async def _handle_client_message(self, client_id: Optional[str], message: str, websocket):
         try:
@@ -428,7 +430,7 @@ class BotWaveServer:
             Log.version(f"  Client protocol version: {protocol_version}. Some features may not work correctly.")
         
         delattr(websocket, 'reg_data')
-        self.onconnect_handlers()
+        self.onconnect_handlers(context=self._build_context(client_id))
 
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
@@ -442,18 +444,28 @@ class BotWaveServer:
         )
         self.ws_handler.start()
 
-    def _execute_command(self, command: str):
-        # this is only a bridge to _execute_command_async
+    def _execute_command(self, command: str, interpolate: bool = True):
         try:
             if "#" in command:
                 command = command.split("#", 1)[0]
-            
+
             command = command.strip()
+            env = os.environ.copy()
+
+            if interpolate:
+                env = os.environ.copy()
+                command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
+                    r'\{(\w+)\}',
+                    lambda m: env.get(m.group(1), ''),
+                    command
+                )
+
             if not command:
                 return True
             
             try:
                 cmd = shlex.split(command)
+
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
                 return True
@@ -462,28 +474,33 @@ class BotWaveServer:
             
             if self.loop and self.loop.is_running():
                 try:
-                    future = asyncio.run_coroutine_threadsafe(
-                        self._execute_command_async(command_name, cmd),
-                        self.loop
-                    )
-                    future.result(timeout=300)
+                    try:
+                        running_loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        running_loop = None
+
+                    if running_loop is self.loop:
+                        asyncio.create_task(self._execute_command_async(command_name, cmd, env))
+                    else:
+                        future = asyncio.run_coroutine_threadsafe(
+                            self._execute_command_async(command_name, cmd, env),
+                            self.loop
+                        )
+                        future.result(timeout=300)
                 except asyncio.TimeoutError:
                     Log.error("Command timeout")
                 except Exception as e:
                     Log.error(f"Command error: {e}")
-                    import traceback
-                    traceback.print_exc()
             else:
                 Log.error("Server not running")
             
             return command_name != 'exit'
-            
         except Exception as e:
             Log.error(f"Error executing command: {e}")
             return True
 
 
-    async def _execute_command_async(self, command_name: str, cmd: list):
+    async def _execute_command_async(self, command_name: str, cmd: list, env: Dict[str, str] = None):
         
         # SERVER CONTROL 
         if command_name == 'exit':
@@ -674,8 +691,18 @@ class BotWaveServer:
             if len(cmd) < 2:
                 Log.error("Usage: < <shell command>")
                 return
+            
             shell_command = ' '.join(cmd[1:])
-            await self.run_shell_command(shell_command)
+            await self.run_shell_command(shell_command, env)
+            return
+        
+        elif command_name == '|':
+            if len(cmd) < 2:
+                Log.error("Usage: | <shell command>")
+                return
+            
+            shell_command = ' '.join(cmd[1:])
+            await self.run_pipe_command(shell_command, env)
             return
         
         elif command_name == 'help':
@@ -685,36 +712,69 @@ class BotWaveServer:
         else:
             Log.error(f"Unknown command: {command_name}")
             return
+        
 
-    def onready_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onready", dir_path)
+    def _build_context(self, client_id: str = None) -> dict:
+        # Returns a context for handlers execution
+        ctx = {}
+        try:
+            ctx = {
+                "BW_CLIENT_HOSTNAME": os.uname().nodename,
+                "BW_CLIENT_MACHINE": os.uname().machine,
+                "BW_CLIENT_SYSTEM": os.uname().sysname,
+                "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+                "BW_UPLOAD_DIR": self.upload_dir,
+                "BW_HANDLERS_DIR": self.handlers_dir,
+                "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
+                "BW_PASSKEY_SET": "true" if self.passkey else "false",
+            }
+        except:
+            ...
 
-    def onstart_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onstart", dir_path)
+        if client_id and client_id in self.clients:
+            client = self.clients[client_id]
+            info = client.machine_info
+            ctx.update({
+                "BW_CLIENT_ID": client_id,
+                "BW_CLIENT_HOSTNAME": info.get("hostname", "unknown"),
+                "BW_CLIENT_MACHINE": info.get("machine", "unknown"),
+                "BW_CLIENT_SYSTEM": info.get("system", "unknown"),
+                "BW_CLIENT_PROTO": client.protocol_version,
+                "BW_CLIENT_CONNECTED_AT": client.connected_at.strftime("%Y-%m-%d %H:%M:%S"),
+            })
 
-    def onstop_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onstop", dir_path)
+        return ctx
 
-    def onconnect_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onconnect", dir_path)
+    def onready_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onready", dir_path, context or self._build_context())
 
-    def ondisconnect_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_ondisconnect", dir_path)
+    def onstart_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onstart", dir_path, context or self._build_context())
 
-    def onwsjoin_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onwsjoin", dir_path)
+    def onstop_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onstop", dir_path, context or self._build_context())
 
-    def onwsleave_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("s_onwsleave", dir_path)
+    def onconnect_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onconnect", dir_path, context or self._build_context())
 
-    async def run_shell_command(self, command: str):
+    def ondisconnect_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_ondisconnect", dir_path, context or self._build_context())
+
+    def onwsjoin_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onwsjoin", dir_path, context or self._build_context())
+
+    def onwsleave_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onwsleave", dir_path, context or self._build_context())
+
+    async def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
             #Log.info(f"Executing: {command}")
             
             process = await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                env=env
             )
             
             try:
@@ -737,6 +797,27 @@ class BotWaveServer:
         
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
+
+    async def run_pipe_command(self, command: str, env: Dict[str, str] = None):
+        try:
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env
+            )
+            stdout, _ = await process.communicate()
+            
+            for line in stdout.decode('utf-8').splitlines():
+                line = line.strip()
+                if line:
+                    # schedule each command as a task instead of awaiting directly to prevent blocking
+                    asyncio.create_task(
+                        self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+                    )
+
+        except Exception as e:
+            Log.error(f"Error executing pipe command: {e}")
 
     def list_clients(self):
         if not self.clients:
@@ -1391,7 +1472,7 @@ class BotWaveServer:
             success_count += 1
         
         Log.broadcast(f"Broadcast start commands sent: {success_count}/{total_count}")
-        self.onstart_handlers()
+        self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": filename, "BW_BROADCAST_FREQ": str(frequency)})
         return success_count > 0
 
     async def stop_broadcast(self, client_targets: str):
@@ -1665,6 +1746,12 @@ class BotWaveServer:
         Log.print("    < df -h", "cyan")
         Log.print("")
 
+        Log.print("| <command>", "bright_green")
+        Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
+        Log.print("  Example:", "white")
+        Log.print("    | cat commands.txt", "cyan")
+        Log.print("")
+
         Log.print("exit", "bright_green")
         Log.print("  Exit the application", "white")
         Log.print("  Example:", "white")
@@ -1735,6 +1822,10 @@ def main():
         server_thread.start()
         
         time.sleep(2)
+
+        if not server.running:
+            Log.error("Server failed to start. Please open an issue on the GitHub.")
+            sys.exit(1)
 
         if args.ws:
             server._start_websocket_server()

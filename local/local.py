@@ -13,12 +13,14 @@
 import argparse
 import os
 import uuid
+import re
 import signal
 import subprocess
 import shlex
 import sys
 import time
 import tempfile
+from typing import Dict
 import urllib.parse
 import urllib.request
 
@@ -96,17 +98,27 @@ class BotWaveCLI:
         )
         self.ws_handler.start()
 
-    def _execute_command(self, command: str):
+    def _execute_command(self, command: str, interpolate: bool = True):
         try:
 
             if "#" in command:
                 command = command.split("#", 1)[0]
 
             command = command.strip()
+            env = os.environ.copy()
+
+            if interpolate:
+                command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
+                    r'\{(\w+)\}',
+                    lambda m: env.get(m.group(1), ''),
+                    command
+                )
+
             if not command:
                 return True
 
             cmd_parts = shlex.split(command)
+
             if not cmd_parts:
                 return True
             
@@ -124,7 +136,7 @@ class BotWaveCLI:
                 rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
                 pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
             
             if cmd == 'live':
@@ -134,13 +146,13 @@ class BotWaveCLI:
                 pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
 
                 self.start_live(frequency, ps, rt, pi)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
                 return True
 
 
             elif cmd == 'stop':
                 self.stop_broadcast()
-                self.onstop_handlers()
+                self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": self.current_file or ""})
                 self.queue.manual_pause()
                 Log.broadcast("Broadcast stopped")
                 return True
@@ -210,7 +222,7 @@ class BotWaveCLI:
                 
                 Log.morse(f"Broadcasting {output_wav}...")
                 self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": output_wav, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
 
             elif cmd == 'list':
@@ -254,8 +266,17 @@ class BotWaveCLI:
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])
-                self.run_shell_command(shell_command)
+                self.run_shell_command(shell_command, env)
 
+                return True
+            
+            elif cmd == '|':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: | <shell command>")
+                    return True
+                
+                shell_command = ' '.join(cmd_parts[1:])
+                self.run_pipe_command(shell_command, env)
                 return True
             
             elif cmd == 'dl':
@@ -280,35 +301,39 @@ class BotWaveCLI:
         except Exception as e:
             Log.error(f"Error executing command '{command}': {e}")
             return True
-
-    def onready_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onready", dir_path)
-
-    def onstart_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onstart", dir_path)
-
-    def onstop_handlers(self, dir_path: str = None):
-        self.handlers_executor.run_handlers("l_onstop", dir_path)
-
-    def _execute_handler(self, file_path: str, silent: bool = False):
+        
+    def _build_context(self) -> dict:
+        ctx = {}
         try:
-            if not silent:
-                Log.handler(f"Running handler on {file_path}")
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
+            ctx = {
+                "BW_CLIENT_HOSTNAME": os.uname().nodename,
+                "BW_CLIENT_MACHINE": os.uname().machine,
+                "BW_CLIENT_SYSTEM": os.uname().sysname,
+                "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+                "BW_UPLOAD_DIR": self.upload_dir,
+                "BW_HANDLERS_DIR": self.handlers_dir,
+                "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
+                "BW_PASSKEY_SET": "true" if self.passkey else "false",
+            }
+        except:
+            ...
 
-                    if line:
-                        if line[0] != "#":
-                            if not silent:
-                                Log.handler(f"Executing command: {line}")
-                            self._execute_command(line)
-        except Exception as e:
-            Log.error(f"Error executing command from {file_path}: {e}")
+        return ctx
 
-    def run_shell_command(self, command: str):
+
+    def onready_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onready", dir_path, context or self._build_context())
+
+    def onstart_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onstart", dir_path, context or self._build_context())
+
+    def onstop_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onstop", dir_path, context or self._build_context())
+
+
+    def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
             for line in process.stdout:
                 Log.print(line, end='')
 
@@ -320,6 +345,20 @@ class BotWaveCLI:
                     Log.print(line, end='')
 
                 Log.error(f"Command failed with return code {return_code}")
+
+        except Exception as e:
+            Log.error(f"Error executing shell command: {e}")
+
+    
+    def run_pipe_command(self, command: str, env: Dict[str, str] = None):
+        try:
+            process = subprocess.run(command, shell=True, capture_output=True, text=True, env=env)
+            
+            for line in process.stdout.splitlines():
+                line = line.strip()
+                if line:
+                    self._execute_command(line)
+
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
@@ -513,7 +552,7 @@ class BotWaveCLI:
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
-            self.onstop_handlers()
+            self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path})
             self.queue.on_broadcast_ended()
 
         if not os.path.exists(file_path):
@@ -563,7 +602,7 @@ class BotWaveCLI:
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
-            self.onstop_handlers()
+            self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": ""})
     
         if not self.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
@@ -764,6 +803,12 @@ class BotWaveCLI:
         Log.print("  Run a shell command on the main OS", "white")
         Log.print("  Example:", "white")
         Log.print("    < df -h", "cyan")
+        Log.print("")
+
+        Log.print("| <command>", "bright_green")
+        Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
+        Log.print("  Example:", "white")
+        Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
         Log.print("help", "bright_green")

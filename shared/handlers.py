@@ -1,5 +1,5 @@
 import os
-from typing import Callable
+from typing import Callable, Dict
 from shared.logger import Log
 
 class HandlerExecutor:
@@ -8,8 +8,12 @@ class HandlerExecutor:
         self.handlers_dir = handlers_dir
         self.command_executor = command_executor
     
-    def execute_handler(self, file_path: str, silent: bool = False):
+    def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
+        original_env = os.environ.copy() # save current environment
+
         try:
+            os.environ.update(ctx)
+
             if not silent:
                 Log.handler(f"Running handler on {file_path}")
             
@@ -20,10 +24,15 @@ class HandlerExecutor:
                         if not silent:
                             Log.handler(f"Executing command: {line}")
                         self.command_executor(line)
+
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
+        finally:
+            # Restore original environment
+            os.environ.clear()
+            os.environ.update(original_env)
     
-    def run_handlers(self, prefix: str, dir_path: str = None):
+    def run_handlers(self, prefix: str, dir_path: str = None, context: Dict[str, str] = {}):
         if dir_path is None:
             dir_path = self.handlers_dir
         
@@ -36,7 +45,7 @@ class HandlerExecutor:
                 file_path = os.path.join(dir_path, filename)
                 silent = filename.endswith(".shdl")
                 if filename.endswith(".hdl") or silent:
-                    self.execute_handler(file_path, silent=silent)
+                    self.execute_handler(file_path, ctx=context, silent=silent)
     
     def list_handlers(self, dir_path: str = None):
         if dir_path is None:

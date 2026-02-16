@@ -90,6 +90,9 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `<`: Run a shell command on the main OS.  
     - Usage: `botwave> < <command>`  
 
+`|`: Run a shell command and pipe each output line as a BotWave command.  
+    - Usage: `botwave> | <command>`  
+
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 

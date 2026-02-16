@@ -389,9 +389,9 @@ botwave> help # server / lc will send the help back to you
 For other / more detailed actions please check the following resources:
 - **Server help**: [`/server/server.md`](/server/server.md)
 - **Client help**: [`/client/client.md`](/client/client.md)
-- **Client help**: [`/local/local.md`](/local/local.md)
+- **Local client help**: [`/local/local.md`](/local/local.md)
 - **AutoRun help**: [`/autorun/autorun.md`](/autorun/autorun.md)
-- **Automated actions help**: [`/misc_doc/handlers.md`](/misc_doc/handlers.md)
+- **Automated actions help**: [`/misc_doc/handlers.md`](/misc_doc/handlers.md), [`Main/Automate Your Setup`](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup)
 - **Remote management protocol**: [`/misc_doc/websocket.md`](/misc_doc/websocket.md)
 
 ### Updating BotWave

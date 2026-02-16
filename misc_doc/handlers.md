@@ -42,6 +42,40 @@ Each line in a handler file represents a command to be executed. Ensure that:
 - Commands are clear and concise.
 - Empty lines are ignored.
 
+## Environment Variables
+When a handler is executed, BotWave injects context as environment variables. These are available to any shell command or script called from within the handler.
+
+### Always available
+| Variable | Description |
+|---|---|
+| `BW_CLIENT_HOSTNAME` | Hostname of the machine running BotWave |
+| `BW_CLIENT_MACHINE` | Machine architecture |
+| `BW_CLIENT_SYSTEM` | OS name |
+| `BW_CLIENT_PROTO` | Protocol version |
+| `BW_UPLOAD_DIR` | Upload directory path |
+| `BW_HANDLERS_DIR` | Handlers directory path |
+| `BW_WS_PORT` | WebSocket port (`0` if unset) |
+| `BW_PASSKEY_SET` | `true` or `false` |
+
+### Event-specific variables
+
+| Event | Extra variables |
+|---|---|
+| `l_onstart` / `s_onstart` | `BW_BROADCAST_FILE`, `BW_BROADCAST_FREQ` |
+| `l_onstop` / `s_onstop` | `BW_BROADCAST_FILE` |
+| `s_onconnect` / `s_ondisconnect` | `BW_CLIENT_ID`, `BW_CLIENT_HOSTNAME`, `BW_CLIENT_MACHINE`, `BW_CLIENT_SYSTEM`, `BW_CLIENT_PROTO`, `BW_CLIENT_CONNECTED_AT` |
+
+### Example usage
+You can access these in a shell script called from a handler:
+```plaintext
+< echo $BW_BROADCAST_FILE
+< notify-send "Now broadcasting $BW_BROADCAST_FILE on $BW_BROADCAST_FREQ MHz"
+```
+```plaintext
+# whitelist system (s_onconnect.hdl)
+| [[ ! "pi1 pi2 radpi" =~ $BW_CLIENT_HOSTNAME ]] && echo "< kick $BW_CLIENT_HOSTNAME \"whitelist enabled\""
+```
+
 ## Example Handler File
 Here is an example of a properly formatted handler file named `s_onready.hdl`:
 
