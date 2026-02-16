@@ -90,6 +90,9 @@ Once the client is running, you can use the following commands:
 - `<`: Run a shell command on the main OS.  
     - Usage: `botwave> < <command>`
 
+- `|`: Run a shell command and pipe each output line as a BotWave command. 
+    - Usage: `botwave> | <command>`
+
 - `help`: Display the help message.  
     - Usage: `botwave> help`
 
