@@ -13,6 +13,7 @@ import asyncio
 from datetime import datetime, timezone
 import json
 import os
+import re
 import shlex
 import sys
 import ssl
@@ -443,21 +444,33 @@ class BotWaveServer:
         )
         self.ws_handler.start()
 
-    def _execute_command(self, command: str):
+    def _execute_command(self, command: str, interpolate: bool = True):
         try:
             if "#" in command:
                 command = command.split("#", 1)[0]
+
             command = command.strip()
+            env = os.environ.copy()
+
+            if interpolate:
+                env = os.environ.copy()
+                command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
+                    r'\{(\w+)\}',
+                    lambda m: env.get(m.group(1), ''),
+                    command
+                )
+
             if not command:
                 return True
+            
             try:
                 cmd = shlex.split(command)
+
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
                 return True
             
             command_name = cmd[0].lower()
-            env = os.environ.copy()
             
             if self.loop and self.loop.is_running():
                 try:
