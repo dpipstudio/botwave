@@ -45,13 +45,15 @@ Each line in a handler file represents a command to be executed. Ensure that:
 ## Environment Variables
 When a handler is executed, BotWave injects context as environment variables. These are available to any shell command or script called from within the handler.
 
-### Always available
+### Always available (System Info)
+These variables describe the machine running the handler:
+
 | Variable | Description |
 |---|---|
-| `BW_CLIENT_HOSTNAME` | Hostname of the machine running BotWave |
-| `BW_CLIENT_MACHINE` | Machine architecture |
-| `BW_CLIENT_SYSTEM` | OS name |
-| `BW_CLIENT_PROTO` | Protocol version |
+| `BW_SYSTEM_HOSTNAME` | Hostname of the machine running BotWave |
+| `BW_SYSTEM_MACHINE` | Machine architecture |
+| `BW_SYSTEM_SYSTEM` | OS name |
+| `BW_SYSTEM_PROTO` | Protocol version |
 | `BW_UPLOAD_DIR` | Upload directory path |
 | `BW_HANDLERS_DIR` | Handlers directory path |
 | `BW_WS_PORT` | WebSocket port (`0` if unset) |
@@ -64,6 +66,8 @@ When a handler is executed, BotWave injects context as environment variables. Th
 | `l_onstart` / `s_onstart` | `BW_BROADCAST_FILE`, `BW_BROADCAST_FREQ` |
 | `l_onstop` / `s_onstop` | `BW_BROADCAST_FILE` |
 | `s_onconnect` / `s_ondisconnect` | `BW_CLIENT_ID`, `BW_CLIENT_HOSTNAME`, `BW_CLIENT_MACHINE`, `BW_CLIENT_SYSTEM`, `BW_CLIENT_PROTO`, `BW_CLIENT_CONNECTED_AT` |
+
+**Note:** For server events `s_onconnect` and `s_ondisconnect`, the `BW_CLIENT_*` variables refer to the remote client that connected/disconnected, while `BW_SYSTEM_*` variables always refer to the server itself.
 
 ### Example usage
 You can access these in a shell script called from a handler:
