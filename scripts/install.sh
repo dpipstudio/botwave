@@ -142,6 +142,7 @@ Modes:
 Options:
   -l, --latest        Install from the latest commit (even if unreleased)
   -t, --to <version>  Install a specific release version
+  -b, --branch <name> Install from a specific branch (default: main)
   -h, --help          Show this help message
 
 Examples:

@@ -114,6 +114,7 @@ Usage: $(basename "$0") [OPTIONS]
 Options:
   -l, --latest        Update to the latest commit (even if unreleased)
   -t, --to <version>  Update to a specific release version
+  -b, --branch <name> Install from a specific branch (default: main)
   -h, --help          Show this help message
 
 Examples:
