@@ -357,7 +357,7 @@ prompt_alsa_setup() {
 resolve_target_commit() {
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
-        local latest_commit=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/commits?sha=${TARGET_BRANCH}"" | \
+        local latest_commit=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/commits?sha=${TARGET_BRANCH}" | \
             grep '"sha":' | \
             head -n 1 | \
             cut -d '"' -f 4)
