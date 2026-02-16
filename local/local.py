@@ -305,11 +305,12 @@ class BotWaveCLI:
     def _build_context(self) -> dict:
         ctx = {}
         try:
+            # System info (always available)
             ctx = {
-                "BW_CLIENT_HOSTNAME": os.uname().nodename,
-                "BW_CLIENT_MACHINE": os.uname().machine,
-                "BW_CLIENT_SYSTEM": os.uname().sysname,
-                "BW_CLIENT_PROTO": PROTOCOL_VERSION,
+                "BW_SYSTEM_HOSTNAME": os.uname().nodename,
+                "BW_SYSTEM_MACHINE": os.uname().machine,
+                "BW_SYSTEM_SYSTEM": os.uname().sysname,
+                "BW_SYSTEM_PROTO": PROTOCOL_VERSION,
                 "BW_UPLOAD_DIR": self.upload_dir,
                 "BW_HANDLERS_DIR": self.handlers_dir,
                 "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
