@@ -140,7 +140,7 @@ class BotWaveCLI:
 
             elif cmd == 'stop':
                 self.stop_broadcast()
-                self.onstop_handlers()
+                self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": self.current_file or ""})
                 self.queue.manual_pause()
                 Log.broadcast("Broadcast stopped")
                 return True
@@ -210,7 +210,7 @@ class BotWaveCLI:
                 
                 Log.morse(f"Broadcasting {output_wav}...")
                 self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
-                self.onstart_handlers()
+                self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": output_wav, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
 
             elif cmd == 'list':
@@ -512,7 +512,7 @@ class BotWaveCLI:
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
-            self.onstop_handlers()
+            self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path})
             self.queue.on_broadcast_ended()
 
         if not os.path.exists(file_path):
@@ -562,7 +562,7 @@ class BotWaveCLI:
         def finished():
             Log.info("Playback finished, stopping broadcast...")
             self.stop_broadcast()
-            self.onstop_handlers()
+            self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": ""})
     
         if not self.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
