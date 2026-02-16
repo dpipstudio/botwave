@@ -386,7 +386,7 @@ resolve_target_commit() {
             exit 1
         fi
 
-        log INFO "Found commit: ${commit:0:7}"
+        log INFO "Found commit: ${commit:0:7} at branch ${TARGET_BRANCH}"
         echo "$commit"
         return 0
     fi
