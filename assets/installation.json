@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.11-redbud",
+      "commit": "d01a3adcfa140070658956559964b49f9946887e"
+    },
+    {
       "codename": "v1.0.10-umtiza",
       "commit": "69c0ad19df838f328a414b087e424ae9dd13bd10"
     },
