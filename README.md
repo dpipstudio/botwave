@@ -152,6 +152,8 @@ Options:
 <hr>
 </details>
 
+---
+
 > [!TIP]
 > **Not sure which mode to pick?**
 > - **One Raspberry Pi**: use the **Local Client** (no server needed). Jump to [Using The Local Client](#using-the-local-client-single-pi).
