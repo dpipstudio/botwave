@@ -727,6 +727,10 @@ class BotWaveServer:
                 "BW_HANDLERS_DIR": self.handlers_dir,
                 "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
                 "BW_PASSKEY_SET": "true" if self.passkey else "false",
+                "BW_SERVER_CONNECTED_CLIENTS": ",".join(
+                        client.machine_info.get("hostname", "unknown") 
+                        for client in self.clients.values()
+                    ),
             }
         except:
             ...
