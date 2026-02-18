@@ -226,8 +226,14 @@ class BotWaveCLI:
                 return True
 
             elif cmd == 'list':
+                Log.warning("'list' command is deprecated. Please use 'lf' instead.")
+                Log.warning("'list' command will be removed in future releases.")
                 directory = cmd_parts[1] if len(cmd_parts) > 1 else None
                 self.list_files(directory)
+                return True
+            
+            elif cmd == 'lf':
+                self.list_files()
                 return True
 
             elif cmd == 'rm':
@@ -769,10 +775,8 @@ class BotWaveCLI:
         Log.print("    morse message.txt", "cyan")
         Log.print("")
 
-        Log.print("list [directory]", "bright_green")
-        Log.print("  List files in the specified directory (default: upload directory)", "white")
-        Log.print("  Example:", "white")
-        Log.print("    list /opt/BotWave/uploads", "cyan")
+        Log.print("lf", "bright_green")
+        Log.print("  List files in the upload directory", "white")
         Log.print("")
 
         Log.print("rm <filename|all>", "bright_green")
