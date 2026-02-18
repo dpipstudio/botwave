@@ -436,6 +436,7 @@ setup_directory_structure() {
     log INFO "Creating directory structure..."
     mkdir -p "$INSTALL_DIR/uploads"
     mkdir -p "$INSTALL_DIR/handlers"
+    mkdir -p "$INSTALL_DIR/scripts"
     mkdir -p "$BIN_DIR"
     mkdir -p "$BACKENDS_DIR"
     cd "$INSTALL_DIR"
