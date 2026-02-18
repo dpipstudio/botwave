@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.12-batesia",
+      "commit": "15a728f4b0bb1b3323925f5cc80ccad3855689b2"
+    },
+    {
       "codename": "v1.0.11-redbud",
       "commit": "3f2d190fd0d492c43e59dc12bcfcfbfcb931956a"
     },
