@@ -14,6 +14,16 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.12-batesia ---=
+### What Changed
+- Handler context updates:
+    - The server handler context now includes `BW_SERVER_CONNECTED_CLIENTS`, which contains the hostnames of all connected clients, separated by commas
+
+- Local client commands:
+    - The `list` command has been renamed to `lf` to avoid conflicts with the server
+    - The `list` command remains deprecated and will be removed in a future release
+=--- END ---=
+
 =--- v1.0.11-redbud ---=
 *This release was supposed to be for valentines day, oops*
 
