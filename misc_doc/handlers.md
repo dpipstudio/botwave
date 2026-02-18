@@ -59,6 +59,12 @@ These variables describe the machine running the handler:
 | `BW_WS_PORT` | WebSocket port (`0` if unset) |
 | `BW_PASSKEY_SET` | `true` or `false` |
 
+### Always available (Server Only)
+
+| Variable | Description |
+|---|---|
+| `BW_SERVER_CONNECTED_CLIENTS` | Comma-separated list of hostnames of all connected clients |
+
 ### Event-specific variables
 
 | Event | Extra variables |
