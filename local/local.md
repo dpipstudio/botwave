@@ -75,8 +75,8 @@ Once the client is running, you can use the following commands:
 - `sstv`: Start broadcasting text converted to morse.    
     - Usage: `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]`
 
-- `list`: List files in the specified directory (default: upload directory).  
-    - Usage: `botwave> list [directory]`
+- `lf`: List files in the upload directory.  
+    - Usage: `botwave> list`
 
 - `upload`: Upload a file to the upload directory.  
     - Usage: `botwave> upload <file|folder>`
