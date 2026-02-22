@@ -383,8 +383,8 @@ class BotWaveClient:
 
             if os.path.exists(filepath):
                 file_size = os.path.getsize(filepath)
-                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes{", converted" if converted else ""})")
-                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}{" (converted)" if converted else ""}")
+                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes{', converted' if converted else ''})")
+                response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}{' (converted)' if converted else ''}")
             else:
                 Log.error("Download failed: file not created")
                 response = ProtocolParser.build_response(Commands.ERROR, "File not created")
