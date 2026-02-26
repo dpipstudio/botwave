@@ -97,6 +97,8 @@ class BotWaveServer:
 
     async def start(self):
         try:
+            self.tips.start() # sanity check
+
             # tls certs (for https and wss)
             cert_pem, key_pem = gen_cert()
             cert_path, key_path = save_cert(cert_pem, key_pem)
@@ -133,8 +135,6 @@ class BotWaveServer:
                 Log.auth("Server is using authentication with a passkey")
             
             self.running = True
-
-            self.tips.start()
             
             if not self.skip_checks:
                 self._check_updates()
@@ -1836,7 +1836,8 @@ def main():
         time.sleep(2)
 
         if not server.running:
-            Log.error("Server failed to start. Please open an issue on the GitHub.")
+            Log.error("Server failed to start. Please open an issue on the GitHub if you don't know what is happening.")
+            Log.print("> https://github.com/dpipstudio/botwave/ <", "bold bright_cyan", "GITHUB")
             sys.exit(1)
 
         if args.ws:
