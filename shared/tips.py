@@ -10,17 +10,16 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 
-LOCKFILE_PATH = os.path.join(tempfile.gettempdir(), "botwave.pid")
-
-
 class TipEngine:
+    def __init__(self, is_server: bool = True):
+        self.__lockfile = os.path.join(tempfile.gettempdir(), f"botwave_{'server' if is_server else 'client'}.pid")
 
     def __check_lock_conflict(self):
-        if not os.path.exists(LOCKFILE_PATH):
+        if not os.path.exists(self.__lockfile):
             return
 
         try:
-            with open(LOCKFILE_PATH) as f:
+            with open(self.__lockfile) as f:
                 pid = int(f.read().strip())
 
         except (ValueError, OSError):
@@ -34,12 +33,12 @@ class TipEngine:
                 Log.warning(f"Another BotWave instance may already be running (PID {pid}). This could cause conflicts.")
 
             else:
-                os.remove(LOCKFILE_PATH)
+                os.remove(self.__lockfile)
         else:
             Log.warning(f"A BotWave lockfile exists (PID {pid}). If no other instance is running, this is stale.")
 
     def __write_lockfile(self):
-        with open(LOCKFILE_PATH, "w") as f:
+        with open(self.__lockfile, "w") as f:
             f.write(str(os.getpid()))
 
     def start(self):
@@ -47,12 +46,9 @@ class TipEngine:
         self.__write_lockfile()
 
     def stop(self):
-        if os.path.exists(LOCKFILE_PATH):
+        if os.path.exists(self.__lockfile):
             try:
-                os.remove(LOCKFILE_PATH)
-                
+                os.remove(self.__lockfile)
+
             except OSError:
                 pass
-
-
-Tips = TipEngine()
