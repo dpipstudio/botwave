@@ -1880,7 +1880,7 @@ def main():
                 except EOFError:
                     toggle_input(False)
                     Log.info("Exiting...")
-                    server.stop()
+                    server.loop.create_task(server.stop())
 
                 except Exception as e:
                     toggle_input(False)
