@@ -1836,8 +1836,22 @@ def main():
         time.sleep(2)
 
         if not server.running:
-            Log.error("Server failed to start. Please open an issue on the GitHub if you don't know what is happening.")
-            Log.print("| https://github.com/dpipstudio/botwave/ |", "bold red bg_white")
+            style = "bold rgb(200,0,0)"
+
+            Log.print("+------------------------------------------------------------+", style)
+            Log.print("|                                                            |", style)
+            Log.print("|  Server failed to start.                                   |", style)
+            Log.print("|                                                            |", style)
+            Log.print("|  If there is a stack trace above, please provide it        |", style)
+            Log.print("|  when opening an issue.                                    |", style)
+            Log.print("|                                                            |", style)
+            Log.print("|  If you do not know what is happening, please open an      |", style)
+            Log.print("|  issue on GitHub:                                          |", style)
+            Log.print("|                                                            |", style)
+            Log.print("|  https://github.com/dpipstudio/botwave/                    |", style)
+            Log.print("|                                                            |", style)
+            Log.print("+------------------------------------------------------------+", style)
+
             sys.exit(1)
 
         if args.ws:
