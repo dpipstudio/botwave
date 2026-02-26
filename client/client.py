@@ -35,6 +35,7 @@ from shared.pw_monitor import PWM
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
+from shared.tips import Tips
 from shared.version import check_for_updates
 
 
@@ -144,6 +145,8 @@ class BotWaveClient:
                 await self.stop()
             
             self.running = True
+
+            Tips.start()
             
             # wait for disconnect (keeps client alive)
             await self.ws_client.wait_for_disconnect()
@@ -755,6 +758,8 @@ class BotWaveClient:
         
         if self.ws_client:
             await self.ws_client.disconnect()
+
+        Tips.stop()
         
         Log.client("Client stopped")
 
