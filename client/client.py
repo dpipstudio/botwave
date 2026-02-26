@@ -35,7 +35,7 @@ from shared.pw_monitor import PWM
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
-from shared.tips import Tips
+from shared.tips import TipEngine
 from shared.version import check_for_updates
 
 
@@ -75,8 +75,10 @@ class BotWaveClient:
         self.running = False
         self.registered = False
         self.client_id = None
+
+        # utilities
+        self.tips = TipEngine()
         
-        os.makedirs(upload_dir, exist_ok=True)
         backend_classes["bw_custom"] = BWCustom
 
     def _create_ssl_context(self):
@@ -146,7 +148,7 @@ class BotWaveClient:
             
             self.running = True
 
-            Tips.start()
+            self.tips.start()
             
             # wait for disconnect (keeps client alive)
             await self.ws_client.wait_for_disconnect()
@@ -759,7 +761,7 @@ class BotWaveClient:
         if self.ws_client:
             await self.ws_client.disconnect()
 
-        Tips.stop()
+        self.tips.stop()
         
         Log.client("Client stopped")
 
