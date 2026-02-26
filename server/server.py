@@ -38,6 +38,7 @@ from shared.queue import Queue
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
+from shared.tips import TipEngine
 from shared.tls import gen_cert, save_cert
 from shared.version import check_for_updates, versions_compatible
 from shared.ws_cmd import WSCMDH
@@ -86,11 +87,13 @@ class BotWaveServer:
         self.pending_responses: Dict[str, asyncio.Future] = {}
         self.file_list_responses: Dict[str, list] = {}
         self.queue = Queue(self)
-        
+
+        # utilities
+        self.tips = TipEngine()
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
+
         self.loop = None
         
-        os.makedirs(upload_dir, exist_ok=True)
 
     async def start(self):
         try:
@@ -130,6 +133,8 @@ class BotWaveServer:
                 Log.auth("Server is using authentication with a passkey")
             
             self.running = True
+
+            self.tips.start()
             
             if not self.skip_checks:
                 self._check_updates()
@@ -161,6 +166,8 @@ class BotWaveServer:
         for future in self.pending_responses.values():
             if not future.done():
                 future.cancel()
+
+        self.tips.stop()
         
         self.running = False
         Log.success("Server shutdown complete")
