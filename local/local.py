@@ -39,6 +39,7 @@ from shared.queue import Queue
 from shared.security import PathValidator, SecurityError
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
+from shared.tips import Tips
 from shared.ws_cmd import WSCMDH
 
 try:
@@ -832,10 +833,14 @@ class BotWaveCLI:
         self.running = False
         if self.broadcasting:
             self.stop_broadcast()
+            
         if self.original_sigint_handler:
             signal.signal(signal.SIGINT, self.original_sigint_handler)
+
         if self.original_sigterm_handler:
             signal.signal(signal.SIGTERM, self.original_sigterm_handler)
+
+        Tips.stop()
 
         Log.client("Client stopped")
 
@@ -860,6 +865,7 @@ def main():
     cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk, args.talk)
     cli._setup_signal_handlers()
     cli.running = True
+    Tips.start()
 
     if args.ws:
         cli._start_websocket_server()
