@@ -1,18 +1,33 @@
 # shared/tips.py
 
+import errno
 import os
 import tempfile
+
 from shared.logger import Log
-
-try:
-    import psutil
-    PSUTIL_AVAILABLE = True
-except ImportError:
-    PSUTIL_AVAILABLE = False
-
 class TipEngine:
     def __init__(self, is_server: bool = True):
         self.__lockfile = os.path.join(tempfile.gettempdir(), f"botwave_{'server' if is_server else 'client'}.pid")
+
+    def __pid_exists(self, pid: int) -> bool:
+        if pid <= 0:
+            return False
+
+        try:
+            os.kill(pid, 0)
+        except OSError as e:
+            # ESRCH = No such process
+            if e.errno == errno.ESRCH:
+                return False
+            
+            # EPERM = Process exists but no permission
+            elif e.errno == errno.EPERM:
+                return True
+            
+            else:
+                return False
+        else:
+            return True    
 
     def __check_lock_conflict(self):
         if not os.path.exists(self.__lockfile):
@@ -28,14 +43,11 @@ class TipEngine:
         if pid == os.getpid():
             return
 
-        if PSUTIL_AVAILABLE:
-            if psutil.pid_exists(pid):
-                Log.warning(f"Another BotWave instance may already be running (PID {pid}). This could cause conflicts.")
+        if self.__pid_exists(pid):
+            Log.warning(f"Another BotWave instance may already be running (PID {pid}). This could cause conflicts.")
 
-            else:
-                os.remove(self.__lockfile)
         else:
-            Log.warning(f"A BotWave lockfile exists (PID {pid}). If no other instance is running, this is stale.")
+            os.remove(self.__lockfile)
 
     def __write_lockfile(self):
         with open(self.__lockfile, "w") as f:
