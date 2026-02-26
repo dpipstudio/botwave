@@ -1837,7 +1837,7 @@ def main():
 
         if not server.running:
             Log.error("Server failed to start. Please open an issue on the GitHub if you don't know what is happening.")
-            Log.print("> https://github.com/dpipstudio/botwave/ <", "bold bright_cyan", "GITHUB")
+            Log.print("| https://github.com/dpipstudio/botwave/ |", "bold red bg_white")
             sys.exit(1)
 
         if args.ws:
