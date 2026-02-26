@@ -3,6 +3,7 @@ import os
 import tempfile
 
 from shared.logger import Log
+
 class TipEngine:
     def __init__(self, is_server: bool = True):
         self.__lockfile = os.path.join(tempfile.gettempdir(), f"botwave_{'server' if is_server else 'client'}.pid")
@@ -48,8 +49,12 @@ class TipEngine:
             os.remove(self.__lockfile)
 
     def __write_lockfile(self):
-        with open(self.__lockfile, "w") as f:
-            f.write(str(os.getpid()))
+        try:
+            with open(self.__lockfile, "w") as f:
+                f.write(str(os.getpid()))
+                
+        except OSError:
+            pass
 
     def start(self):
         self.__check_lock_conflict()
