@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.0.13-ochna",
+      "commit": "e9867f0a4c56ce3d9e32555ad88a31a06e14860b"
+    },
+    {
       "codename": "v1.0.12-batesia",
       "commit": "15a728f4b0bb1b3323925f5cc80ccad3855689b2"
     },
