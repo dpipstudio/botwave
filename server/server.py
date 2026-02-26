@@ -38,6 +38,7 @@ from shared.queue import Queue
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
+from shared.tips import TipEngine
 from shared.tls import gen_cert, save_cert
 from shared.version import check_for_updates, versions_compatible
 from shared.ws_cmd import WSCMDH
@@ -86,14 +87,18 @@ class BotWaveServer:
         self.pending_responses: Dict[str, asyncio.Future] = {}
         self.file_list_responses: Dict[str, list] = {}
         self.queue = Queue(self)
-        
+
+        # utilities
+        self.tips = TipEngine()
         self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
+
         self.loop = None
         
-        os.makedirs(upload_dir, exist_ok=True)
 
     async def start(self):
         try:
+            self.tips.start() # sanity check
+
             # tls certs (for https and wss)
             cert_pem, key_pem = gen_cert()
             cert_path, key_path = save_cert(cert_pem, key_pem)
@@ -161,6 +166,8 @@ class BotWaveServer:
         for future in self.pending_responses.values():
             if not future.done():
                 future.cancel()
+
+        self.tips.stop()
         
         self.running = False
         Log.success("Server shutdown complete")
@@ -1829,7 +1836,8 @@ def main():
         time.sleep(2)
 
         if not server.running:
-            Log.error("Server failed to start. Please open an issue on the GitHub.")
+            Log.error("Server failed to start. Please open an issue on the GitHub if you don't know what is happening.")
+            Log.print("| https://github.com/dpipstudio/botwave/ |", "bold red bg_white")
             sys.exit(1)
 
         if args.ws:
@@ -1872,7 +1880,7 @@ def main():
                 except EOFError:
                     toggle_input(False)
                     Log.info("Exiting...")
-                    server.stop()
+                    server.loop.create_task(server.stop())
 
                 except Exception as e:
                     toggle_input(False)
