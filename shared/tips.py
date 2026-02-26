@@ -1,5 +1,3 @@
-# shared/tips.py
-
 import errno
 import os
 import tempfile
