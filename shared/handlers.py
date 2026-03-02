@@ -1,12 +1,17 @@
 import os
 from typing import Callable, Dict
+
+from shared.env import Env
 from shared.logger import Log
 
 class HandlerExecutor:
     
-    def __init__(self, handlers_dir: str, command_executor: Callable):
-        self.handlers_dir = handlers_dir
+    def __init__(self, command_executor: Callable):
         self.command_executor = command_executor
+
+    @property
+    def handlers_dir(self):
+        return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
     
     def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
         try:
