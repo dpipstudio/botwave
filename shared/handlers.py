@@ -9,8 +9,6 @@ class HandlerExecutor:
         self.command_executor = command_executor
     
     def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
-        original_env = os.environ.copy() # save current environment
-
         try:
             os.environ.update(ctx)
 
@@ -27,10 +25,6 @@ class HandlerExecutor:
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
-        finally:
-            # Restore original environment
-            os.environ.clear()
-            os.environ.update(original_env)
     
     def run_handlers(self, prefix: str, dir_path: str = None, context: Dict[str, str] = {}):
         if dir_path is None:
