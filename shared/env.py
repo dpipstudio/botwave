@@ -62,7 +62,7 @@ class EnvManager:
         except ValueError:
             return default
 
-    def get_bool(self, key: str, default: bool | False = False) -> bool:
+    def get_bool(self, key: str, default: bool = False) -> bool:
         """Return the value of a key as a boolean, or default if missing."""
 
         value = self.get(key)
