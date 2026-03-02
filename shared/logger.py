@@ -2,6 +2,8 @@ from dlogger import DLogger
 import asyncio
 import sys
 
+from shared.env import Env
+
 try:
     import readline
     HAS_READLINE = True
@@ -79,7 +81,7 @@ class Logger(DLogger):
         super().print(message=message, style=style, icon=icon, end=end)
 
         if has_tty and INPUT_ACTIVE:
-            prompt = '\033[1;32mbotwave › \033[0m '
+            prompt = f'\033[1;32m{Env.get("PROMPT_TEXT", 'botwave')} › \033[0m '
             sys.stdout.write(prompt + current_line)
             sys.stdout.flush()
 
