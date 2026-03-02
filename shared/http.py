@@ -7,30 +7,19 @@ import uuid
 from aiohttp import web, ClientSession, TCPConnector
 from typing import Dict, Optional
 
+from shared.env import Env
 from shared.logger import Log
 from shared.security import PathValidator, SecurityError
 
-CHUNK_SIZE = 65536 # 64KB, here so we have the value centralized
+CHUNK_SIZE = Env.get_int("HTTP_CHUNK_SIZE", 65536) # 64KB, here so we have the value centralized
 
 class BWHTTPFileServer:
     
     # http server for downloads / uploads / pcm streaming
     # each file has a time-limited unique id
     
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        ssl_context: ssl.SSLContext,
-        upload_dir: str,
-        token_lifetime: int = 300
-    ):
-
-        self.host = host
-        self.port = port
+    def __init__(self, ssl_context: ssl.SSLContext):
         self.ssl_context = ssl_context
-        self.upload_dir = upload_dir
-        self.token_lifetime = token_lifetime
 
         self.upload_tokens: Dict[str, dict] = {}
         self.download_tokens: Dict[str, dict] = {}
@@ -38,10 +27,24 @@ class BWHTTPFileServer:
         
         self.app = None
         self.runner = None
-        
-        os.makedirs(upload_dir, exist_ok=True)
-        
+                
         asyncio.create_task(self._cleanup_expired_tokens())
+
+    @property
+    def host(self):
+        return Env.get("HOST", "0.0.0.0")
+
+    @property
+    def port(self):
+        return Env.get_int("FPORT", 9921)
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
+
+    @property
+    def token_lifetime(self):
+        return Env.get_int("FTOKEN_LIFETIME", 300)
     
     def create_upload_token(self, filename: str, size: int) -> str:
         token = uuid.uuid4().hex
