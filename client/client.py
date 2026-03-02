@@ -383,7 +383,7 @@ class BotWaveClient:
 
             def download_with_progress(dest_path):
                 headers = {
-                    "User-Agent": f"{Env.get('DOWNLOAD_UA', f'BotWaveDownloads/{PROTOCOL_VERSION}')} (+https://github.com/dpipstudio/botwave/)"
+                    "User-Agent": Env.get("DOWNLOAD_UA", f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
                 }
 
                 request = urllib.request.Request(url, headers=headers)
@@ -817,7 +817,7 @@ def main():
     # Set the env from the params
     if args.server_host:
         Env.set("SERVER_HOST", args.server_host, immutable=True)
-        
+
     elif not Env.get("SERVER_HOST", False):
         Env.set("SERVER_HOST", input("Server hostname/IP: ").strip(), immutable=True)
 
