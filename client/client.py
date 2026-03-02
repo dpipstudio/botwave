@@ -801,32 +801,39 @@ class BotWaveClient:
 def main():
     Log.header("BotWave - Client")
 
-    check() # most important check
+    check()
 
     parser = argparse.ArgumentParser(description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
-    parser.add_argument('--port', type=int, default=9938, help='Server port')
+    parser.add_argument('--port', type=int, default=None, help='Server port')
     parser.add_argument('--fhost', help='File transfer server hostname/IP (defaults to server_host)')
-    parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Uploads directory')
+    parser.add_argument('--fport', type=int, default=None, help='File transfer (HTTP) port')
+    parser.add_argument('--upload-dir', default=None, help='Uploads directory')
     parser.add_argument('--pk', help='Passkey for authentication')
-    parser.add_argument('--skip-checks', action='store_true', help='Skip update and requirements checks')
-    parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
+    parser.add_argument('--skip-checks', dest='skip_checks', action=argparse.BooleanOptionalAction, default=None, help='Skip update and requirements checks')
+    parser.add_argument('--talk', action=argparse.BooleanOptionalAction, default=None, help='Makes PiWave (broadcast manager) output logs visible.')
     args = parser.parse_args()
 
     # Set the env from the params
+
+    def set_prio(key, cli_value, default, immutable=False): # helper to set with priority
+        if cli_value is not None:
+            Env.set(key, str(cli_value), immutable=immutable)
+
+        elif not Env.get(key, False):
+            Env.set(key, str(default), immutable=immutable)
+
     if args.server_host:
         Env.set("SERVER_HOST", args.server_host, immutable=True)
-
     elif not Env.get("SERVER_HOST", False):
         Env.set("SERVER_HOST", input("Server hostname/IP: ").strip(), immutable=True)
 
-    Env.set("SERVER_PORT", str(args.port), immutable=True)
-    Env.set("FHOST", args.fhost or Env.get("SERVER_HOST"), immutable=True)
-    Env.set("FPORT", str(args.fport), immutable=True)
-    Env.set("UPLOAD_DIR", args.upload_dir)
-    Env.set("SKIP_CHECKS", str(args.skip_checks))
-    Env.set("TALK", str(args.talk))
+    set_prio("SERVER_PORT", args.port, 9938, immutable=True)
+    set_prio("FHOST", args.fhost, Env.get("SERVER_HOST"), immutable=True)
+    set_prio("FPORT", args.fport, 9921, immutable=True)
+    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads')
+    set_prio("TALK", args.talk, False)
+    set_prio("SKIP_CHECKS", args.skip_checks, False)
 
     if args.pk:
         Env.set("PASSKEY", args.pk, immutable=True)
@@ -840,7 +847,6 @@ def main():
             if latest_version:
                 Log.update(f"Update available! Latest version: {latest_version}")
                 Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
-
             else:
                 Log.success("You are using the latest protocol version")
 
@@ -848,7 +854,7 @@ def main():
             Log.warning("Unable to check for updates (continuing anyway)")
 
     client = BotWaveClient()
-    
+
     try:
         asyncio.run(client.start())
     except KeyboardInterrupt:
