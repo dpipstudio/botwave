@@ -28,6 +28,7 @@ from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
+from shared.env import Env
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
@@ -48,21 +49,13 @@ except ImportError:
 
 
 class BotWaveClient:
-    def __init__(self, server_host: str, ws_port: int, http_port: int, http_host: str = None, upload_dir: str = "/opt/BotWave/uploads", passkey: str = None, talk: bool = False):
-        self.server_host = server_host
-        self.http_host = http_host or server_host
-        self.ws_port = ws_port
-        self.http_port = http_port
-        self.upload_dir = upload_dir
-        self.passkey = passkey
-        
+    def __init__(self):        
         # communications
         self.ws_client = None
         self.http_client = None
         
         # broadcast
         self.piwave = None
-        self.silent = not talk # if silent = True, piwave wont output any logs
         self.piwave_monitor = PWM()
         self.broadcasting = False
         self.current_file = None
@@ -80,6 +73,38 @@ class BotWaveClient:
         self.tips = TipEngine()
         
         backend_classes["bw_custom"] = BWCustom
+
+    @property
+    def server_host(self):
+        return Env.get("SERVER_HOST")
+
+    @property
+    def http_host(self):
+        return Env.get("FHOST")
+
+    @property
+    def ws_port(self):
+        return Env.get_int("SERVER_PORT")
+
+    @property
+    def http_port(self):
+        return Env.get_int("FPORT")
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads")
+
+    @property
+    def passkey(self):
+        return Env.get("PASSKEY")
+
+    @property
+    def talk(self):
+        return Env.get_bool("TALK", False)
+    
+    @property
+    def silent(self):
+        return not self.talk
 
     def _create_ssl_context(self):
         # Creates SSL context accepting self-signed certificates
@@ -255,6 +280,7 @@ class BotWaveClient:
         try:
             filename = PathValidator.sanitize_filename(filename)
             filepath = PathValidator.safe_join(self.upload_dir, filename)
+
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
             error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
@@ -276,6 +302,7 @@ class BotWaveClient:
         if success:
             Log.success(f"Upload completed: {filename}")
             response = ProtocolParser.build_response(Commands.OK, f"Uploaded {filename}")
+
         else:
             Log.error(f"Upload failed: {filename}")
             response = ProtocolParser.build_response(Commands.ERROR, "Upload failed")
@@ -297,6 +324,7 @@ class BotWaveClient:
         try:
             filename = PathValidator.sanitize_filename(filename)
             save_path = PathValidator.safe_join(self.upload_dir, filename)
+
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
             error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
@@ -321,6 +349,7 @@ class BotWaveClient:
         if success:
             Log.success(f"Download completed: {filename}")
             response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}")
+
         else:
             Log.error(f"Download failed: {filename}")
             response = ProtocolParser.build_response(Commands.ERROR, "Download failed")
@@ -339,6 +368,7 @@ class BotWaveClient:
         try:
             filename = PathValidator.sanitize_filename(filename)
             filepath = PathValidator.safe_join(self.upload_dir, filename)
+
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
             error = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
@@ -353,7 +383,7 @@ class BotWaveClient:
 
             def download_with_progress(dest_path):
                 headers = {
-                    "User-Agent": f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)"
+                    "User-Agent": f"{Env.get('DOWNLOAD_UA', f'BotWaveDownloads/{PROTOCOL_VERSION}')} (+https://github.com/dpipstudio/botwave/)"
                 }
 
                 request = urllib.request.Request(url, headers=headers)
@@ -382,7 +412,7 @@ class BotWaveClient:
                     if os.path.exists(tmp_path):
                         os.unlink(tmp_path)
 
-            # unsuèèprted
+            # unsupported
             else:
                 raise ValueError(f"Unsupported file type from URL: .{ext}")
 
@@ -390,6 +420,7 @@ class BotWaveClient:
                 file_size = os.path.getsize(filepath)
                 Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes{', converted' if converted else ''})")
                 response = ProtocolParser.build_response(Commands.OK, f"Downloaded {filename}{' (converted)' if converted else ''}")
+
             else:
                 Log.error("Download failed: file not created")
                 response = ProtocolParser.build_response(Commands.ERROR, "File not created")
@@ -415,6 +446,7 @@ class BotWaveClient:
         try:
             filename = PathValidator.sanitize_filename(filename)
             file_path = PathValidator.safe_join(self.upload_dir, filename)
+
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
             response = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
@@ -781,32 +813,41 @@ def main():
     parser.add_argument('--skip-checks', action='store_true', help='Skip update and requirements checks')
     parser.add_argument('--talk', action='store_true', help='Makes PiWave (broadcast manager) output logs visible.')
     args = parser.parse_args()
-    
-    if not args.server_host:
-        args.server_host = input("Server hostname/IP: ").strip()
-    
-    if not args.skip_checks:
+
+    # Set the env from the params
+    if args.server_host:
+        Env.set("SERVER_HOST", args.server_host, immutable=True)
+        
+    elif not Env.get("SERVER_HOST", False):
+        Env.set("SERVER_HOST", input("Server hostname/IP: ").strip(), immutable=True)
+
+    Env.set("SERVER_PORT", str(args.port), immutable=True)
+    Env.set("FHOST", args.fhost or Env.get("SERVER_HOST"), immutable=True)
+    Env.set("FPORT", str(args.fport), immutable=True)
+    Env.set("UPLOAD_DIR", args.upload_dir)
+    Env.set("SKIP_CHECKS", str(args.skip_checks))
+    Env.set("TALK", str(args.talk))
+
+    if args.pk:
+        Env.set("PASSKEY", args.pk, immutable=True)
+
+    if not Env.get_bool("SKIP_CHECKS"):
         check_requirements()
         Log.info("Checking for protocol updates...")
+
         try:
             latest_version = check_for_updates()
             if latest_version:
                 Log.update(f"Update available! Latest version: {latest_version}")
                 Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
+
             else:
                 Log.success("You are using the latest protocol version")
+
         except Exception as e:
             Log.warning("Unable to check for updates (continuing anyway)")
-    
-    client = BotWaveClient(
-        server_host=args.server_host,
-        ws_port=args.port,
-        http_port=args.fport,
-        http_host=args.fhost,
-        upload_dir=args.upload_dir,
-        passkey=args.pk,
-        talk=args.talk
-    )
+
+    client = BotWaveClient()
     
     try:
         asyncio.run(client.start())
