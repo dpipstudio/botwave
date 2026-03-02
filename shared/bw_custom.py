@@ -3,6 +3,8 @@
 from piwave.backends.base import Backend, BackendError
 from pathlib import Path
 
+from shared.env import Env
+
 class BWCustom(Backend):
     @property
     def name(self):
@@ -25,9 +27,19 @@ class BWCustom(Backend):
         return True
 
     def _get_executable_name(self):
+        path = Env.get("BWCUSTOM_PATH")
+
+        if path:
+            return Path(path).name
+        
         return "bw_custom"
 
     def _get_search_paths(self):
+        path = Env.get("BWCUSTOM_PATH")
+
+        if path:
+            return [str(Path(path).parent)]
+        
         return ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
 
     def build_command(self, wav_file: str, loop: bool):
