@@ -21,7 +21,7 @@ class EnvManager:
 
     def get(self, key: str, default=None) -> str | None:
         """Return the value of a key case-insensitively, or default if not found."""
-        
+
         key_lower = key.lower()
 
         for k, v in os.environ.items():
@@ -60,7 +60,7 @@ class EnvManager:
         except ValueError:
             return default
 
-    def get_bool(self, key: str, default: bool | None = None) -> bool | None:
+    def get_bool(self, key: str, default: bool | False = False) -> bool:
         """Return the value of a key as a boolean, or default if missing."""
 
         value = self.get(key)
