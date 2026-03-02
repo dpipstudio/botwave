@@ -36,6 +36,8 @@ class EnvManager:
         and future changes will raise a ValueError.
         """
 
+        value = str(value)
+
         if immutable:
             value = f"immutable({value})"
 
