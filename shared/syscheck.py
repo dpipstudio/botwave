@@ -1,54 +1,64 @@
+from pathlib import Path
 import os
 import sys
 from typing import Optional
+
+from shared.env import Env
 from shared.logger import Log
 
 def is_valid_executable(path: str) -> bool:
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
-def check_bakcends_paths() -> Optional[str]:
+def check_backends_paths() -> Optional[str]:
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    path_file = os.path.join(current_dir, "..", "backend_path")
+    cache_file = os.path.join(current_dir, "..", "backend_path")
+    envpath = Env.get("BWCUSTOM_PATH")
+    search_paths = [str(Path(envpath).parent)] if envpath else ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
+    exe_name = str(Path(envpath).name) if envpath else "bw_custom"
     
-    if os.path.isfile(path_file):
-        try:
-            with open(path_file, "r") as file:
-                path = file.read().strip()
-                if is_valid_executable(path):
-                    return path
-                else:
-                    Log.error("[Launcher] The path in backend_path is invalid.")
-                    Log.info("[Launcher] Please relaunch this program.")
-                    os.remove(path_file)
-        except Exception as e:
-            Log.error(f"Error reading {path_file}: {e}")
-            os.remove(path_file)
-    
-    search_paths = ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
+    if os.path.isfile(cache_file):
+        if envpath:
+            os.remove(cache_file) # skip cache if env is set
+
+        else: 
+            try:
+                with open(cache_file, "r") as file:
+                    path = file.read().strip()
+                    if is_valid_executable(path):
+                        return path
+                    else:
+                        Log.error("The path in backend_path is invalid.")
+                        Log.info("Please relaunch this program. No other action is required from your end.")
+                        os.remove(cache_file)
+
+            except Exception as e:
+                Log.error(f"Error reading {cache_file}: {e}")
+                os.remove(cache_file)
     
     for directory in search_paths:
         if not os.path.isdir(directory):
             continue
         try:
             for root, _, files in os.walk(directory):
-                if "bw_custom" in files:
-                    path = os.path.join(root, "bw_custom")
+                if exe_name in files:
+                    path = os.path.join(root, exe_name)
                     if is_valid_executable(path):
-                        with open(path_file, "w") as file:
+                        with open(cache_file, "w") as file:
                             file.write(path)
                         return path
+                    
         except Exception:
             pass
     
-    Log.warning("Could not automatically find `bw_custom`. Please enter the full path manually.")
-    user_path = input("Enter the path to `bw_custom`: ").strip()
+    Log.warning(f"Could not automatically find `{exe_name}`. Please enter the full path manually.")
+    user_path = input(f"Enter the path to `{exe_name}`: ").strip()
     if is_valid_executable(user_path):
-        with open(path_file, "w") as file:
+        with open(cache_file, "w") as file:
             file.write(user_path)
         return user_path
     
-    Log.error("The path you provided is not valid or `bw_custom` is not executable.")
-    Log.info("Please make sure `bw_custom` is installed and accessible, then restart the program.")
+    Log.error(f"The path you provided is not valid or `{exe_name}` is not executable.")
+    Log.info(f"Please make sure `{exe_name}` is installed and accessible, then restart the program.")
     sys.exit(1)
 
 def is_raspberry_pi() -> bool:
@@ -73,9 +83,9 @@ def check_requirements(skip_checks: bool = False):
         Log.error("This client must be run as root for GPIO access")
         sys.exit(1)
     
-    pi_fm_rds_path = check_bakcends_paths()
+    pi_fm_rds_path = check_backends_paths()
     if not pi_fm_rds_path:
-        Log.error("bw_custom not found. Please install PiFmRds first.")
+        Log.error("Backend not found. Please install bw_custom first.")
         sys.exit(1)
     else:
-        Log.success(f"Found bw_custom at: {pi_fm_rds_path}")
+        Log.success(f"Found backend at: {pi_fm_rds_path}")
