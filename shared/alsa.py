@@ -6,16 +6,29 @@ try:
 except ImportError:
     ALSA_AVAILABLE = False
 
-from .logger import Log
+from shared.logger import Log
+from shared.env import Env
 
 class Alsa:
-    def __init__(self, device_name="hw:BotWave,1", rate=48000, channels=2, period_size=1024):
-        self.device_name = device_name
-        self.rate = rate
-        self.channels = channels
-        self.period_size = period_size
+    def __init__(self):
         self.capture = None
         self._running = False
+
+    @property
+    def device_name(self):
+        return f"hw:{Env.get('ALSA_CARD', 'BotWave')},1"
+
+    @property
+    def rate(self):
+        return Env.get_int("ALSA_RATE", 48000)
+
+    @property
+    def channels(self):
+        return Env.get_int("ALSA_CHANNELS", 2)
+
+    @property
+    def period_size(self):
+        return Env.get_int("ALSA_PERIODSIZE", 1024)
 
     def is_supported(self):
         """
@@ -28,9 +41,11 @@ class Alsa:
             cards = alsaaudio.cards()
             # Check for "BotWave" in the list of soundcard names
             # Or check if we can successfully initialize the PCM device
-            if any("BotWave" in card for card in cards):
+            if any(Env.get("ALSA_CARD", "BotWave") in card for card in cards):
                 return True
+            
             return False
+        
         except Exception:
             return False
 
