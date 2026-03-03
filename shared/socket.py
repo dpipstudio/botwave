@@ -12,10 +12,7 @@ PING_INTERVAL = 30
 PING_TIMEOUT = 5
 
 class BWWebSocketServer:
-    def __init__(self, host: str, port: int, ssl_context: ssl.SSLContext, on_message_callback: Callable, on_connect_callback: Callable, on_disconnect_callback: Callable
-    ):
-        self.host = host
-        self.port = port
+    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable, on_connect_callback: Callable, on_disconnect_callback: Callable):
         self.ssl_context = ssl_context
         self.on_message = on_message_callback
         self.on_connect = on_connect_callback
@@ -28,6 +25,14 @@ class BWWebSocketServer:
         
         self.server = None
         self.running = False
+
+    @property
+    def host(self):
+        return Env.get("HOST", "0.0.0.0")
+    
+    @property
+    def port(self):
+        return Env.get_int("PORT", 9938)
     
     async def start(self):
         self.running = True
@@ -126,7 +131,7 @@ class BWWebSocketClient:
 
     @property
     def host(self):
-        return Env.get("SERVER_HOST", "0.0.0.0")
+        return Env.get("SERVER_HOST")
     
     @property
     def port(self):

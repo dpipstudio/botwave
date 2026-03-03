@@ -110,8 +110,6 @@ class BotWaveServer:
             Log.tls("Generated self-signed TLS certificate")
             
             self.ws_server = BWWebSocketServer(
-                host=self.host,
-                port=self.ws_port,
                 ssl_context=ssl_context,
                 on_message_callback=self._handle_client_message,
                 on_connect_callback=self._handle_client_connect,
