@@ -4,6 +4,8 @@ import websockets
 from typing import Callable, Dict, Optional
 from websockets.server import WebSocketServerProtocol
 from websockets.client import WebSocketClientProtocol
+
+from shared.env import Env
 from shared.logger import Log
 
 PING_INTERVAL = 30
@@ -111,10 +113,7 @@ class BWWebSocketServer:
 
 
 class BWWebSocketClient:    
-    def __init__(self, host: str, port: int, ssl_context: ssl.SSLContext, on_message_callback: Callable
-    ):
-        self.host = host
-        self.port = port
+    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable):
         self.ssl_context = ssl_context
         self.on_message = on_message_callback
         
@@ -124,6 +123,14 @@ class BWWebSocketClient:
         
         self._receive_task = None
         self._ping_task = None
+
+    @property
+    def host(self):
+        return Env.get("SERVER_HOST", "0.0.0.0")
+    
+    @property
+    def port(self):
+        return Env.get_int("SERVER_PORT", 9938)
     
     async def connect(self) -> bool:
 

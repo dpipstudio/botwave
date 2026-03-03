@@ -160,8 +160,6 @@ class BotWaveClient:
             ssl_context = self._create_ssl_context()
             
             self.ws_client = BWWebSocketClient(
-                host=self.server_host,
-                port=self.ws_port,
                 ssl_context=ssl_context,
                 on_message_callback=self._handle_server_msg
             )
