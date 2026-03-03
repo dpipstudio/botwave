@@ -697,8 +697,27 @@ class BotWaveServer:
             await self.start_broadcast(targets, os.path.basename(output_wav), frequency=frequency, ps=ps, rt=rt, pi=pi, loop=loop)
 
             return
-
         
+        # ENVIRONMENT
+        elif command_name == 'get':
+            if len(cmd) < 2:
+                Log.error("Usage: get <keys|*>")
+                return
+            
+            self.print_envkeys(cmd[1:])
+
+            return
+
+        elif command_name == 'set':
+            if len(cmd) < 3:
+                Log.error("Usage: set <key> <value> [immutable]")
+                return
+            
+            self.set_envkey(cmd[1], cmd[2], cmd[3].lower() == 'true' if len(cmd) > 3 else False)
+            
+            return
+
+
         # OTHER 
         elif command_name == 'handlers':
             if len(cmd) > 1:
@@ -1678,6 +1697,31 @@ class BotWaveServer:
             return None
         
 
+    def print_envkeys(self, keys: List[str]) -> List[str]:
+        if "*" in keys:
+            keys = list(os.environ.copy().keys())
+
+        for key in keys:
+            key = key.upper()
+            value, immutable = Env.get(key, get_immutability=True)
+
+            if not value:
+                Log.environ(f"'{key}' doesn't exit in the current environment")
+                continue
+
+            Log.print("", style="rgb(224,107,61)", icon="ENV", end="")
+            Log.print(f"({key})", style="bright_blue", end=" ")
+            Log.print(value, style="orange" if immutable else "white")
+
+    def set_envkey(self, key: str, value: str, immutable: bool = False):
+        try:
+            Env.set(key, value, immutable)
+        except ValueError as e:
+            Log.environ(str(e))
+            return
+        
+        self.print_envkeys([key])
+
     def display_help(self):
         Log.header("BotWave Server - Help")
         Log.section("Available Commands")
@@ -1779,6 +1823,23 @@ class BotWaveServer:
         Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
         Log.print("  Example:", "white")
         Log.print("    | cat commands.txt", "cyan")
+        Log.print("")
+
+        Log.print("get <keys|*>", "bright_green")
+        Log.print("  Get one or more environment variable(s)", "white")
+        Log.print("  Use '*' to list all environment variables", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    get PORT", "cyan")
+        Log.print("    get PORT HOST FPORT", "cyan")
+        Log.print("    get *", "cyan")
+        Log.print("")
+
+        Log.print("set <key> <value> [immutable]", "bright_green")
+        Log.print("  Set an environment variable", "white")
+        Log.print("  If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
+        Log.print("    set PASSKEY mykey true", "cyan")
         Log.print("")
 
         Log.print("exit", "bright_green")
