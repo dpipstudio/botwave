@@ -65,16 +65,7 @@ class BotWaveClient:
         return f"{hostname} ({self.client_id})"
 
 class BotWaveServer:
-    def __init__(self, host: str = '0.0.0.0', ws_port: int = 9938, http_port: int = 9921, ws_cmd_port: int = None, passkey: str = None, wait_start: bool = True, skip_checks: bool = False, handlers_dir: str = "/opt/BotWave/handlers", upload_dir: str = "/opt/BotWave/uploads"):
-        self.host = host
-        self.ws_port = ws_port
-        self.ws_cmd_port = ws_cmd_port
-        self.http_port = http_port
-        self.passkey = passkey
-        self.wait_start = wait_start
-        self.handlers_dir = handlers_dir
-        self.upload_dir = upload_dir
-        self.skip_checks = skip_checks
+    def __init__(self):
         
         self.clients: Dict[str, BotWaveClient] = {}
         
@@ -94,7 +85,43 @@ class BotWaveServer:
         self.handlers_executor = HandlerExecutor(self._execute_command)
 
         self.loop = None
-        
+
+    @property
+    def host(self):
+        return Env.get("HOST", "0.0.0.0")
+    
+    @property
+    def ws_port(self):
+        return Env.get_int("PORT")
+    
+    @property
+    def ws_cmd_port(self):
+        return Env.get_int("WS_CMD_PORT")
+
+    @property
+    def http_port(self):
+        return Env.get_int("FPORT")
+
+    @property
+    def passkey(self):
+        return Env.get("PASSKEY")
+
+    @property
+    def wait_start(self):
+        return Env.get_bool("WAIT_START")
+    
+    @property
+    def handlers_dir(self):
+        return Env.get("HANDLERS_DIR")
+    
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
+    
+    @property
+    def skip_checks(self):
+        return Env.get_bool("SKIP_CHECKS")
+    
 
     async def start(self):
         try:
@@ -1788,33 +1815,50 @@ def main():
     check() # from shared.cat !
     
     parser = argparse.ArgumentParser(description='BotWave Server')
-    parser.add_argument('--host', default='0.0.0.0', help='Server host')
-    parser.add_argument('--port', type=int, default=9938, help='Server port')
-    parser.add_argument('--fport', type=int, default=9921, help='File transfer (HTTP) port')
+    parser.add_argument('--host', default=None, help='Server host')
+    parser.add_argument('--port', type=int, default=None, help='Server port')
+    parser.add_argument('--fport', type=int, default=None, help='File transfer (HTTP) port')
     parser.add_argument('--pk', help='Passkey for authentication')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve s_ handlers from')
-    parser.add_argument('--start-asap', action='store_false', dest='wait_start', help='Start broadcasts immediately (may cause client desync)')
-    parser.add_argument('--skip-checks', action='store_true', help='Skip system requirements checks')
-    parser.add_argument('--ws', type=int, help='WebSocket port for remote shell access')
+    parser.add_argument('--handlers-dir', default=None, help='Directory to retrieve s_ handlers from')
+    parser.add_argument('--start-asap', action='store_true', default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
+    parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, default=None, help='Skip system requirements checks')
+    parser.add_argument('--ws', type=int, default=None, help='WebSocket port for remote shell access')
     parser.add_argument('--daemon', action='store_true', help='Run in non-interactive daemon mode')
     args = parser.parse_args()
+
+    def set_prio(key, cli_value, default, immutable=False):
+        if cli_value is not None:
+            Env.set(key, str(cli_value), immutable=immutable)
+
+        elif not Env.get(key, False):
+            Env.set(key, str(default), immutable=immutable)
+
+    set_prio("HOST", args.host, '0.0.0.0', immutable=True)
+    set_prio("PORT", args.port, 9938, immutable=True)
+    set_prio("FPORT", args.fport, 9921, immutable=True)
+    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers')
+    set_prio("SKIP_CHECKS", args.skip_checks, False)
+    set_prio("DAEMON", args.daemon, False, immutable=True)
+
+    if args.ws and not Env.get("WS_CMD_PORT"):
+        Env.set("WS_CMD_PORT", str(args.ws), immutable=True)
+
+    if args.start_asap is not None:
+        Env.set("WAIT_START", str(not args.start_asap))
+    elif not Env.get("WAIT_START", False):
+        Env.set("WAIT_START", str(True))
+
+    if args.pk:
+        Env.set("PASSKEY", args.pk, immutable=True)
+        
+    server = BotWaveServer()
     
-    server = BotWaveServer(
-        host=args.host,
-        ws_port=args.port,
-        http_port=args.fport,
-        ws_cmd_port=args.ws,
-        passkey=args.pk,
-        wait_start=args.wait_start,
-        skip_checks=args.skip_checks,
-        handlers_dir=args.handlers_dir
-    )
-    
-    if args.daemon:
-        if args.ws:
+    if Env.get_bool("DAEMON"):
+        if Env.get("WS_CMD_PORT"):
             threading.Thread(target=server._start_websocket_server, daemon=True).start()
             time.sleep(1)
-        
+            
+        Log.info("Running in daemon mode. Server will continue to run in the background.")
         asyncio.run(server.start())
 
     else:
@@ -1848,7 +1892,7 @@ def main():
 
             sys.exit(1)
 
-        if args.ws:
+        if Env.get("WS_CMD_PORT"):
             server._start_websocket_server()
 
         if HAS_READLINE:
@@ -1856,7 +1900,7 @@ def main():
             readline.parse_and_bind('set editing-mode emacs')
             readline.set_history_length(1000)
             try:
-                readline.read_history_file("/opt/BotWave/.history")
+                readline.read_history_file(Env.get("HISTORY_PATH", "/opt/BotWave/.history"))
             except:
                 pass
         
@@ -1897,7 +1941,7 @@ def main():
         finally:
             if HAS_READLINE:
                 try:
-                    readline.write_history_file("/opt/BotWave/.history")
+                    readline.write_history_file(Env.get("HISTORY_PATH", "/opt/BotWave/.history"))
                 except:
                     pass
             server.running = False
