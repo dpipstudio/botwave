@@ -30,6 +30,7 @@ from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
@@ -56,31 +57,46 @@ except ImportError:
     sys.exit(1)
 
 class BotWaveCLI:
-    def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers", ws_port: int = None, passkey: str = None, talk: bool = False):
+    def __init__(self):
         self.piwave = None
         self.running = False
         self.current_file = None
         self.broadcasting = False
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
-        self.upload_dir = upload_dir
-        self.handlers_dir = handlers_dir
-        self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
-        self.silent = not talk # if silent = True, piwave wont output any logs
+        self.handlers_executor = HandlerExecutor(self._execute_command)
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
-        self.queue = Queue(client_instance=self, is_local=True, upload_dir=upload_dir)
-        self.ws_port = ws_port
+        self.queue = Queue(client_instance=self, is_local=True)
         self.ws_server = None
         self.ws_clients = set()
         self.ws_loop = None
-        self.passkey = passkey
         self.tips = TipEngine(is_server=False)
 
         self.tips.start()
 
         # load custom piwave backend
         backend_classes["bw_custom"] = BWCustom
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
+    
+    @property
+    def handlers_dir(self):
+        return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
+    
+    @property
+    def ws_port(self):
+        return Env.get_int("WS_CMD_PORT")
+    
+    @property
+    def passkey(self):
+        return Env.get("PASSKEY")
+    
+    @property
+    def silent(self): # if silent = True, piwave wont output any logs
+        return not Env.get_bool("TALK")
 
     def _setup_signal_handlers(self):
         self.original_sigint_handler = signal.signal(signal.SIGINT, self._signal_handler)
@@ -93,9 +109,6 @@ class BotWaveCLI:
 
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
-            host="0.0.0.0",
-            port=self.ws_port,
-            passkey=self.passkey,
             command_executor=self._execute_command,
             is_server=False
         )
@@ -862,25 +875,48 @@ def main():
 
     args = parser.parse_args()
 
-    check_requirements(args.skip_checks)
+    def set_prio(key, cli_value, default, immutable=False):
+        if cli_value is not None:
+            Env.set(key, str(cli_value), immutable=immutable)
 
-    cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk, args.talk)
+        elif not Env.get(key, False):
+            Env.set(key, str(default), immutable=immutable)
+
+    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads')
+    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers')
+    set_prio("SKIP_CHECKS", args.skip_checks, False)
+    set_prio("DAEMON", args.daemon, False, immutable=True)
+    set_prio("HOST", None, "0.0.0.0", immutable=True)
+    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("PROMPT_TEXT", None, "botwave › ")
+    set_prio("TALK", args.talk, False)
+
+
+    if args.ws and not Env.get("WS_CMD_PORT"):
+        Env.set("WS_CMD_PORT", str(args.ws), immutable=True)
+
+    if args.pk:
+        Env.set("PASSKEY", args.pk, immutable=True)
+
+    check_requirements(Env.get_bool("SKIP_CHECKS"))
+
+    cli = BotWaveCLI()
     cli._setup_signal_handlers()
     cli.running = True
 
-    if args.ws:
+    if Env.get("WS_CMD_PORT"):
         cli._start_websocket_server()
 
     Log.info("Type 'help' for a list of available commands")
-    cli.onready_handlers(args.handlers_dir)
+    cli.onready_handlers(Env.get("HANDLERS_DIR"))
 
-    if not args.daemon:
+    if not Env.get_bool("DAEMON"):
         if HAS_READLINE:
             readline.parse_and_bind('tab: complete')
             readline.parse_and_bind('set editing-mode emacs')
             readline.set_history_length(1000)
             try:
-                readline.read_history_file("/opt/BotWave/.history")
+                readline.read_history_file(Env.get("HISTORY_PATH"))
             except:
                 pass
 
@@ -888,7 +924,7 @@ def main():
             try:
                 print()
                 toggle_input(True)
-                cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+                cmd_input = input(f"\033[1;32m{Env.get('PROMPT_TEXT')}\033[0m").strip()
                 toggle_input(False)
 
                 if not cmd_input:
@@ -918,11 +954,11 @@ def main():
 
         if HAS_READLINE:
             try:
-                readline.write_history_file("/opt/BotWave/.history")
+                readline.write_history_file(Env.get("HISTORY_PATH"))
             except:
                 pass
     else:
-        Log.info("Running in daemon mode. Server will continue to run in the background.")
+        Log.info("Running in daemon mode. Local client will continue to run in the background.")
         try:
             while True:
                 time.sleep(1)
