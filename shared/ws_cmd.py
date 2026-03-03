@@ -117,4 +117,6 @@ class WSCMDH: # WebSocket Command Handler
 
             self.command_executor(message, interpolate=False)
         
-        asyncio.get_event_loop().call_soon_threadsafe(execute)
+        asyncio.get_event_loop().call_soon_threadsafe(
+            lambda: asyncio.get_event_loop().run_in_executor(None, execute)
+        )

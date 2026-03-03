@@ -15,21 +15,31 @@ class HandlerExecutor:
     
     def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
         try:
+            old_env = {k: os.environ.get(k) for k in ctx}
             os.environ.update(ctx)
 
             if not silent:
                 Log.handler(f"Running handler on {file_path}")
-            
+
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
+
                     if line and line[0] != "#":
                         if not silent:
                             Log.handler(f"Executing command: {line}")
+
                         self.command_executor(line)
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
+
+        finally:
+            for k, v in old_env.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
     
     def run_handlers(self, prefix: str, dir_path: str = None, context: Dict[str, str] = {}):
         if dir_path is None:

@@ -11,7 +11,8 @@ from shared.env import Env
 from shared.logger import Log
 from shared.security import PathValidator, SecurityError
 
-CHUNK_SIZE = Env.get_int("HTTP_CHUNK_SIZE", 65536) # 64KB, here so we have the value centralized
+def chunk_size() -> int:
+    return Env.get_int("HTTP_chunk_size", 65536) # 64KB, here so we have the value centralized
 
 class BWHTTPFileServer:
     
@@ -27,8 +28,6 @@ class BWHTTPFileServer:
         
         self.app = None
         self.runner = None
-                
-        asyncio.create_task(self._cleanup_expired_tokens())
 
     @property
     def host(self):
@@ -74,6 +73,7 @@ class BWHTTPFileServer:
         return token
     
     async def start(self):
+        asyncio.create_task(self._cleanup_expired_tokens())
         self.app = web.Application(client_max_size=Env.get_int("HTTP_MAX_UPLOAD_SIZE", 1024**3))  # max 1gb
         
         self.app.router.add_post('/upload/{token}', self._handle_upload)
@@ -127,7 +127,7 @@ class BWHTTPFileServer:
             bytes_received = 0
             
             async with aiofiles.open(filepath, 'wb') as f:
-                async for chunk in request.content.iter_chunked(CHUNK_SIZE):
+                async for chunk in request.content.iter_chunked(chunk_size()):
                     await f.write(chunk)
                     bytes_received += len(chunk)
             
@@ -189,7 +189,7 @@ class BWHTTPFileServer:
             
             async with aiofiles.open(filepath, 'rb') as f:
                 while True:
-                    chunk = await f.read(CHUNK_SIZE)
+                    chunk = await f.read(chunk_size())
                     if not chunk:
                         break
                     await response.write(chunk)
@@ -340,7 +340,7 @@ class BWHTTPFileClient:
                     async def file_sender():
                         bytes_sent = 0
                         while True:
-                            chunk = await f.read(CHUNK_SIZE)
+                            chunk = await f.read(chunk_size())
                             if not chunk:
                                 break
                             bytes_sent += len(chunk)
@@ -381,7 +381,7 @@ class BWHTTPFileClient:
                     bytes_received = 0
                     
                     async with aiofiles.open(save_path, 'wb') as f:
-                        async for chunk in response.content.iter_chunked(CHUNK_SIZE):
+                        async for chunk in response.content.iter_chunked(chunk_size()):
                             await f.write(chunk)
                             bytes_received += len(chunk)
                             

@@ -5,8 +5,8 @@ from typing import Optional
 from shared.env import Env
 from shared.protocol import PROTOCOL_VERSION
 
-# if mismatch of 1th or 2th part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
+# if mismatch of 1st or 2nd part: error
+VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest ver
 
 def parse_version(version_str: str) -> tuple:
     try:
