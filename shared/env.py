@@ -19,15 +19,27 @@ class EnvManager:
         dotenv = self.__load_env(filepath)
         os.environ.update(dotenv)
 
-    def get(self, key: str, default=None) -> str | None:
-        """Return the value of a key case-insensitively, or default if not found."""
+    def get(self, key: str, default = None, get_immutability: bool = False) -> tuple | str | None:
+        """Return the value of a key case-insensitively, or default if not found.
+        
+        If get_immutability is True, returns a (value, is_immutable) tuple instead.
+        """
 
         key_lower = key.lower()
 
         for k, v in os.environ.items():
             if k.lower() == key_lower:
-                return self.__strip_immutable(v)
+                stripped_v = self.__strip_immutable(v)
+                immutable = stripped_v != v
 
+                if get_immutability:
+                    return (stripped_v, immutable)
+
+                return stripped_v
+
+        if get_immutability:
+            return (default, False)
+        
         return default
 
     def set(self, key: str, value: str, immutable: bool = False) -> None:
