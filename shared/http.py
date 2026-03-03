@@ -74,7 +74,7 @@ class BWHTTPFileServer:
         return token
     
     async def start(self):
-        self.app = web.Application(client_max_size=1024**3)  # max 1gb
+        self.app = web.Application(client_max_size=Env.get_int("HTTP_MAX_UPLOAD_SIZE", 1024**3))  # max 1gb
         
         self.app.router.add_post('/upload/{token}', self._handle_upload)
         self.app.router.add_get('/download/{token}', self._handle_download)
@@ -216,8 +216,8 @@ class BWHTTPFileServer:
             return web.Response(status=403, text="Token expired")
         
         audio_generator = token_data['generator']
-        rate = token_data.get('rate', 48000)
-        channels = token_data.get('channels', 2)
+        rate = token_data.get('rate', Env.get_int("ALSA_RATE", 48000))
+        channels = token_data.get('channels', Env.get_int("ALSA_CHANNELS", 2))
         
         response = web.StreamResponse(
             status=200,
@@ -381,7 +381,7 @@ class BWHTTPFileClient:
                     bytes_received = 0
                     
                     async with aiofiles.open(save_path, 'wb') as f:
-                        async for chunk in response.content.iter_chunked(65536):
+                        async for chunk in response.content.iter_chunked(CHUNK_SIZE):
                             await f.write(chunk)
                             bytes_received += len(chunk)
                             
