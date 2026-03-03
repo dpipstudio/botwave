@@ -7,6 +7,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
+from shared.env import Env
+
 
 def gen_cert():
     # gens a self-signed TLS certificate for runtime encryption
@@ -17,9 +19,9 @@ def gen_cert():
     )
     
     subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COMMON_NAME, u"BotWave-Server"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"DPIP Studio"),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"BotWave"),
+        x509.NameAttribute(NameOID.COMMON_NAME, Env.get("CERT_COMMON", "BotWave-Server")),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, Env.get("CERT_ORG", "DPIP Studio")),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, Env.get("CERT_UNIT", "BotWave")),
     ])
     
     # Build certificate
