@@ -91,7 +91,7 @@ class BotWaveServer:
 
         # utilities
         self.tips = TipEngine()
-        self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
+        self.handlers_executor = HandlerExecutor(self._execute_command)
 
         self.loop = None
         
