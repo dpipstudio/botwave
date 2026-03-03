@@ -3,6 +3,8 @@ import json
 import threading
 from typing import Callable, Set, Optional
 import websockets
+
+from shared.env import Env
 from shared.logger import Log
 
 
@@ -14,10 +16,6 @@ class WSCMDH: # WebSocket Command Handler
                  onwsleave_callback: Optional[Callable] = None):
         
         #onwsjoin and leave are for the handlers
-
-        self.host = host
-        self.port = port
-        self.passkey = passkey
         self.command_executor = command_executor
         self.is_server = is_server
         self.onwsjoin_callback = onwsjoin_callback
@@ -28,7 +26,21 @@ class WSCMDH: # WebSocket Command Handler
         self.history_index = 0
         
         self.blocked_commands = ['<', '|', 'exit'] # only for server
+
+    @property
+    def host(self):
+        return Env.get("HOST")
+
+    @property
+    def port(self):
+        return Env.get_int("WS_CMD_PORT")
     
+    @property
+    def passkey(self):
+        return Env.get("PASSKEY")
+    
+
+
     def start(self):
         
         # starts in a background thread
