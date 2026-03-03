@@ -31,7 +31,8 @@ class Logger(DLogger):
         'morse': 'MORSE',
         'alsa': 'ALSA',
         'queue': 'QUEUE',
-        'converter': 'CVRT'
+        'converter': 'CVRT',
+        'environ': 'ENV'
     }
 
     STYLES = {
@@ -52,7 +53,8 @@ class Logger(DLogger):
         'morse': 'purple',
         'alsa': 'pink',
         'queue': 'orange',
-        'converter': 'rgb(50,215,165)'
+        'converter': 'rgb(50,215,165)',
+        'environ': 'rgb(224,107,61)'
     }
 
     ws_clients = set()
