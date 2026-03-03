@@ -10,8 +10,7 @@ from shared.logger import Log
 
 class WSCMDH: # WebSocket Command Handler
     
-    def __init__(self, host: str, port: int, passkey: Optional[str], 
-                 command_executor: Callable, is_server: bool = False,
+    def __init__(self, command_executor: Callable, is_server: bool = False,
                  onwsjoin_callback: Optional[Callable] = None,
                  onwsleave_callback: Optional[Callable] = None):
         
