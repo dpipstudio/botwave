@@ -19,7 +19,7 @@ class EnvManager:
         dotenv = self.__load_env(filepath)
         os.environ.update(dotenv)
 
-    def get(self, key: str, default = None, get_immutability: bool = False) -> tuple | str | None:
+    def get(self, key: str, default = None, get_immutability: bool = False, strip_immutable: bool = True) -> tuple | str | None:
         """Return the value of a key case-insensitively, or default if not found.
         
         If get_immutability is True, returns a (value, is_immutable) tuple instead.
@@ -29,7 +29,7 @@ class EnvManager:
 
         for k, v in os.environ.items():
             if k.lower() == key_lower:
-                stripped_v = self.__strip_immutable(v)
+                stripped_v = self.__strip_immutable(v) if strip_immutable else v
                 immutable = stripped_v != v
 
                 if get_immutability:
@@ -109,7 +109,7 @@ class EnvManager:
     def __is_immutable(self, key: str) -> bool:
         """Return True if the key's value is marked as immutable."""
 
-        value = self.get(key)
+        value = self.get(key, strip_immutable=False)
 
         if value is None:
             return False
