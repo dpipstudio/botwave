@@ -20,7 +20,7 @@ import shlex
 import sys
 import time
 import tempfile
-from typing import Dict
+from typing import Dict, List
 import urllib.parse
 import urllib.request
 
@@ -310,6 +310,22 @@ class BotWaveCLI:
                 dest_name = cmd_parts[2] if len(cmd_parts) > 2 else None
 
                 self.download_file(url, dest_name)
+                return True
+            
+            elif cmd == 'get':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: get <keys|*>")
+                    return True
+                
+                self.print_envkeys(cmd_parts[1:])
+                return True
+            
+            elif cmd == 'set':
+                if len(cmd_parts) < 3:
+                    Log.error("Usage: set <key> <value> [immutable]")
+                    return True
+                
+                self.set_envkey(cmd_parts[1], cmd_parts[2], cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False)
                 return True
             
             elif cmd == 'exit':
@@ -750,6 +766,30 @@ class BotWaveCLI:
             except Exception as e:
                 Log.error(f"Error removing file {filename}: {str(e)}")
 
+    def print_envkeys(self, keys: List[str]) -> List[str]:
+        if "*" in keys:
+            keys = list(os.environ.copy().keys())
+
+        for key in keys:
+            key = key.upper()
+            value, immutable = Env.get(key, get_immutability=True)
+
+            if not value:
+                Log.environ(f"'{key}' doesn't exit in the current environment")
+                continue
+
+            Log.print("", style="rgb(224,107,61)", icon="ENV", end="")
+            Log.print(f"({key})", style="bright_blue", end=" ")
+            Log.print(value, style="orange" if immutable else "white")
+
+    def set_envkey(self, key: str, value: str, immutable: bool = False):
+        try:
+            Env.set(key, value, immutable)
+        except ValueError as e:
+            Log.environ(str(e))
+            return
+        
+        self.print_envkeys([key])
 
     def display_help(self):
         Log.header("BotWave Local Client - Help")
@@ -832,16 +872,33 @@ class BotWaveCLI:
         Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
-        Log.print("help", "bright_green")
-        Log.print("  Display this help message", "white")
-        Log.print("  Example:", "white")
-        Log.print("    help", "cyan")
+        Log.print("get <keys|*>", "bright_green")
+        Log.print("  Get one or more environment variable(s)", "white")
+        Log.print("  Use '*' to list all environment variables", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    get PORT", "cyan")
+        Log.print("    get PORT HOST WS_CMD_PORT", "cyan")
+        Log.print("    get *", "cyan")
+        Log.print("")
+
+        Log.print("set <key> <value> [immutable]", "bright_green")
+        Log.print("  Set an environment variable", "white")
+        Log.print("  If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
+        Log.print("    set PASSKEY mykey true", "cyan")
         Log.print("")
 
         Log.print("exit", "bright_green")
         Log.print("  Exit the application", "white")
         Log.print("  Example:", "white")
         Log.print("    exit", "cyan")
+
+        Log.print("help", "bright_green")
+        Log.print("  Display this help message", "white")
+        Log.print("  Example:", "white")
+        Log.print("    help", "cyan")
+        Log.print("")
 
 
     def stop(self):
