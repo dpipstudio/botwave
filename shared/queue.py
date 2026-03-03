@@ -1,9 +1,11 @@
-from .logger import Log
-import os
-from typing import List, Dict, Set
 import asyncio
 import fnmatch
+import os
 import shlex
+from typing import List, Dict, Set
+
+from shared.env import Env
+from shared.logger import Log
 
 
 class Queue:
@@ -12,7 +14,7 @@ class Queue:
     Supports both local (single client) and server (multi-client) modes.
     """
     
-    def __init__(self, server_instance=None, client_instance=None, is_local=False, upload_dir="/opt/BotWave/uploads"):
+    def __init__(self, server_instance=None, client_instance=None, is_local=False):
         """Initialize the queue system.
         
         Args:
@@ -31,7 +33,6 @@ class Queue:
         self.server = server_instance
         self.client = client_instance
         self.is_local = is_local
-        self.upload_dir = upload_dir
         
         # Playback settings
         self.active_targets = "all"
@@ -42,6 +43,10 @@ class Queue:
             'rt': 'Broadcasting',
             'pi': 'FFFF'
         }
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
     
     # COMMAND PARSER
     
