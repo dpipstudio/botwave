@@ -81,7 +81,7 @@ class Logger(DLogger):
         super().print(message=message, style=style, icon=icon, end=end)
 
         if has_tty and INPUT_ACTIVE:
-            prompt = f'\033[1;32m{Env.get("PROMPT_TEXT", 'botwave')} › \033[0m '
+            prompt = f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m'
             sys.stdout.write(prompt + current_line)
             sys.stdout.flush()
 

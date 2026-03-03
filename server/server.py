@@ -28,7 +28,8 @@ import uuid
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.alsa import Alsa
 from shared.cat import check
-from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.converter import Converter, SUPPORTED_EXTENSIONS
+from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
 from shared.logger import Log, toggle_input
@@ -1876,7 +1877,7 @@ def main():
                 try:
                     print()
                     toggle_input(True)
-                    cmd_input = input("\033[1;32mbotwave › \033[0m ").strip()
+                    cmd_input = input(f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m').strip()
                     toggle_input(False)
                     
                     if not cmd_input:
