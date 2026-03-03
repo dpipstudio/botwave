@@ -119,7 +119,7 @@ class EnvManager:
     def __strip_immutable(self, text: str) -> str:
         """Strip the immutable() wrapper from a value if present."""
 
-        match = re.fullmatch(r"immutable\((.*?)\)", text)
+        match = re.fullmatch(r"immutable\((.*)\)", text)
 
         if match:
             return match.group(1)
