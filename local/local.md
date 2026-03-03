@@ -90,8 +90,14 @@ Once the client is running, you can use the following commands:
 - `<`: Run a shell command on the main OS.  
     - Usage: `botwave> < <command>`
 
-- `|`: Run a shell command and pipe each output line as a BotWave command. 
+- `|`: Run a shell command and pipe each output line as a BotWave command.  
     - Usage: `botwave> | <command>`
+
+- `get`: Get one or more environment variable(s).  
+    - Usage: `botwave> get <keys|*>`
+
+- `set`: Set an environment variable. (If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.)  
+    - Usage: `botwave> set <key> <value> [immutable]`
 
 - `help`: Display the help message.  
     - Usage: `botwave> help`
