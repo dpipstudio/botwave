@@ -93,10 +93,6 @@ class BotWaveServer:
     @property
     def ws_port(self):
         return Env.get_int("PORT")
-    
-    @property
-    def ws_cmd_port(self):
-        return Env.get_int("WS_CMD_PORT")
 
     @property
     def http_port(self):
@@ -462,9 +458,6 @@ class BotWaveServer:
 
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
-            host=self.host,
-            port=self.ws_cmd_port,
-            passkey=self.passkey,
             command_executor=self._execute_command,
             is_server=True,
             onwsjoin_callback=self.onwsjoin_handlers,
@@ -481,7 +474,6 @@ class BotWaveServer:
             env = os.environ.copy()
 
             if interpolate:
-                env = os.environ.copy()
                 command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
                     r'\{(\w+)\}',
                     lambda m: env.get(m.group(1), ''),
@@ -872,10 +864,14 @@ class BotWaveServer:
             Log.print("")
 
     async def upload_file(self, client_targets, filepath):
+        extra = Env.get("EXTRA_ALLOWED_DIRS", "")
+        extra_dirs = [d for d in extra.split(":") if d.strip()]
+
         ALLOWED_SOURCE_DIRS = [
             "/tmp",
             "/opt/BotWave",
-            os.path.expanduser("~")
+            os.path.expanduser("~"),
+            *extra_dirs
         ]
 
         target_clients = self._parse_client_targets(client_targets)
@@ -1850,6 +1846,9 @@ def main():
 
     if args.pk:
         Env.set("PASSKEY", args.pk, immutable=True)
+
+    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("PROMPT_TEXT", None, "botwave › ")
         
     server = BotWaveServer()
     
