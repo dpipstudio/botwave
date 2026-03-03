@@ -120,12 +120,7 @@ class BotWaveServer:
             
             await self.ws_server.start()
             
-            self.http_server = BWHTTPFileServer(
-                host=self.host,
-                port=self.http_port,
-                ssl_context=ssl_context,
-                upload_dir=self.upload_dir
-            )
+            self.http_server = BWHTTPFileServer(ssl_context=ssl_context)
             
             await self.http_server.start()
             
