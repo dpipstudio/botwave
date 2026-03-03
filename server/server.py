@@ -1857,9 +1857,19 @@ def main():
         if Env.get("WS_CMD_PORT"):
             threading.Thread(target=server._start_websocket_server, daemon=True).start()
             time.sleep(1)
-            
+
         Log.info("Running in daemon mode. Server will continue to run in the background.")
-        asyncio.run(server.start())
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            loop.run_until_complete(server.start())
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            Log.info("Daemon interrupted, shutting down...")
+            loop.run_until_complete(server.stop())
+        finally:
+            loop.close()
 
     else:
         
