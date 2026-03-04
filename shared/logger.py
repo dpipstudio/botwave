@@ -104,7 +104,7 @@ class Logger(DLogger):
                 except Exception:
                     pass
 
-    def __redact_ipv4(text: str) -> str:
+    def __redact_ipv4(self, text: str) -> str:
         return re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '[REDACTED]', text)
 
 def toggle_input(is_active=None):
