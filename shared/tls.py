@@ -15,7 +15,7 @@ def gen_cert():
     
     private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=Env.get("TLS_KEY_SIZE", 2048),
     )
     
     subject = issuer = x509.Name([
@@ -36,7 +36,7 @@ def gen_cert():
     ).not_valid_before(
         datetime.datetime.now(datetime.timezone.utc)
     ).not_valid_after(
-        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=Env.get_int("CERT_VALIDITY_DAYS", 365))
     ).add_extension(
         x509.SubjectAlternativeName([
             x509.DNSName(Env.get("CERT_SAN_DNS", "localhost")),
