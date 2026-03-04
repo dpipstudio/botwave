@@ -924,11 +924,11 @@ def main():
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
     parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve l_ handlers from')
-    parser.add_argument('--skip-checks', action='store_true', help='Skip system requirements checks')
-    parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
+    parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
+    parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
-    parser.add_argument('--talk', action='store_true', help='Show output logs')
+    parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
 
     args = parser.parse_args()
 
