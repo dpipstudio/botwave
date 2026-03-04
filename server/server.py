@@ -584,11 +584,11 @@ class BotWaveServer:
                 Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
                 return
                 
-            frequency = float(cmd[3]) if len(cmd) > 3 else 90.0
+            frequency = float(cmd[3]) if len(cmd) > 3 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
-            ps = cmd[5] if len(cmd) > 5 else "BotWave"
-            rt = cmd[6] if len(cmd) > 6 else cmd[2] # file name
-            pi = cmd[7] if len(cmd) > 7 else "FFFF"
+            ps = cmd[5] if len(cmd) > 5 else Env.get("DEFAULT_PS", "BotWave")
+            rt = cmd[6] if len(cmd) > 6 else Env.get("DEFAULT_RT", cmd[2]) # file name
+            pi = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PI", "FFFF")
             
             await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
             return
@@ -598,10 +598,10 @@ class BotWaveServer:
                 Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
                 return
             
-            frequency = float(cmd[2]) if len(cmd) > 2 else 90.0
-            ps = cmd[3] if len(cmd) > 3 else "BotWave"
-            rt = cmd[4] if len(cmd) > 4 else "Broadcasting"
-            pi = cmd[5] if len(cmd) > 5 else "FFFF"
+            frequency = float(cmd[2]) if len(cmd) > 2 else Env.get_int("DEFAULT_FREQ", 90)
+            ps = cmd[3] if len(cmd) > 3 else Env.get("DEFAULT_PS", "BotWave")
+            rt = cmd[4] if len(cmd) > 4 else Env.get("DEFAULT_RT", "Broadcasting")
+            pi = cmd[5] if len(cmd) > 5 else Env.get("DEFAULT_PI", "FFFF")
 
             await self.start_live(cmd[1], frequency, ps, rt, pi)
             return
@@ -630,11 +630,11 @@ class BotWaveServer:
             img_path = cmd[2]
             mode = cmd[3] if len(cmd) > 3 else None
             output_wav = cmd[4] if len(cmd) > 4 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
-            frequency = float(cmd[5]) if len(cmd) > 5 else 90.0
+            frequency = float(cmd[5]) if len(cmd) > 5 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
-            ps = cmd[7] if len(cmd) > 7 else "BotWave"
-            rt = cmd[8] if len(cmd) > 8 else "Live streaming !"
-            pi = cmd[9] if len(cmd) > 9 else "FFFF"
+            ps = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PS", "BotWave")
+            rt = cmd[8] if len(cmd) > 8 else Env.get("DEFAULT_RT", output_wav)
+            pi = cmd[9] if len(cmd) > 9 else Env.get("DEFAULT_PI", "FFFF")
             
             if not os.path.exists(img_path):
                 Log.error(f"Image file {img_path} not found")
@@ -672,18 +672,19 @@ class BotWaveServer:
             else:
                 text = text_source
 
-            wpm = int(cmd[3]) if len(cmd) > 3 else 20
-            frequency = float(cmd[4]) if len(cmd) > 4 else 90
+            wpm = int(cmd[3]) if len(cmd) > 3 else Env.get("DEFAULT_MORSE_WPM", 20)
+            morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
+            frequency = float(cmd[4]) if len(cmd) > 4 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[5].lower() == 'true' if len(cmd) > 5 else False
-            ps = cmd[6] if len(cmd) > 6 else "BOTWAVE"
-            rt = cmd[7] if len(cmd) > 7 else "MORSE"
-            pi = cmd[8] if len(cmd) > 8 else "FFFF"
+            ps = cmd[6] if len(cmd) > 6 else Env.get("DEFAULT_PS", "BotWave")
+            rt = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_RT", "Morse")
+            pi = cmd[8] if len(cmd) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
             output_wav = f"morse_{uuid.uuid4().hex[:8]}.wav"
 
-            Log.morse(f"Generating Morse WAV ({wpm} WPM @ 700Hz)...")
+            Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
 
-            success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=700)
+            success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=morse_freq, sample_rate=Env.get_int("MORSE_SAMPLE_RATE", 48000))
 
             if not success or not os.path.exists(output_wav):
                 Log.error("Failed to generate Morse WAV")
