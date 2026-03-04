@@ -10,13 +10,12 @@ from shared.logger import Log
 
 class WSCMDH: # WebSocket Command Handler
     
-    def __init__(self, command_executor: Callable, is_server: bool = False,
+    def __init__(self, command_executor: Callable,
                  onwsjoin_callback: Optional[Callable] = None,
                  onwsleave_callback: Optional[Callable] = None):
         
         #onwsjoin and leave are for the handlers
         self.command_executor = command_executor
-        self.is_server = is_server
         self.onwsjoin_callback = onwsjoin_callback
         self.onwsleave_callback = onwsleave_callback
         self.ws_clients: Set = set()
@@ -24,8 +23,6 @@ class WSCMDH: # WebSocket Command Handler
         self.command_history = []
         self.history_index = 0
         
-        self.blocked_commands = ['<', '|', 'exit'] # only for server
-
     @property
     def host(self):
         return Env.get("HOST")
@@ -38,7 +35,17 @@ class WSCMDH: # WebSocket Command Handler
     def passkey(self):
         return Env.get("PASSKEY")
     
+    @property
+    def allow_commands(self):
+        return Env.get_bool("ALLOW_WS_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING")
+    
+    @property
+    def blocked_commands(self):
+        blocked_env = Env.get("WS_BLOCKED_CMD")
+        if blocked_env:
+            return [cmd for cmd in blocked_env.split(",") if cmd.strip()]
 
+        return ['get', 'set', '<', '|', 'exit'] # defaults
 
     def start(self):
         
@@ -102,18 +109,16 @@ class WSCMDH: # WebSocket Command Handler
             self.command_history.append(message)
             self.history_index = len(self.command_history)
             
-            # blocked cmds
-            if self.is_server:
-                cmd_parts = message.strip().split()
-                if cmd_parts:
-                    command = cmd_parts[0].lower()
+            cmd_parts = message.strip().split()
+            if cmd_parts:
+                command = cmd_parts[0].lower()
 
-                    if command in self.blocked_commands:
-                        Log.warning(f"Hmmm, you can't do that. ;)")
-                        return
-                    
-                    if command == '#':
-                        return
+                if command in self.blocked_commands and not self.allow_commands:
+                    Log.warning(f"Hmmm, you can't do that. ;)")
+                    return
+                
+                if command == '#':
+                    return
 
             self.command_executor(message, interpolate=False)
         
