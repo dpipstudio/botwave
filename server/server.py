@@ -152,6 +152,9 @@ class BotWaveServer:
                 Log.auth("Server is using authentication with a passkey")
             
             self.running = True
+
+            if Env.get("WS_CMD_PORT"):
+                threading.Thread(target=self._start_websocket_server, daemon=True).start()
             
             if not self.skip_checks:
                 self._check_updates()
