@@ -1,5 +1,6 @@
 from dlogger import DLogger
 import asyncio
+import re
 import sys
 
 from shared.env import Env
@@ -78,7 +79,10 @@ class Logger(DLogger):
             if INPUT_ACTIVE:
                 sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
                 sys.stdout.flush()
-        
+
+
+        if Env.get_bool("REDACT_IPV4"):
+            message = self.__redact_ipv4(message)
 
         super().print(message=message, style=style, icon=icon, end=end)
 
@@ -99,6 +103,9 @@ class Logger(DLogger):
                     self.ws_clients.discard(ws)
                 except Exception:
                     pass
+
+    def __redact_ipv4(text: str) -> str:
+        return re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '[REDACTED]', text)
 
 def toggle_input(is_active=None):
     global INPUT_ACTIVE
