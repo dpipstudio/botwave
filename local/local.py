@@ -220,6 +220,7 @@ class BotWaveCLI:
                     text = text_source
                 
                 wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_MORSE_WPM", 20)
+                morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
                 frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
                 ps = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PS", "BotWave")
@@ -228,8 +229,8 @@ class BotWaveCLI:
                 
                 output_wav = os.path.join(self.upload_dir, f"morse_{uuid.uuid4().hex[:8]}.wav")
                 
-                Log.morse(f"Generating Morse WAV ({wpm} WPM @ 700Hz)...")
-                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=Env.get_int("MORSE_FREQUENCY", 700), sample_rate=Env.get_int("MORSE_SAMPLE_RATE", 48000))
+                Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
+                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=morse_freq, sample_rate=Env.get_int("MORSE_SAMPLE_RATE", 48000))
                 
                 if not success or not os.path.exists(output_wav):
                     Log.error("Failed to generate Morse WAV")
