@@ -672,7 +672,7 @@ class BotWaveServer:
             else:
                 text = text_source
 
-            wpm = int(cmd[3]) if len(cmd) > 3 else Env.get("DEFAULT_MORSE_WPM", 20)
+            wpm = int(cmd[3]) if len(cmd) > 3 else Env.get_int("DEFAULT_MORSE_WPM", 20)
             morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
             frequency = float(cmd[4]) if len(cmd) > 4 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[5].lower() == 'true' if len(cmd) > 5 else False
