@@ -7,30 +7,20 @@ import uuid
 from aiohttp import web, ClientSession, TCPConnector
 from typing import Dict, Optional
 
+from shared.env import Env
 from shared.logger import Log
 from shared.security import PathValidator, SecurityError
 
-CHUNK_SIZE = 65536 # 64KB, here so we have the value centralized
+def chunk_size() -> int:
+    return Env.get_int("HTTP_CHUNK_SIZE", 65536) # 64KB, here so we have the value centralized
 
 class BWHTTPFileServer:
     
     # http server for downloads / uploads / pcm streaming
     # each file has a time-limited unique id
     
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        ssl_context: ssl.SSLContext,
-        upload_dir: str,
-        token_lifetime: int = 300
-    ):
-
-        self.host = host
-        self.port = port
+    def __init__(self, ssl_context: ssl.SSLContext):
         self.ssl_context = ssl_context
-        self.upload_dir = upload_dir
-        self.token_lifetime = token_lifetime
 
         self.upload_tokens: Dict[str, dict] = {}
         self.download_tokens: Dict[str, dict] = {}
@@ -38,10 +28,22 @@ class BWHTTPFileServer:
         
         self.app = None
         self.runner = None
-        
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        asyncio.create_task(self._cleanup_expired_tokens())
+
+    @property
+    def host(self):
+        return Env.get("HOST", "0.0.0.0")
+
+    @property
+    def port(self):
+        return Env.get_int("FPORT", 9921)
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
+
+    @property
+    def token_lifetime(self):
+        return Env.get_int("FTOKEN_LIFETIME", 300)
     
     def create_upload_token(self, filename: str, size: int) -> str:
         token = uuid.uuid4().hex
@@ -71,7 +73,8 @@ class BWHTTPFileServer:
         return token
     
     async def start(self):
-        self.app = web.Application(client_max_size=1024**3)  # max 1gb
+        asyncio.create_task(self._cleanup_expired_tokens())
+        self.app = web.Application(client_max_size=Env.get_int("HTTP_MAX_UPLOAD_SIZE", 1024**3))  # max 1gb
         
         self.app.router.add_post('/upload/{token}', self._handle_upload)
         self.app.router.add_get('/download/{token}', self._handle_download)
@@ -124,7 +127,7 @@ class BWHTTPFileServer:
             bytes_received = 0
             
             async with aiofiles.open(filepath, 'wb') as f:
-                async for chunk in request.content.iter_chunked(CHUNK_SIZE):
+                async for chunk in request.content.iter_chunked(chunk_size()):
                     await f.write(chunk)
                     bytes_received += len(chunk)
             
@@ -186,7 +189,7 @@ class BWHTTPFileServer:
             
             async with aiofiles.open(filepath, 'rb') as f:
                 while True:
-                    chunk = await f.read(CHUNK_SIZE)
+                    chunk = await f.read(chunk_size())
                     if not chunk:
                         break
                     await response.write(chunk)
@@ -213,8 +216,8 @@ class BWHTTPFileServer:
             return web.Response(status=403, text="Token expired")
         
         audio_generator = token_data['generator']
-        rate = token_data.get('rate', 48000)
-        channels = token_data.get('channels', 2)
+        rate = token_data.get('rate', Env.get_int("ALSA_RATE", 48000))
+        channels = token_data.get('channels', Env.get_int("ALSA_CHANNELS", 2))
         
         response = web.StreamResponse(
             status=200,
@@ -337,7 +340,7 @@ class BWHTTPFileClient:
                     async def file_sender():
                         bytes_sent = 0
                         while True:
-                            chunk = await f.read(CHUNK_SIZE)
+                            chunk = await f.read(chunk_size())
                             if not chunk:
                                 break
                             bytes_sent += len(chunk)
@@ -378,7 +381,7 @@ class BWHTTPFileClient:
                     bytes_received = 0
                     
                     async with aiofiles.open(save_path, 'wb') as f:
-                        async for chunk in response.content.iter_chunked(65536):
+                        async for chunk in response.content.iter_chunked(chunk_size()):
                             await f.write(chunk)
                             bytes_received += len(chunk)
                             

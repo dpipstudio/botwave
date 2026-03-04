@@ -91,6 +91,7 @@
       "shared/cat.py",
       "shared/cat.jpg",
       "shared/converter.py",
+      "shared/env.py",
       "shared/handlers.py",
       "shared/http.py",
       "shared/logger.py",

@@ -7,19 +7,21 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
+from shared.env import Env
+
 
 def gen_cert():
     # gens a self-signed TLS certificate for runtime encryption
     
     private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=Env.get("TLS_KEY_SIZE", 2048),
     )
     
     subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COMMON_NAME, u"BotWave-Server"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"DPIP Studio"),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"BotWave"),
+        x509.NameAttribute(NameOID.COMMON_NAME, Env.get("CERT_COMMON", "BotWave-Server")),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, Env.get("CERT_ORG", "DPIP Studio")),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, Env.get("CERT_UNIT", "BotWave")),
     ])
     
     # Build certificate
@@ -34,11 +36,11 @@ def gen_cert():
     ).not_valid_before(
         datetime.datetime.now(datetime.timezone.utc)
     ).not_valid_after(
-        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=Env.get_int("CERT_VALIDITY_DAYS", 365))
     ).add_extension(
         x509.SubjectAlternativeName([
-            x509.DNSName(u"localhost"),
-            x509.IPAddress(ipaddress.IPv4Address("127.0.0.1")),
+            x509.DNSName(Env.get("CERT_SAN_DNS", "localhost")),
+            x509.IPAddress(ipaddress.IPv4Address(Env.get("CERT_SAN_IP", "127.0.0.1"))),
         ]),
         critical=False,
     ).sign(private_key, hashes.SHA256())

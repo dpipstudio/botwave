@@ -1,6 +1,9 @@
 from dlogger import DLogger
 import asyncio
+import re
 import sys
+
+from shared.env import Env
 
 try:
     import readline
@@ -29,7 +32,8 @@ class Logger(DLogger):
         'morse': 'MORSE',
         'alsa': 'ALSA',
         'queue': 'QUEUE',
-        'converter': 'CVRT'
+        'converter': 'CVRT',
+        'environ': 'ENV'
     }
 
     STYLES = {
@@ -50,7 +54,8 @@ class Logger(DLogger):
         'morse': 'purple',
         'alsa': 'pink',
         'queue': 'orange',
-        'converter': 'rgb(50,215,165)'
+        'converter': 'rgb(50,215,165)',
+        'environ': 'rgb(224,107,61)'
     }
 
     ws_clients = set()
@@ -74,12 +79,15 @@ class Logger(DLogger):
             if INPUT_ACTIVE:
                 sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
                 sys.stdout.flush()
-        
+
+
+        if Env.get_bool("REDACT_IPV4"):
+            message = self.__redact_ipv4(message)
 
         super().print(message=message, style=style, icon=icon, end=end)
 
         if has_tty and INPUT_ACTIVE:
-            prompt = '\033[1;32mbotwave › \033[0m '
+            prompt = f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m'
             sys.stdout.write(prompt + current_line)
             sys.stdout.flush()
 
@@ -95,6 +103,9 @@ class Logger(DLogger):
                     self.ws_clients.discard(ws)
                 except Exception:
                     pass
+
+    def __redact_ipv4(self, text: str) -> str:
+        return re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '[REDACTED]', text)
 
 def toggle_input(is_active=None):
     global INPUT_ACTIVE

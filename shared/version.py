@@ -1,10 +1,12 @@
 import urllib.request
 import urllib.error
 from typing import Optional
+
+from shared.env import Env
 from shared.protocol import PROTOCOL_VERSION
 
-# if mismatch of 1th or 2th part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the lastest ver
+# if mismatch of 1st or 2nd part: error
+VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest ver
 
 def parse_version(version_str: str) -> tuple:
     try:
@@ -18,7 +20,7 @@ def check_for_updates() -> Optional[str]:
         req = urllib.request.Request(
             VERSION_CHECK_URL,
             headers={
-                "User-Agent": f"BotWaveVCheck/{PROTOCOL_VERSION}"
+                "User-Agent": Env.get("VCHECK_UA", f"BotWaveVCheck/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
             }
         )
 

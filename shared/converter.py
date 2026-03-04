@@ -1,6 +1,7 @@
 import subprocess
 import os
 
+from shared.env import Env
 from shared.logger import Log
 
 SUPPORTED_EXTENSIONS = [
@@ -36,8 +37,8 @@ class Converter:
             "-i", source,
             "-vn",
             "-acodec", "pcm_s16le",
-            "-ar", "48000",
-            "-ac", "2",
+            "-ar", Env.get("CONVERTER_SAMPLE_RATE", "48000"),
+            "-ac", Env.get("CONVERTER_CHANNELS", "2"),
             destination
         ]
 

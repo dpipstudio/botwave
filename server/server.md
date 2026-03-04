@@ -93,6 +93,12 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `|`: Run a shell command and pipe each output line as a BotWave command.  
     - Usage: `botwave> | <command>`  
 
+`get`: Get one or more environment variable(s). 
+    - Usage: `botwave> get <keys|*>`  
+
+`set`: Set an environment variable. (If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.)  
+    - Usage: `botwave> | <key> <value> [immutable]`  
+
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 

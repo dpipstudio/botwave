@@ -1,36 +1,45 @@
 import os
 from typing import Callable, Dict
+
+from shared.env import Env
 from shared.logger import Log
 
 class HandlerExecutor:
     
-    def __init__(self, handlers_dir: str, command_executor: Callable):
-        self.handlers_dir = handlers_dir
+    def __init__(self, command_executor: Callable):
         self.command_executor = command_executor
+
+    @property
+    def handlers_dir(self):
+        return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
     
     def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
-        original_env = os.environ.copy() # save current environment
-
         try:
+            old_env = {k: os.environ.get(k) for k in ctx}
             os.environ.update(ctx)
 
             if not silent:
                 Log.handler(f"Running handler on {file_path}")
-            
+
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
+
                     if line and line[0] != "#":
                         if not silent:
                             Log.handler(f"Executing command: {line}")
+
                         self.command_executor(line)
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
+
         finally:
-            # Restore original environment
-            os.environ.clear()
-            os.environ.update(original_env)
+            for k, v in old_env.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
     
     def run_handlers(self, prefix: str, dir_path: str = None, context: Dict[str, str] = {}):
         if dir_path is None:

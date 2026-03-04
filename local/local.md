@@ -37,8 +37,8 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-ch
 
 ### Arguments
 
-- `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
-- `--handlers-dir`: The directory to retrive l_ handlers from (default: `/opt/BotWave/handlers`)
+- `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads/`).
+- `--handlers-dir`: The directory to retrive l_ handlers from (default: `/opt/BotWave/handlers/`)
 - `--skip-checks`: Skip system requirements checks.
 - `--daemon`: Run in daemon mode (non-interactive).
 - `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
@@ -90,8 +90,14 @@ Once the client is running, you can use the following commands:
 - `<`: Run a shell command on the main OS.  
     - Usage: `botwave> < <command>`
 
-- `|`: Run a shell command and pipe each output line as a BotWave command. 
+- `|`: Run a shell command and pipe each output line as a BotWave command.  
     - Usage: `botwave> | <command>`
+
+- `get`: Get one or more environment variable(s).  
+    - Usage: `botwave> get <keys|*>`
+
+- `set`: Set an environment variable. (If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.)  
+    - Usage: `botwave> set <key> <value> [immutable]`
 
 - `help`: Display the help message.  
     - Usage: `botwave> help`

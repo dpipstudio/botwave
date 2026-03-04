@@ -20,7 +20,7 @@ import shlex
 import sys
 import time
 import tempfile
-from typing import Dict
+from typing import Dict, List
 import urllib.parse
 import urllib.request
 
@@ -30,6 +30,7 @@ from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
@@ -56,31 +57,46 @@ except ImportError:
     sys.exit(1)
 
 class BotWaveCLI:
-    def __init__(self, upload_dir: str = "/opt/BotWave/uploads", handlers_dir: str = "/opt/BotWave/handlers", ws_port: int = None, passkey: str = None, talk: bool = False):
+    def __init__(self):
         self.piwave = None
         self.running = False
         self.current_file = None
         self.broadcasting = False
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
-        self.upload_dir = upload_dir
-        self.handlers_dir = handlers_dir
-        self.handlers_executor = HandlerExecutor(handlers_dir, self._execute_command)
-        self.silent = not talk # if silent = True, piwave wont output any logs
+        self.handlers_executor = HandlerExecutor(self._execute_command)
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
-        self.queue = Queue(client_instance=self, is_local=True, upload_dir=upload_dir)
-        self.ws_port = ws_port
+        self.queue = Queue(client_instance=self, is_local=True)
         self.ws_server = None
         self.ws_clients = set()
         self.ws_loop = None
-        self.passkey = passkey
         self.tips = TipEngine(is_server=False)
 
         self.tips.start()
 
         # load custom piwave backend
         backend_classes["bw_custom"] = BWCustom
+
+    @property
+    def upload_dir(self):
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
+    
+    @property
+    def handlers_dir(self):
+        return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
+    
+    @property
+    def ws_port(self):
+        return Env.get_int("WS_CMD_PORT")
+    
+    @property
+    def passkey(self):
+        return Env.get("PASSKEY")
+    
+    @property
+    def silent(self): # if silent = True, piwave wont output any logs
+        return not Env.get_bool("TALK")
 
     def _setup_signal_handlers(self):
         self.original_sigint_handler = signal.signal(signal.SIGINT, self._signal_handler)
@@ -93,11 +109,7 @@ class BotWaveCLI:
 
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
-            host="0.0.0.0",
-            port=self.ws_port,
-            passkey=self.passkey,
             command_executor=self._execute_command,
-            is_server=False
         )
         self.ws_handler.start()
 
@@ -108,12 +120,12 @@ class BotWaveCLI:
                 command = command.split("#", 1)[0]
 
             command = command.strip()
-            env = os.environ.copy()
+            env = os.environ.copy() # for subprocesses
 
             if interpolate:
                 command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
                     r'\{(\w+)\}',
-                    lambda m: env.get(m.group(1), ''),
+                    lambda m: Env.get(m.group(1), ''),
                     command
                 )
 
@@ -133,20 +145,20 @@ class BotWaveCLI:
                     return True
                 
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
-                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
+                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
-                ps = cmd_parts[4] if len(cmd_parts) > 4 else "BotWave"
-                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
-                pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
+                ps = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PS", "BotWave")
+                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", cmd_parts[1]) # (file name)
+                pi = cmd_parts[-1] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
             
             if cmd == 'live':
-                frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else 90.0
-                ps = cmd_parts[2] if len(cmd_parts) > 2 else "BotWave"
-                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else "Broadcasting"
-                pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
+                frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_int("DEFAULT_FREQ", 90)
+                ps = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_PS", "BotWave")
+                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else Env.get("DEFAULT_RT", "Broadcasting")
+                pi = cmd_parts[-1] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")
 
                 self.start_live(frequency, ps, rt, pi)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
@@ -172,11 +184,11 @@ class BotWaveCLI:
                 img_path = cmd_parts[1]
                 mode = cmd_parts[2] if len(cmd_parts) > 2 else None
                 output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
-                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
+                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
-                ps = cmd_parts[6] if len(cmd_parts) > 6 else "BotWave"
-                rt = cmd_parts[7] if len(cmd_parts) > 7 else output_wav
-                pi = cmd_parts[8] if len(cmd_parts) > 8 else "FFFF"
+                ps = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PS", "BotWave")
+                rt = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_RT", output_wav)
+                pi = cmd_parts[8] if len(cmd_parts) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
                 if not os.path.exists(img_path):
                     Log.error(f"Image file {img_path} not found")
@@ -207,17 +219,18 @@ class BotWaveCLI:
                 else:
                     text = text_source
                 
-                wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else 20
-                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else 90.0
+                wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_MORSE_WPM", 20)
+                morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
+                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
-                ps = cmd_parts[5] if len(cmd_parts) > 5 else "BOTWAVE"
-                rt = cmd_parts[6] if len(cmd_parts) > 6 else "MORSE"
-                pi = cmd_parts[7] if len(cmd_parts) > 7 else "FFFF"
+                ps = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PS", "BotWave")
+                rt = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_RT", "Morse")
+                pi = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_PI", "FFFF")
                 
                 output_wav = os.path.join(self.upload_dir, f"morse_{uuid.uuid4().hex[:8]}.wav")
                 
-                Log.morse(f"Generating Morse WAV ({wpm} WPM @ 700Hz)...")
-                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=700)
+                Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
+                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=morse_freq, sample_rate=Env.get_int("MORSE_SAMPLE_RATE", 48000))
                 
                 if not success or not os.path.exists(output_wav):
                     Log.error("Failed to generate Morse WAV")
@@ -297,6 +310,22 @@ class BotWaveCLI:
                 dest_name = cmd_parts[2] if len(cmd_parts) > 2 else None
 
                 self.download_file(url, dest_name)
+                return True
+            
+            elif cmd == 'get':
+                if len(cmd_parts) < 2:
+                    Log.error("Usage: get <keys|*>")
+                    return True
+                
+                self.print_envkeys(cmd_parts[1:])
+                return True
+            
+            elif cmd == 'set':
+                if len(cmd_parts) < 3:
+                    Log.error("Usage: set <key> <value> [immutable]")
+                    return True
+                
+                self.set_envkey(cmd_parts[1], cmd_parts[2], cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False)
                 return True
             
             elif cmd == 'exit':
@@ -737,6 +766,30 @@ class BotWaveCLI:
             except Exception as e:
                 Log.error(f"Error removing file {filename}: {str(e)}")
 
+    def print_envkeys(self, keys: List[str]) -> List[str]:
+        if "*" in keys:
+            keys = list(os.environ.copy().keys())
+
+        for key in keys:
+            key = key.upper()
+            value, immutable = Env.get(key, get_immutability=True)
+
+            if not value:
+                Log.environ(f"'{key}' doesn't exit in the current environment")
+                continue
+
+            Log.print("", style="rgb(224,107,61)", icon="ENV", end="")
+            Log.print(f"({key})", style="bright_blue", end=" ")
+            Log.print(value, style="orange" if immutable else "white")
+
+    def set_envkey(self, key: str, value: str, immutable: bool = False):
+        try:
+            Env.set(key, value, immutable)
+        except ValueError as e:
+            Log.environ(str(e))
+            return
+        
+        self.print_envkeys([key])
 
     def display_help(self):
         Log.header("BotWave Local Client - Help")
@@ -819,16 +872,33 @@ class BotWaveCLI:
         Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
-        Log.print("help", "bright_green")
-        Log.print("  Display this help message", "white")
-        Log.print("  Example:", "white")
-        Log.print("    help", "cyan")
+        Log.print("get <keys|*>", "bright_green")
+        Log.print("  Get one or more environment variable(s)", "white")
+        Log.print("  Use '*' to list all environment variables", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    get PORT", "cyan")
+        Log.print("    get PORT HOST WS_CMD_PORT", "cyan")
+        Log.print("    get *", "cyan")
+        Log.print("")
+
+        Log.print("set <key> <value> [immutable]", "bright_green")
+        Log.print("  Set an environment variable", "white")
+        Log.print("  If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
+        Log.print("    set PASSKEY mykey true", "cyan")
         Log.print("")
 
         Log.print("exit", "bright_green")
         Log.print("  Exit the application", "white")
         Log.print("  Example:", "white")
         Log.print("    exit", "cyan")
+
+        Log.print("help", "bright_green")
+        Log.print("  Display this help message", "white")
+        Log.print("  Example:", "white")
+        Log.print("    help", "cyan")
+        Log.print("")
 
 
     def stop(self):
@@ -852,35 +922,58 @@ def main():
     check() #from shared.cat
 
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve l_ handlers from')
-    parser.add_argument('--skip-checks', action='store_true', help='Skip system requirements checks')
-    parser.add_argument('--daemon', action='store_true', help='Run in daemon mode (non-interactive)')
+    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads/', help='Directory to store uploaded files')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers/', help='Directory to retrieve l_ handlers from')
+    parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
+    parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
-    parser.add_argument('--talk', action='store_true', help='Show output logs')
+    parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
 
     args = parser.parse_args()
 
-    check_requirements(args.skip_checks)
+    def set_prio(key, cli_value, default, immutable=False):
+        if cli_value is not None:
+            Env.set(key, str(cli_value), immutable=immutable)
 
-    cli = BotWaveCLI(args.upload_dir, args.handlers_dir, args.ws, args.pk, args.talk)
+        elif not Env.get(key, False):
+            Env.set(key, str(default), immutable=immutable)
+
+    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
+    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
+    set_prio("SKIP_CHECKS", args.skip_checks, False)
+    set_prio("DAEMON", args.daemon, False, immutable=True)
+    set_prio("HOST", None, "0.0.0.0", immutable=True)
+    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("PROMPT_TEXT", None, "botwave › ")
+    set_prio("TALK", args.talk, False)
+
+
+    if args.ws and not Env.get("WS_CMD_PORT"):
+        Env.set("WS_CMD_PORT", str(args.ws), immutable=True)
+
+    if args.pk:
+        Env.set("PASSKEY", args.pk, immutable=True)
+
+    check_requirements(Env.get_bool("SKIP_CHECKS"))
+
+    cli = BotWaveCLI()
     cli._setup_signal_handlers()
     cli.running = True
 
-    if args.ws:
+    if Env.get("WS_CMD_PORT"):
         cli._start_websocket_server()
 
     Log.info("Type 'help' for a list of available commands")
-    cli.onready_handlers(args.handlers_dir)
+    cli.onready_handlers(Env.get("HANDLERS_DIR"))
 
-    if not args.daemon:
+    if not Env.get_bool("DAEMON"):
         if HAS_READLINE:
             readline.parse_and_bind('tab: complete')
             readline.parse_and_bind('set editing-mode emacs')
             readline.set_history_length(1000)
             try:
-                readline.read_history_file("/opt/BotWave/.history")
+                readline.read_history_file(Env.get("HISTORY_PATH"))
             except:
                 pass
 
@@ -888,7 +981,7 @@ def main():
             try:
                 print()
                 toggle_input(True)
-                cmd_input = input("\033[1;32mbotwave ›\033[0m ").strip()
+                cmd_input = input(f"\033[1;32m{Env.get('PROMPT_TEXT')}\033[0m").strip()
                 toggle_input(False)
 
                 if not cmd_input:
@@ -918,11 +1011,11 @@ def main():
 
         if HAS_READLINE:
             try:
-                readline.write_history_file("/opt/BotWave/.history")
+                readline.write_history_file(Env.get("HISTORY_PATH"))
             except:
                 pass
     else:
-        Log.info("Running in daemon mode. Server will continue to run in the background.")
+        Log.info("Running in daemon mode. Local client will continue to run in the background.")
         try:
             while True:
                 time.sleep(1)
