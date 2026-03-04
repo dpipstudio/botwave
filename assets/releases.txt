@@ -14,6 +14,17 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.0.14-psydrax ---=
+### What Changed
+- **Environment variables**: BotWave now supports configuration via environment variables and `.env` files for ports, paths, RDS defaults, ALSA settings, and more. See the [wiki](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables) for the full list.
+- **`get` and `set` commands**: Inspect and change environment variables at runtime directly from the BotWave shell, no restart needed.
+- **Bug fixes**: Minor bug fixes across the program.
+
+### Additional notes
+> [!WARNING]
+> This is the last release supporting the local `list` command. It is replaced with the `lf` one, and will be completely removed in `1.0.15`.
+=--- END ---=
+
 =--- v1.0.13-ochna ---=
 ### What Changed
 - BotWave will now warn you if another instance is already running, preventing potential broadcast conflicts
