@@ -20,7 +20,7 @@ def check_for_updates() -> Optional[str]:
         req = urllib.request.Request(
             VERSION_CHECK_URL,
             headers={
-                "User-Agent": Env.get("VCHECK_UA", f"BotWaveVCheck/{PROTOCOL_VERSION}")
+                "User-Agent": Env.get("VCHECK_UA", f"BotWaveVCheck/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
             }
         )
 
