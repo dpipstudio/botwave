@@ -1877,10 +1877,10 @@ def main():
     parser.add_argument('--fport', type=int, default=None, help='File transfer (HTTP) port')
     parser.add_argument('--pk', help='Passkey for authentication')
     parser.add_argument('--handlers-dir', default=None, help='Directory to retrieve s_ handlers from')
-    parser.add_argument('--start-asap', action='store_true', default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
+    parser.add_argument('--start-asap', action=argparse.BooleanOptionalAction, default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, default=None, help='Skip system requirements checks')
     parser.add_argument('--ws', type=int, default=None, help='WebSocket port for remote shell access')
-    parser.add_argument('--daemon', action='store_true', help='Run in non-interactive daemon mode')
+    parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in non-interactive daemon mode')
     args = parser.parse_args()
 
     def set_prio(key, cli_value, default, immutable=False):
