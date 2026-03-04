@@ -92,7 +92,7 @@ class BotWaveClient:
 
     @property
     def upload_dir(self):
-        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads")
+        return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
 
     @property
     def passkey(self):
@@ -829,7 +829,7 @@ def main():
     set_prio("SERVER_PORT", args.port, 9938, immutable=True)
     set_prio("FHOST", args.fhost, Env.get("SERVER_HOST"), immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
-    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads')
+    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
     set_prio("TALK", args.talk, False)
     set_prio("SKIP_CHECKS", args.skip_checks, False)
 

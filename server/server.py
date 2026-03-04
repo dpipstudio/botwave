@@ -1895,7 +1895,7 @@ def main():
     set_prio("HOST", args.host, '0.0.0.0', immutable=True)
     set_prio("PORT", args.port, 9938, immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
-    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers')
+    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
     set_prio("SKIP_CHECKS", args.skip_checks, False)
     set_prio("DAEMON", args.daemon, False, immutable=True)
 

@@ -921,8 +921,8 @@ def main():
     check() #from shared.cat
 
     parser = argparse.ArgumentParser(description='BotWave Standalone CLI Client')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads', help='Directory to store uploaded files')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers', help='Directory to retrieve l_ handlers from')
+    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads/', help='Directory to store uploaded files')
+    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers/', help='Directory to retrieve l_ handlers from')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
     parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
@@ -938,8 +938,8 @@ def main():
         elif not Env.get(key, False):
             Env.set(key, str(default), immutable=immutable)
 
-    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads')
-    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers')
+    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
+    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
     set_prio("SKIP_CHECKS", args.skip_checks, False)
     set_prio("DAEMON", args.daemon, False, immutable=True)
     set_prio("HOST", None, "0.0.0.0", immutable=True)
