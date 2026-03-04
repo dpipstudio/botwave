@@ -110,7 +110,6 @@ class BotWaveCLI:
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
             command_executor=self._execute_command,
-            is_server=False
         )
         self.ws_handler.start()
 

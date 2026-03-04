@@ -459,7 +459,6 @@ class BotWaveServer:
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
             command_executor=self._execute_command,
-            is_server=True,
             onwsjoin_callback=self.onwsjoin_handlers,
             onwsleave_callback=self.onwsleave_handlers
         )
