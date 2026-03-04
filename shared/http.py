@@ -12,7 +12,7 @@ from shared.logger import Log
 from shared.security import PathValidator, SecurityError
 
 def chunk_size() -> int:
-    return Env.get_int("HTTP_chunk_size", 65536) # 64KB, here so we have the value centralized
+    return Env.get_int("HTTP_CHUNK_SIZE", 65536) # 64KB, here so we have the value centralized
 
 class BWHTTPFileServer:
     
