@@ -70,7 +70,7 @@ class BotWaveClient:
         self.client_id = None
 
         # utilities
-        self.tips = TipEngine()
+        self.tips = TipEngine(is_server=False)
         
         backend_classes["bw_custom"] = BWCustom
 
