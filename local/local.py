@@ -145,20 +145,20 @@ class BotWaveCLI:
                     return True
                 
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
-                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else 90.0
+                frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
-                ps = cmd_parts[4] if len(cmd_parts) > 4 else "BotWave"
-                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else cmd_parts[1] # (file name)
-                pi = cmd_parts[-1] if len(cmd_parts) > 6 else "FFFF"
+                ps = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PS", "BotWave")
+                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", cmd_parts[1]) # (file name)
+                pi = cmd_parts[-1] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
             
             if cmd == 'live':
-                frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else 90.0
-                ps = cmd_parts[2] if len(cmd_parts) > 2 else "BotWave"
-                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else "Broadcasting"
-                pi = cmd_parts[-1] if len(cmd_parts) > 4 else "FFFF"
+                frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_int("DEFAULT_FREQ", 90)
+                ps = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_PS", "BotWave")
+                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else Env.get("DEFAULT_RT", "Broadcasting")
+                pi = cmd_parts[-1] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")
 
                 self.start_live(frequency, ps, rt, pi)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
@@ -184,11 +184,11 @@ class BotWaveCLI:
                 img_path = cmd_parts[1]
                 mode = cmd_parts[2] if len(cmd_parts) > 2 else None
                 output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
-                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else 90.0
+                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
-                ps = cmd_parts[6] if len(cmd_parts) > 6 else "BotWave"
-                rt = cmd_parts[7] if len(cmd_parts) > 7 else output_wav
-                pi = cmd_parts[8] if len(cmd_parts) > 8 else "FFFF"
+                ps = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PS", "BotWave")
+                rt = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_RT", output_wav)
+                pi = cmd_parts[8] if len(cmd_parts) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
                 if not os.path.exists(img_path):
                     Log.error(f"Image file {img_path} not found")
@@ -219,17 +219,17 @@ class BotWaveCLI:
                 else:
                     text = text_source
                 
-                wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else 20
-                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else 90.0
+                wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_MORSE_WPM", 20)
+                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
-                ps = cmd_parts[5] if len(cmd_parts) > 5 else "BOTWAVE"
-                rt = cmd_parts[6] if len(cmd_parts) > 6 else "MORSE"
-                pi = cmd_parts[7] if len(cmd_parts) > 7 else "FFFF"
+                ps = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PS", "BotWave")
+                rt = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_RT", "Morse")
+                pi = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_PI", "FFFF")
                 
                 output_wav = os.path.join(self.upload_dir, f"morse_{uuid.uuid4().hex[:8]}.wav")
                 
                 Log.morse(f"Generating Morse WAV ({wpm} WPM @ 700Hz)...")
-                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=700)
+                success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=Env.get_int("MORSE_FREQUENCY", 700), sample_rate=Env.get_int("MORSE_SAMPLE_RATE", 48000))
                 
                 if not success or not os.path.exists(output_wav):
                     Log.error("Failed to generate Morse WAV")
