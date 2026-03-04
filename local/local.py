@@ -121,12 +121,12 @@ class BotWaveCLI:
                 command = command.split("#", 1)[0]
 
             command = command.strip()
-            env = os.environ.copy()
+            env = os.environ.copy() # for subprocesses
 
             if interpolate:
                 command = re.sub( # replace every {var} with the env value, if exists. if not, empty it
                     r'\{(\w+)\}',
-                    lambda m: env.get(m.group(1), ''),
+                    lambda m: Env.get(m.group(1), ''),
                     command
                 )
 
