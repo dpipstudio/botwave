@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import Optional
+
+from shared.env import Env
 from shared.logger import Log
 
 try:
@@ -57,8 +59,12 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
         return False
     
     # Select mode
+    envmode = Env.get("SSTV_DEFAULT_MODE")
+
     if mode_name and mode_name.lower() in MODE_MAP:
         cls = MODE_MAP[mode_name.lower()]
+    elif envmode and envmode.lower() in MODE_MAP:
+        cls = MODE_MAP[envmode.lower()]
     else:
         cls = get_best_sstv_mode(*img.size)
         if cls is None:
@@ -68,13 +74,13 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
     img = img.resize((cls.WIDTH, cls.HEIGHT))
     
     try:
-        sstv = cls(img, 44100, 16)
+        sstv = cls(img, Env.get_int("SSTV_SAMPLE_RATE", 48000), 16)
         samples = np.array(list(sstv.gen_samples())).astype(np.int16)
         
         with wave.open(wav_path, "wb") as f:
             f.setnchannels(1)
             f.setsampwidth(2)
-            f.setframerate(44100)
+            f.setframerate(Env.get_int("SSTV_SAMPLE_RATE", 48000))
             f.writeframes(samples.tobytes())
         
         Log.sstv(f"SSTV wav created {wav_path} (mode: {cls.__name__})")
