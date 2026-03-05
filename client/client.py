@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 import json
 import os
 import platform
+import queue
 import ssl
 import sys
 import tempfile
@@ -545,33 +546,44 @@ class BotWaveClient:
                     channels=channels,
                     chunk_size=1024
                 )
-
                 captured = self.stream_task
-
                 self.stream_active = True
-                
-                def sync_generator_wrapper():
-                    loop = asyncio.new_event_loop()
-                    try:
-                        async_gen = captured.__aiter__()
 
+                stream_queue = queue.Queue(maxsize=50)
+
+                async def _feed_queue():
+                    try:
+                        async for chunk in captured:
+                            if not self.stream_active:
+                                break
+                            stream_queue.put(chunk)
+                    except Exception as e:
+                        Log.error(f"Stream feed error: {e}")
+                    finally:
+                        stream_queue.put(None)  # sentinel
+
+                asyncio.get_event_loop().create_task(_feed_queue())
+
+                def sync_generator_wrapper():
+                    try:
                         while self.stream_active:
                             try:
-                                chunk = loop.run_until_complete(async_gen.__anext__())
+                                chunk = stream_queue.get(timeout=5)
+                                if chunk is None:
+                                    break
                                 yield chunk
-
-                            except StopAsyncIteration:
+                                
+                            except queue.Empty:
+                                Log.warning("Stream stalled (queue timeout)")
                                 break
-
-                    except Exception as e:
-                        Log.error(f"Stream generator error: {e}")
-
+                    except GeneratorExit:
+                        pass
                     finally:
-                        loop.close()
+                        self.stream_active = False
                 
                 self.broadcasting = True
                 self.current_file = f"stream:{token[:8]}"
-                                
+                
                 success = self.piwave.play(
                     sync_generator_wrapper(),
                     sample_rate=rate,
