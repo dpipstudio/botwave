@@ -240,13 +240,6 @@ class BotWaveCLI:
                 self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": output_wav, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
-
-            elif cmd == 'list':
-                Log.warning("'list' command is deprecated. Please use 'lf' instead.")
-                Log.warning("'list' command will be removed in future releases.")
-                directory = cmd_parts[1] if len(cmd_parts) > 1 else None
-                self.list_files(directory)
-                return True
             
             elif cmd == 'lf':
                 self.list_files()
