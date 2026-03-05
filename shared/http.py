@@ -1,10 +1,10 @@
+from aiohttp import web, ClientSession, TCPConnector, ClientTimeout
 import aiofiles
 import asyncio
 import os
 import ssl
 import time
 import uuid
-from aiohttp import web, ClientSession, TCPConnector
 from typing import Dict, Optional
 
 from shared.env import Env
@@ -399,8 +399,9 @@ class BWHTTPFileClient:
         
         try:
             connector = TCPConnector(ssl=self.ssl_context)
+            timeout = ClientTimeout(total=None, connect=30, sock_read=None)
             
-            async with ClientSession(connector=connector) as session:
+            async with ClientSession(connector=connector, timeout=timeout) as session:
                 async with session.get(url) as response:
                     if response.status != 200:
                         error_text = await response.text()
@@ -415,5 +416,5 @@ class BWHTTPFileClient:
                     Log.info("Stream ended")
                     
         except Exception as e:
-            Log.error(f"Stream error: {e}")
+            Log.error(f"Stream error: {type(e).__name__}: {e}")
             return
