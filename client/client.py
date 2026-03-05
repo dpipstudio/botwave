@@ -537,7 +537,7 @@ class BotWaveClient:
                     silent=self.silent
                 )
                 
-                stream_task = self.http_client.stream_pcm_generator(
+                self.stream_task = self.http_client.stream_pcm_generator(
                     server_host=self.http_host,
                     server_port=self.http_port,
                     token=token,
@@ -546,28 +546,32 @@ class BotWaveClient:
                     chunk_size=1024
                 )
 
+                captured = self.stream_task
+
                 self.stream_active = True
                 
                 def sync_generator_wrapper():
                     loop = asyncio.new_event_loop()
                     try:
-                        async_gen = self.stream_task.__aiter__()
+                        async_gen = captured.__aiter__()
+
                         while self.stream_active:
                             try:
                                 chunk = loop.run_until_complete(async_gen.__anext__())
                                 yield chunk
+
                             except StopAsyncIteration:
                                 break
+
                     except Exception as e:
                         Log.error(f"Stream generator error: {e}")
+
                     finally:
                         loop.close()
                 
                 self.broadcasting = True
                 self.current_file = f"stream:{token[:8]}"
-                
-                self.stream_task = stream_task
-                
+                                
                 success = self.piwave.play(
                     sync_generator_wrapper(),
                     sample_rate=rate,
@@ -662,8 +666,7 @@ class BotWaveClient:
 
             if self.stream_task:
                 try:
-                    await asyncio.sleep(0.1)
-                    await self.stream_task.aclose()
+                    self.stream_task = None
                     Log.broadcast("Stream closed")
                 except Exception as e:
                     Log.error(f"Error closing stream: {e}")
