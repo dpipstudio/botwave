@@ -33,6 +33,7 @@ from shared.env import Env
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.protomanager import ProtoManager
 from shared.pw_monitor import PWM
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
@@ -54,6 +55,7 @@ class BotWaveClient:
         # communications
         self.ws_client = None
         self.http_client = None
+        self.proto = None
         
         # broadcast
         self.piwave = None
@@ -130,7 +132,7 @@ class BotWaveClient:
             "release": platform.release()
         }
         
-        register_cmd = ProtocolParser.build_command(
+        await self.proto.fire(
             Commands.REGISTER,
             hostname=machine_info['hostname'],
             machine=machine_info['machine'],
@@ -138,15 +140,11 @@ class BotWaveClient:
             release=machine_info['release']
         )
         
-        await self.ws_client.send(register_cmd)
-        
         # if passkey, sending auth cmd
         if self.passkey:
-            auth_cmd = ProtocolParser.build_command(Commands.AUTH, self.passkey)
-            await self.ws_client.send(auth_cmd)
+            await self.proto.fire(Commands.AUTH, self.passkey)
         
-        ver_cmd = ProtocolParser.build_command(Commands.VER, PROTOCOL_VERSION)
-        await self.ws_client.send(ver_cmd)
+        await self.proto.fire(Commands.VER, PROTOCOL_VERSION)
         
         for _ in range(50):  # wait up to 5s
             if self.registered:
@@ -166,6 +164,8 @@ class BotWaveClient:
             )
             
             self.http_client = BWHTTPFileClient(ssl_context=ssl_context)
+
+            self.proto = ProtoManager(send_fn=self.ws_client.send)
             
             if not await self.connect():
                 await self.stop()
@@ -183,6 +183,15 @@ class BotWaveClient:
             await self.stop()
         
         return True
+    
+    async def reply(self, parsed: dict, command: str, **kwargs):
+        tx_id = parsed['kwargs'].get('transaction_id')
+
+        if tx_id:
+            kwargs['transaction_id'] = tx_id
+
+        msg = ProtocolParser.build_command(command, **kwargs)
+        asyncio.ensure_future(self.ws_client.send(msg))
 
     async def _handle_server_msg(self, message: str):
         try:
@@ -212,12 +221,12 @@ class BotWaveClient:
             
             # ping pong
             if command == Commands.PING:
-                await self.ws_client.send(Commands.PONG)
+                await self.proto.fire(Commands.PONG)
                 return
             
             # broadcast
             if command == Commands.START:
-                await self._handle_start_broadcast(kwargs)
+                await self._handle_start_broadcast(parsed)
                 return
             
             if command == Commands.STREAM_TOKEN:
@@ -434,12 +443,12 @@ class BotWaveClient:
 
         await self.ws_client.send(response)
 
-    async def _handle_start_broadcast(self, kwargs: dict):
+    async def _handle_start_broadcast(self, parsed: dict):
+        kwargs = parsed["kwargs"]
         filename = kwargs.get('filename')
 
         if not filename:
-            response = ProtocolParser.build_response(Commands.ERROR, "Missing filename")
-            await self.ws_client.send(response)
+            await self.proto.reply(parsed, Commands.ERROR, "Missing filename")
             return
         
         try:
@@ -448,13 +457,11 @@ class BotWaveClient:
 
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
-            response = ProtocolParser.build_response(Commands.ERROR, "Provided filename raised a security violation")
-            await self.ws_client.send(response)
+            await self.proto.reply(parsed, Commands.ERROR, "Provided filename raised a security violation")
             return
 
         if not os.path.exists(file_path):
-            response = ProtocolParser.build_response(Commands.END, f"File not found: {filename}")
-            await self.ws_client.send(response)
+            await self.proto.reply(parsed, Commands.END, f"File not found: {filename}")
             return
         
         # broadcast params
@@ -476,19 +483,16 @@ class BotWaveClient:
                     file_path, filename, frequency, ps, rt, pi, loop, delay
                 ))
                 
-                response = ProtocolParser.build_response(Commands.OK, f"Scheduled in {delay:.2f}s")
-                await self.ws_client.send(response)
+                await self.proto.reply(parsed, Commands.OK, f"Scheduled in {delay:.2f}s")
                 return
         
         # "start asap"
         started = await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
 
         if isinstance(started, Exception):
-            response = ProtocolParser.build_response(Commands.ERROR, message=str(started));
+            await self.proto.reply(parsed, Commands.ERROR, message=str(started))
         else:
-            response = ProtocolParser.build_response(Commands.OK, "Broadcast started")
-
-        await self.ws_client.send(response)
+            await self.proto.reply(parsed, Commands.OK, "Broadcast started")
 
     async def _handle_stream_token(self, kwargs: dict):
         token = kwargs.get('token')
@@ -701,6 +705,8 @@ class BotWaveClient:
                 await _cleanup()
         else:
             await _cleanup()
+
+        Log.broadcast("Stopped broadcast")
 
     async def _handle_list_files(self):
         try:
