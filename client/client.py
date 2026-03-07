@@ -448,7 +448,7 @@ class BotWaveClient:
         filename = kwargs.get('filename')
 
         if not filename:
-            await self.proto.reply(parsed, Commands.ERROR, "Missing filename")
+            await self.proto.reply(parsed, Commands.ERROR, message="Missing filename")
             return
         
         try:
@@ -457,14 +457,13 @@ class BotWaveClient:
 
         except SecurityError as e:
             Log.error(f"Invalid filename from server: {e}")
-            await self.proto.reply(parsed, Commands.ERROR, "Provided filename raised a security violation")
+            await self.proto.reply(parsed, Commands.ERROR, message="Provided filename raised a security violation")
             return
 
         if not os.path.exists(file_path):
-            await self.proto.reply(parsed, Commands.END, f"File not found: {filename}")
+            await self.proto.reply(parsed, Commands.END, message=f"File not found: {filename}")
             return
         
-        # broadcast params
         frequency = float(kwargs.get('freq', 90.0))
         ps = kwargs.get('ps', 'BotWave')
         rt = kwargs.get('rt', 'Broadcasting')
@@ -472,7 +471,6 @@ class BotWaveClient:
         loop = kwargs.get('loop', 'false').lower() == 'true'
         start_at = float(kwargs.get('start_at', 0))
         
-        # handle delayed start
         if start_at > 0:
             current_time = datetime.now(timezone.utc).timestamp()
             if start_at > current_time:
@@ -483,16 +481,15 @@ class BotWaveClient:
                     file_path, filename, frequency, ps, rt, pi, loop, delay
                 ))
                 
-                await self.proto.reply(parsed, Commands.OK, f"Scheduled in {delay:.2f}s")
+                await self.proto.reply(parsed, Commands.OK, message=f"Scheduled in {delay:.2f}s")
                 return
         
-        # "start asap"
         started = await self._start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
 
         if isinstance(started, Exception):
             await self.proto.reply(parsed, Commands.ERROR, message=str(started))
         else:
-            await self.proto.reply(parsed, Commands.OK, "Broadcast started")
+            await self.proto.reply(parsed, Commands.OK, message="Broadcast started")
 
     async def _handle_stream_token(self, kwargs: dict):
         token = kwargs.get('token')
