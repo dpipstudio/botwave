@@ -101,6 +101,7 @@
       "shared/logger.py",
       "shared/morser.py",
       "shared/protocol.py",
+      "shared/protomanager.py",
       "shared/queue.py",
       "shared/security.py",
       "shared/socket.py",
