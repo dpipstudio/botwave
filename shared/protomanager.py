@@ -103,6 +103,7 @@ class ProtoManager:
         loop = asyncio.get_event_loop()
         tx_id = gen_tx()
         future = loop.create_future()
+        future.add_done_callback(lambda f: f.exception() if f.done() and not f.cancelled() else None) # to avoid printing exceptions
 
         context = {
             'command': command,
