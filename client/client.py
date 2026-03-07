@@ -234,7 +234,7 @@ class BotWaveClient:
                 return
             
             if command == Commands.STOP:
-                await self._handle_stop_broadcast()
+                await self._handle_stop_broadcast(parsed)
                 return
             
             # files
