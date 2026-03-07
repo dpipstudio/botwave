@@ -3,7 +3,7 @@ import shlex
 import time
 from typing import Dict, Tuple
 
-PROTOCOL_VERSION = "2.0.2"
+PROTOCOL_VERSION = "2.1.0"
 
 
 class Commands:
