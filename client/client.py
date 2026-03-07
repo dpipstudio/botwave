@@ -786,7 +786,7 @@ class BotWaveClient:
             
             await self._stop_broadcast()
             
-            await self.proto.reply(parsed, Commands.OK, "Broadcast stopped")
+            await self.proto.reply(parsed, Commands.OK, message="Broadcast stopped")
             
         except Exception as e:
             Log.error(f"Stop error: {e}")
