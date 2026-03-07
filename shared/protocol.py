@@ -1,4 +1,6 @@
+import itertools
 import shlex
+import time
 from typing import Dict, Tuple
 
 PROTOCOL_VERSION = "2.0.2"
@@ -39,6 +41,12 @@ class Commands:
     REGISTER_OK = 'REGISTER_OK'
     AUTH_FAILED = 'AUTH_FAILED'
     VERSION_MISMATCH = 'VERSION_MISMATCH'
+
+__tx_counter = itertools.count(1)
+
+
+def gen_tx() -> str:
+    return f"tx_{int(time.monotonic() * 1000)}_{next(__tx_counter)}"
 
 class ProtocolParser:
     # parse protocol commands
