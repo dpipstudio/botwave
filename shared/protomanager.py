@@ -246,3 +246,11 @@ class ProtoManager:
         # any other non-error response (custom response types, etc)
         self.__safe_call(callbacks['on_ok'], parsed)
         return True
+    
+    async def reply(self, parsed: dict, command: str, **kwargs):
+        tx_id = parsed['kwargs'].get('transaction_id')
+
+        if tx_id:
+            kwargs['transaction_id'] = tx_id
+
+        await self.fire(command, **kwargs)
