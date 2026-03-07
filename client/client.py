@@ -777,22 +777,20 @@ class BotWaveClient:
             await self.ws_client.send(error)
 
 
-    async def _handle_stop_broadcast(self):
+    async def _handle_stop_broadcast(self, parsed: dict):
+
         try:
             if not self.broadcasting:
-                response = ProtocolParser.build_response(Commands.ERROR, "No broadcast running")
-                await self.ws_client.send(response)
+                await self.proto.reply(parsed, Commands.ERROR, message="No broadcast running")
                 return
             
             await self._stop_broadcast()
             
-            response = ProtocolParser.build_response(Commands.OK, "Broadcast stopped")
-            await self.ws_client.send(response)
+            await self.proto.reply(parsed, Commands.OK, "Broadcast stopped")
             
         except Exception as e:
             Log.error(f"Stop error: {e}")
-            error = ProtocolParser.build_response(Commands.ERROR, str(e))
-            await self.ws_client.send(error)
+            await self.proto.reply(parsed, Commands.ERROR, message=str(e))
 
     async def stop(self):
         if not self.running:
