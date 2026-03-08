@@ -93,7 +93,7 @@ class WSCMDH: # WebSocket Command Handler
                 self.onwsjoin_callback()
             
             async for message in websocket:
-                Log.client(f"> {message}")
+                Log.print(f"{message}", 'bright_green', icon=ip)
                 self._inject_command(message)
                 
         except asyncio.TimeoutError:
