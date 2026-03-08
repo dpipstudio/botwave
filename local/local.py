@@ -88,7 +88,7 @@ class BotWaveCLI:
     
     @property
     def ws_port(self):
-        return Env.get_int("WS_CMD_PORT")
+        return Env.get_int("REMOTE_CMD_PORT")
     
     @property
     def passkey(self):
@@ -870,7 +870,7 @@ class BotWaveCLI:
         Log.print("  Use '*' to list all environment variables", "white")
         Log.print("  Examples:", "white")
         Log.print("    get PORT", "cyan")
-        Log.print("    get PORT HOST WS_CMD_PORT", "cyan")
+        Log.print("    get PORT HOST REMOTE_CMD_PORT", "cyan")
         Log.print("    get *", "cyan")
         Log.print("")
 
@@ -919,7 +919,8 @@ def main():
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers/', help='Directory to retrieve l_ handlers from')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
-    parser.add_argument('--ws', type=int, help='WebSocket port for remote control')
+    parser.add_argument('--ws', type=int, default=None, help='DEPRECATED, use --rc')
+    parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
 
@@ -929,7 +930,7 @@ def main():
         if cli_value is not None:
             Env.set(key, str(cli_value), immutable=immutable)
 
-        elif not Env.get(key, False):
+        elif not Env.get(key, False) and default is not None:
             Env.set(key, str(default), immutable=immutable)
 
     set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
@@ -940,13 +941,12 @@ def main():
     set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
     set_prio("PROMPT_TEXT", None, "botwave › ")
     set_prio("TALK", args.talk, False)
+    set_prio("PASSKEY", args.pk, None, immutable=True)
+    set_prio("REMOTE_CMD_PORT", args.rc, None, immutable=True)
 
-
-    if args.ws and not Env.get("WS_CMD_PORT"):
-        Env.set("WS_CMD_PORT", str(args.ws), immutable=True)
-
-    if args.pk:
-        Env.set("PASSKEY", args.pk, immutable=True)
+    if args.ws:
+        Log.warning("--ws is deprecated and planned for deletion. Please use --rc instead.")
+        set_prio("REMOTE_CMD_PORT", args.ws, None, immutable=True)
 
     check_requirements(Env.get_bool("SKIP_CHECKS"))
 
@@ -954,7 +954,7 @@ def main():
     cli._setup_signal_handlers()
     cli.running = True
 
-    if Env.get("WS_CMD_PORT"):
+    if Env.get("REMOTE_CMD_PORT"):
         cli._start_websocket_server()
 
     Log.info("Type 'help' for a list of available commands")

@@ -1823,7 +1823,8 @@ def main():
     parser.add_argument('--handlers-dir', default=None, help='Directory to retrieve s_ handlers from')
     parser.add_argument('--start-asap', action=argparse.BooleanOptionalAction, default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, default=None, help='Skip system requirements checks')
-    parser.add_argument('--ws', type=int, default=None, help='WebSocket port for remote shell access')
+    parser.add_argument('--ws', type=int, default=None, help='DEPRECATED, use --rc')
+    parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in non-interactive daemon mode')
     args = parser.parse_args()
 
@@ -1831,7 +1832,7 @@ def main():
         if cli_value is not None:
             Env.set(key, str(cli_value), immutable=immutable)
 
-        elif not Env.get(key, False):
+        elif not Env.get(key, False) and default is not None:
             Env.set(key, str(default), immutable=immutable)
 
     set_prio("HOST", args.host, '0.0.0.0', immutable=True)
@@ -1840,29 +1841,25 @@ def main():
     set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
     set_prio("SKIP_CHECKS", args.skip_checks, False)
     set_prio("DAEMON", args.daemon, False, immutable=True)
+    set_prio("REMOTE_CMD_PORT", args.rc, None, immutable=True)
+    set_prio("PASSKEY", args.pk, None, immutable=True)
+    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("PROMPT_TEXT", None, "botwave › ")
+    set_prio("EXTRA_ALLOWED_DIRS", None, os.getcwd())
 
-    if args.ws and not Env.get("WS_CMD_PORT"):
-        Env.set("WS_CMD_PORT", str(args.ws), immutable=True)
+    if args.ws:
+        Log.warning("--ws is deprecated and planned for deletion. Please use --rc instead.")
+        set_prio("REMOTE_CMD_PORT", args.ws, None, immutable=True)
 
     if args.start_asap is not None:
         Env.set("WAIT_START", str(not args.start_asap))
     elif not Env.get("WAIT_START", False):
-        Env.set("WAIT_START", str(True))
-
-    if args.pk:
-        Env.set("PASSKEY", args.pk, immutable=True)
-
-    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
-    set_prio("PROMPT_TEXT", None, "botwave › ")
-
-    # for file uploads
-    if not Env.get("EXTRA_ALLOWED_DIRS"):
-        Env.set("EXTRA_ALLOWED_DIRS", os.getcwd())
+        Env.set("WAIT_START", str(True))        
 
     server = BotWaveServer()
     
     if Env.get_bool("DAEMON"):
-        if Env.get("WS_CMD_PORT"):
+        if Env.get("REMOTE_CMD_PORT"):
             threading.Thread(target=server._start_websocket_server, daemon=True).start()
             time.sleep(1)
 
@@ -1910,7 +1907,7 @@ def main():
 
             sys.exit(1)
 
-        if Env.get("WS_CMD_PORT"):
+        if Env.get("REMOTE_CMD_PORT"):
             server._start_websocket_server()
 
         if HAS_READLINE:
