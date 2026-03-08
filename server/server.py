@@ -601,7 +601,7 @@ class BotWaveServer:
             targets = cmd[1]
             img_path = cmd[2]
             mode = cmd[3] if len(cmd) > 3 else None
-            output_wav = cmd[4] if len(cmd) > 4 else os.path.join('/tmp', os.path.splitext(os.path.basename(img_path))[0] + ".wav")
+            output_wav = cmd[4] if len(cmd) > 4 else os.path.join(tempfile.gettempdir(), os.path.splitext(os.path.basename(img_path))[0] + ".wav")
             frequency = float(cmd[5]) if len(cmd) > 5 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
             ps = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PS", "BotWave")
@@ -652,7 +652,7 @@ class BotWaveServer:
             rt = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_RT", "Morse")
             pi = cmd[8] if len(cmd) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
-            output_wav = f"/tmp/morse_{uuid.uuid4().hex[:8]}.wav"
+            output_wav = os.path.join(tempfile.gettempdir(), f"morse_{uuid.uuid4().hex[:8]}.wav")
 
             Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
 
@@ -862,7 +862,7 @@ class BotWaveServer:
         extra_dirs = [d for d in extra.split(":") if d.strip()]
 
         ALLOWED_SOURCE_DIRS = [
-            "/tmp",
+            tempfile.gettempdir(),
             "/opt/BotWave",
             os.path.expanduser("~"),
             *extra_dirs
