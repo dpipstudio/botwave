@@ -1893,7 +1893,7 @@ def main():
             Log.print("|  If you do not know what is happening, please open an      |", style)
             Log.print("|  issue on GitHub:                                          |", style)
             Log.print("|                                                            |", style)
-            Log.print("|  https://github.com/dpipstudio/botwave/                    |", style)
+            Log.print("|  https://github.com/dpipstudio/botwave/issues/new/         |", style)
             Log.print("|                                                            |", style)
             Log.print("+------------------------------------------------------------+", style)
 
