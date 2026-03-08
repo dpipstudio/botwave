@@ -299,11 +299,11 @@ class BotWaveClient:
 
         if success:
             Log.success(f"Upload completed: {filename}")
-            self.proto.reply(parsed, Commands.OK, message=f"Uploaded {filename}")
+            await self.proto.reply(parsed, Commands.OK, message=f"Uploaded {filename}")
 
         else:
             Log.error(f"Upload failed: {filename}")
-            self.proto.reply(parsed, Commands.ERROR, message="Upload failed")
+            await self.proto.reply(parsed, Commands.ERROR, message="Upload failed")
 
 
     async def _handle_download_token(self, parsed: dict):

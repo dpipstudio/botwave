@@ -1038,7 +1038,7 @@ class BotWaveServer:
             token = self.http_server.create_stream_token(self.alsa.audio_generator(), self.alsa.rate, self.alsa.channels)
 
             try:
-                response = await client.proto.fire(
+                response = await client.proto.send(
                     Commands.STREAM_TOKEN,
                     token=token,
                     rate=self.alsa.rate,
