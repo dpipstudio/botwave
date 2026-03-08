@@ -1185,7 +1185,7 @@ class BotWaveServer:
                     
                     token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=target_dir)
                     
-                    await self.clients[source_client_id].proto.fire(
+                    self.clients[source_client_id].proto.execute(
                         Commands.UPLOAD_TOKEN,
                         token=token,
                         filename=filename,
@@ -1327,7 +1327,7 @@ class BotWaveServer:
                         
                         token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=temp_dir)
                         
-                        await self.clients[source_client_id].proto.fire(
+                        self.clients[source_client_id].proto.execute(
                             Commands.UPLOAD_TOKEN,
                             token=token,
                             filename=filename,
@@ -1843,7 +1843,11 @@ def main():
 
     set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
     set_prio("PROMPT_TEXT", None, "botwave › ")
-        
+
+    # for file uploads
+    if not Env.get("EXTRA_ALLOWED_DIRS"):
+        Env.set("EXTRA_ALLOWED_DIRS", os.getcwd())
+
     server = BotWaveServer()
     
     if Env.get_bool("DAEMON"):
