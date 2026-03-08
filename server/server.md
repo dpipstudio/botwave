@@ -33,6 +33,7 @@ sudo bw-server [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers
 * `--fport`: The port on which the server will listen for file transfers (default: 9921).
 * `--pk`: Optional passkey for client authentication.
 * `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+* `--handlers-dir`: The directory to retrieve s_ handlers from (default: `/opt/BotWave/handlers/`)
 * `--skip-checks`: Skip checking for protocol updates.
 * `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
 * `--daemon`: Run in daemon mode (non-interactive).
