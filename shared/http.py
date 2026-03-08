@@ -119,7 +119,7 @@ class BWHTTPFileServer:
         expected_size = token_data['size']
         
         try:
-            filepath = PathValidator.safe_join(self.upload_dir, filename)
+            filepath = PathValidator.safe_join(token_data.get('upload_dir'), filename)
         except SecurityError as e:
             Log.error(f"Path traversal attempt in upload: {e}")
             return web.Response(status=403, text="Invalid file path")
