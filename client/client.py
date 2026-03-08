@@ -796,7 +796,7 @@ def main():
 
     check()
 
-    parser = argparse.ArgumentParser(description='BotWave Client')
+    parser = argparse.ArgumentParser(prog="bw-client", description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
     parser.add_argument('--port', type=int, default=None, help='Server port')
     parser.add_argument('--fhost', help='File transfer server hostname/IP (defaults to server_host)')
