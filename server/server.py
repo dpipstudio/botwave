@@ -332,7 +332,7 @@ class BotWaveServer:
                 Log.error("VER command missing version")
                 error = ProtocolParser.build_response(
                     Commands.ERROR,
-                    "Missing protocol version"
+                    message="Missing protocol version"
                 )
                 await websocket.send(error)
                 await websocket.close()
@@ -362,6 +362,17 @@ class BotWaveServer:
                 websocket.reg_data['protocol_version']):
                 
                 await self._complete_registration(websocket)
+
+            else:
+                if not websocket.reg_data['authenticated']:
+                    Log.auth("Client did not authenticate. Perhaps a missing passkey?")
+
+                    error = ProtocolParser.build_response(
+                        Commands.AUTH_FAILED,
+                        message="Authentication required"
+                    )
+                    await websocket.send(error)
+                    await websocket.close()
             
             return
         
