@@ -18,13 +18,13 @@ BotWave Server is a program designed to manage multiple BotWave clients, allowin
 >
 > Please exercise caution and ensure you have the proper permissions, equipment, and knowledge of regulations before using BotWave for broadcasting purposes.
 
-We highly recommand using the official installer (Check the [main README](/README.md)) -- If you don't want to or are not using a Linux distribution, find how to install it by yourself. (Tip: on windows, use wsl)
+We highly recommend using the official installer (Check the [main README](/README.md)) -- If you don't want to or are not using a Linux distribution, find how to install it by yourself. (Tip: on windows, use wsl)
 
 ## Usage
 To start the BotWave Server, use the following command:
 
 ```bash
-sudo bw-server [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap] [--skip-checks] [--ws WS] [--daemon]
+sudo bw-server [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap] [--skip-checks] [--rc REMOTE_PORT] [--daemon]
 ```
 
 ### Arguments
@@ -32,7 +32,7 @@ sudo bw-server [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers
 * `--port`: The port on which the server will listen (default: 9938).
 * `--fport`: The port on which the server will listen for file transfers (default: 9921).
 * `--pk`: Optional passkey for client authentication.
-* `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+* `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
 * `--skip-checks`: Skip checking for protocol updates.
 * `--start-asap`: Starts broadcasting as soon as possible. Can cause delay between different clients broadcasts.
 * `--daemon`: Run in daemon mode (non-interactive).
@@ -106,7 +106,7 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
     - Usage: `botwave> help`  
 
 > [!WARNING]
-> 1. `upload` command support is experimental. Your client / server connexion may crash or act strange.  
+> 1. `upload` command support is experimental. Your client / server connection may crash or act strange.  
 > 2. `sstv` command modules are not installed by default. Install them with `[sudo /opt/BotWave/venv/bin/]pip install pysstv numpy pillow`
 
 ### Supported handlers

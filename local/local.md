@@ -25,8 +25,7 @@ BotWave Local Client is a standalone application designed to broadcast audio fil
 
 ### Installation
 
-
-We highly recommand using the official installer (Check the [main README](/README.md)) -- Note that if you aren't on a raspberry pi, the client is very unlikely to work.
+We highly recommend using the official installer (Check the [main README](/README.md)). Note that if you aren't on a raspberry pi, the client is very unlikely to work.
 
 ## Usage
 
@@ -41,7 +40,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-ch
 - `--handlers-dir`: The directory to retrive l_ handlers from (default: `/opt/BotWave/handlers/`)
 - `--skip-checks`: Skip system requirements checks.
 - `--daemon`: Run in daemon mode (non-interactive).
-- `--ws`: Port for the WebSocket server. You can connect remotly to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+- `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
 - `--pk`: Optional passkey for websocket authentication.
 - `--talk`: Show the debug logs.
 
@@ -50,7 +49,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-ch
 ### Example
 
 ```bash
-sudo bw-local --upload-dir /tmp/my_uploads --skip-checks --ws 9939
+sudo bw-local --upload-dir /tmp/my_uploads --skip-checks --rc 9939
 ```
 
 ### Available Commands
