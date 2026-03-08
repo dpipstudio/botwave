@@ -35,6 +35,7 @@ from shared.http import BWHTTPFileServer
 from shared.logger import Log, toggle_input
 from shared.morser import text_to_morse
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
+from shared.protomanager import ProtoManager
 from shared.queue import Queue
 from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketServer
@@ -54,6 +55,7 @@ class BotWaveClient:
     def __init__(self, client_id: str, websocket, machine_info: dict, protocol_version: str):
         self.client_id = client_id
         self.websocket = websocket
+        self.proto = ProtoManager(send_fn=websocket.send)
         self.machine_info = machine_info
         self.protocol_version = protocol_version
         self.connected_at = datetime.now()
@@ -76,8 +78,6 @@ class BotWaveServer:
         
         # state
         self.running = False
-        self.pending_responses: Dict[str, asyncio.Future] = {}
-        self.file_list_responses: Dict[str, list] = {}
         self.queue = Queue(self)
 
         # utilities
@@ -182,10 +182,6 @@ class BotWaveServer:
         if self.http_server:
             await self.http_server.stop()
             Log.server("File transfer (HTTP) server stopped")
-        
-        for future in self.pending_responses.values():
-            if not future.done():
-                future.cancel()
 
         self.tips.stop()
         
@@ -230,47 +226,21 @@ class BotWaveServer:
             
             if client_id in self.clients:
                 self.clients[client_id].last_seen = datetime.now()
+
+                if self.clients[client_id].proto.dispatch(parsed):
+                    return
             
             if command == Commands.PONG:
                 return
             
             if command == Commands.OK:
                 msg = kwargs.get('message', 'OK')
-                files_json = kwargs.get('files')
-                
-                if files_json:
-                    try:
-                        files = json.loads(files_json)
-
-                        # store file list for sync operations
-                        self.file_list_responses[client_id] = files
-
-                        if f"{client_id}_files" in self.pending_responses:
-                            self.pending_responses[f"{client_id}_files"].set_result(files)
-                            del self.pending_responses[f"{client_id}_files"]
-                            return
-
-                        for file in files:
-                            Log.file(f"  {file['name']} ({file['size']} bytes)")
-
-                    except Exception as e:
-                        Log.error(f"Error parsing files: {e}")
-                        
-                        if f"{client_id}_files" in self.pending_responses:
-                            self.pending_responses[f"{client_id}_files"].set_exception(e)
-                            del self.pending_responses[f"{client_id}_files"]
-
                 Log.success(f"{self.clients[client_id].get_display_name()}: {msg}")
                 return
             
             if command == Commands.ERROR:
                 msg = kwargs.get('message', 'Error')
                 Log.error(f"{self.clients[client_id].get_display_name()}: {msg}")
-                
-                if f"{client_id}_files" in self.pending_responses:
-                    self.pending_responses[f"{client_id}_files"].set_exception(Exception(msg))
-                    del self.pending_responses[f"{client_id}_files"]
-                
                 return
             
             if command == Commands.END:
@@ -989,19 +959,17 @@ class BotWaveServer:
 
             client = self.clients[client_id]
 
-            command = ProtocolParser.build_command(
+            await client.proto.fire(
                 Commands.DOWNLOAD_TOKEN,
                 token=token,
                 filename=filename,
                 size=filesize
             )
-
-            await self.ws_server.send(client_id, command)
-            Log.file(f"  {client.get_display_name()}: Download token sent")
+            Log.success(f"  {client.get_display_name()}: Download requested")
 
             success_count += 1
 
-        Log.broadcast(f"Upload tokens sent to {success_count}/{len(target_clients)} clients")
+        Log.info(f"Download tokens sent to {success_count}/{len(target_clients)} clients")
         return success_count > 0
     
     async def _upload_folder_contents(self, client_targets: str, folder_path: str):
@@ -1035,7 +1003,7 @@ class BotWaveServer:
             if idx < len(files):
                 await asyncio.sleep(0.5)
 
-        Log.file(f"Folder upload completed: {overall_success}/{len(files)} files")
+        Log.info(f"Folder upload completed: {overall_success}/{len(files)} files")
         return overall_success > 0
 
 
@@ -1058,7 +1026,7 @@ class BotWaveServer:
 
         Log.broadcast(f"Sending stream tokens to {len(target_clients)} client(s)...")
         
-        success_count = 0
+        results = {'streamed': [], 'failed': []}
         
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1068,28 +1036,37 @@ class BotWaveServer:
             client = self.clients[client_id]
             
             token = self.http_server.create_stream_token(self.alsa.audio_generator(), self.alsa.rate, self.alsa.channels)
-            
-            command = ProtocolParser.build_command(
-                Commands.STREAM_TOKEN,
-                token=token,
-                rate=self.alsa.rate,
-                channels=self.alsa.channels,
-                frequency=frequency,
-                ps=ps,
-                rt=rt,
-                pi=pi
-            )
-            
-            await self.ws_server.send(client_id, command)
-            
-            Log.file(f"  {client.get_display_name()}: Stream token sent")
-            
-            success_count += 1
-        
-        Log.broadcast(f"Stream tokens sent to {success_count}/{len(target_clients)} clients")
+
+            try:
+                response = await client.proto.fire(
+                    Commands.STREAM_TOKEN,
+                    token=token,
+                    rate=self.alsa.rate,
+                    channels=self.alsa.channels,
+                    frequency=frequency,
+                    ps=ps,
+                    rt=rt,
+                    pi=pi
+                )
+
+                results["streamed"].append(client_id)
+                Log.success(f"{client.get_display_name()}: {response['kwargs'].get('message', 'Success')}")
+
+            except TimeoutError:
+                results["failed"].append(client_id)
+                Log.error(f"{client.get_display_name()}")
+
+            except RuntimeError as e:
+                results["failed"].append(client_id)
+                Log.error(f"{client.get_display_name()}: {str(e)}")
+
+        Log.print("")    
+        Log.info(f"Success: {len(results['streamed'])}, Failure: {len(results['failed'])}")
+                    
         Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
         Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
-        return success_count > 0
+
+        return len(results["streamed"]) > 0
     
     async def download_file(self, client_targets: str, url: str):
         target_clients = self._parse_client_targets(client_targets)
@@ -1097,9 +1074,8 @@ class BotWaveServer:
             Log.warning("No client(s) found matching the query")
             return False
         
-        Log.broadcast(f"Requesting download from {len(target_clients)} client(s)...")
+        Log.info(f"Requesting download from {len(target_clients)} client(s)...")
         
-        # Custom command for URL download
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
@@ -1108,10 +1084,12 @@ class BotWaveServer:
             client = self.clients[client_id]
             filename = url.split('/')[-1]
             
-            command = ProtocolParser.build_command(Commands.DOWNLOAD_URL, url=url, filename=filename)
-            await self.ws_server.send(client_id, command)
+            await client.proto.fire(Commands.DOWNLOAD_URL, url=url, filename=filename)
             
-            Log.file(f"  {client.get_display_name()}: Download request sent")
+            Log.success(f"  {client.get_display_name()}: Download request sent")
+
+        Log.print("")
+        Log.info(f"Download requests sent to {len(target_clients)} client(s)")
         
         return True
     
@@ -1122,7 +1100,7 @@ class BotWaveServer:
             Log.warning("No client(s) found matching the query")
             return False
         
-        Log.broadcast(f"Removing '{filename}' from {len(target_clients)} client(s)...")
+        Log.info(f"Removing '{filename}' from {len(target_clients)} client(s)...")
         
         for client_id in target_clients:
             if client_id not in self.clients:
@@ -1131,10 +1109,9 @@ class BotWaveServer:
             
             client = self.clients[client_id]
             
-            command = ProtocolParser.build_command(Commands.REMOVE_FILE, filename=filename)
-            await self.ws_server.send(client_id, command)
+            await client.proto.fire(Commands.REMOVE_FILE, filename=filename)
             
-            Log.file(f"  {client.get_display_name()}: Remove request sent")
+            Log.success(f"  {client.get_display_name()}: Remove request sent")
         
         return True
     
@@ -1146,7 +1123,7 @@ class BotWaveServer:
         # - sync <clients> <folder/> - Sync from local folder to clients
         # - sync <folder/> <source_client> - Sync from client to local folder
         
-        Log.warning("This feature is in beta and may be unstable.")
+        Log.info("This feature is in beta and may be unstable.")
 
         is_target_folder = client_targets.endswith('/')
         is_source_folder = source.endswith('/')
@@ -1172,14 +1149,10 @@ class BotWaveServer:
             
             source_client = self.clients[source_client_id]
             
-            Log.broadcast(f"Syncing from {source_client.get_display_name()} to local folder: {target_dir}")
+            Log.info(f"Syncing from {source_client.get_display_name()} to local folder: {target_dir}")
             
             files = await self._request_file_list(source_client_id)
-            
-            if not files:
-                Log.error("Could not get file list from client")
-                return False
-            
+
             if not files:
                 Log.warning(f"{source_client.get_display_name()} has no files")
                 return True
@@ -1214,16 +1187,14 @@ class BotWaveServer:
                     old_upload_dir = self.http_server.upload_dir
                     self.http_server.upload_dir = target_dir
                     
-                    command = ProtocolParser.build_command(
+                    await self.clients[source_client_id].proto.fire(
                         Commands.UPLOAD_TOKEN,
                         token=token,
                         filename=filename,
                         size=0
                     )
                     
-                    await self.ws_server.send(source_client_id, command)
-                    
-                    Log.file(f"  [{success_count + 1}/{len(files)}] Downloading {filename}...")
+                    Log.client(f"  [{success_count + 1}/{len(files)}] Downloading {filename}...")
  
                     if not await self._wait_for_file_complete(temp_path):
                             Log.error(f"  {filename} - file never unlocked")
@@ -1240,7 +1211,7 @@ class BotWaveServer:
                             os.rename(temp_path, final_path)
                             
                             file_size = os.path.getsize(final_path)
-                            Log.success(f"  {filename} ({file_size} bytes)")
+                            Log.file(f"  {filename} saved ({file_size} bytes)")
                             success_count += 1
                         except PermissionError:
                             # If still locked, try a few more times
@@ -1252,7 +1223,7 @@ class BotWaveServer:
                                     os.rename(temp_path, final_path)
                                     
                                     file_size = os.path.getsize(final_path)
-                                    Log.success(f"  {filename} ({file_size} bytes)")
+                                    Log.file(f"  {filename} saved ({file_size} bytes)")
                                     success_count += 1
                                     break
                                 except PermissionError:
@@ -1273,7 +1244,7 @@ class BotWaveServer:
                         pass
             
             if success_count > 0:
-                Log.broadcast(f"Sync completed: {success_count}/{len(files)} files")
+                Log.info(f"Sync completed: {success_count}/{len(files)} files")
                 return True
             else:
                 Log.error("Sync failed: no files transferred")
@@ -1301,8 +1272,8 @@ class BotWaveServer:
                 Log.warning(f"No supported files found in {source_dir}")
                 return False
             
-            Log.broadcast(f"Syncing from local folder: {source_dir} ({len(supported_files)} files)")
-            Log.broadcast(f"Targets: {', '.join(target_clients)}")
+            Log.info(f"Syncing from local folder: {source_dir} ({len(supported_files)} files)")
+            Log.info(f"Targets: {', '.join(target_clients)}")
             
             # Clear files
             Log.info("Clearing existing files on targets...")
@@ -1311,10 +1282,7 @@ class BotWaveServer:
             
             success = await self._upload_folder_contents(','.join(target_clients), source_dir)
             
-            if success:
-                Log.broadcast("Sync completed successfully!")
-            else:
-                Log.error("Sync completed with errors")
+            Log.info(f"Sync completed: {len(supported_files)} file(s) uploaded")
             
             return success
         
@@ -1344,7 +1312,7 @@ class BotWaveServer:
             
             source_client = self.clients[source_client_id]
             
-            Log.broadcast(f"Syncing from {source_client.get_display_name()} to {len(target_clients)} client(s)")
+            Log.info(f"Syncing from {source_client.get_display_name()} to {len(target_clients)} client(s)")
             
             files = await self._request_file_list(source_client_id)
             
@@ -1379,16 +1347,14 @@ class BotWaveServer:
                         # FIX 1: Use size 0 instead of 1GB
                         token = self.http_server.create_upload_token(temp_filename, 0)
                         
-                        command = ProtocolParser.build_command(
+                        await self.clients[source_client_id].proto.fire(
                             Commands.UPLOAD_TOKEN,
                             token=token,
                             filename=filename,
                             size=0
                         )
                         
-                        await self.ws_server.send(source_client_id, command)
-                        
-                        Log.file(f"  Downloading {filename}...")
+                        Log.info(f"  Requesting {filename}...")
                         
                         if not await self._wait_for_file_complete(temp_path):
                             Log.error(f"  {filename} - file never unlocked")
@@ -1402,7 +1368,7 @@ class BotWaveServer:
                             await asyncio.sleep(0.2)
                             os.rename(temp_path, final_temp_path)
                             downloaded_files.append(filename)
-                            Log.success(f"  {filename}")
+                            Log.file(f"  + {filename}")
                         else:
                             Log.error(f"  {filename} - timeout")
                             self.http_server.upload_dir = old_upload_dir
@@ -1424,10 +1390,7 @@ class BotWaveServer:
                 Log.info("Uploading files to target clients...")
                 success = await self._upload_folder_contents(','.join(target_clients), temp_dir)
                 
-                if success:
-                    Log.broadcast("Sync completed successfully!")
-                else:
-                    Log.error("Sync completed with errors")
+                Log.info(f"Sync completed: {len(downloaded_files)} file(s) transferred")
                 
                 return success
                 
@@ -1468,14 +1431,6 @@ class BotWaveServer:
 
         return False
 
-
-
-    def _remove_temp_dir(self, directory: str):
-        try:
-            shutil.rmtree(directory)
-        except Exception as e:
-            Log.warning(f"Failed to remove temp directory {directory}: {e}")
-
     async def start_broadcast(self, client_targets: str, filename: str, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, trigger_manual:bool = True):
         target_clients = self._parse_client_targets(client_targets)
         
@@ -1493,38 +1448,51 @@ class BotWaveServer:
         else:
             start_at = 0
             Log.broadcast(f"Starting broadcast ASAP")
-        
-        command = ProtocolParser.build_command(
-            Commands.START,
-            filename=filename,
-            freq=frequency,
-            ps=ps,
-            rt=rt,
-            pi=pi,
-            loop='true' if loop else 'false',
-            start_at=start_at
-        )
-        
-        success_count = 0
+
         total_count = len(target_clients)
         
         Log.broadcast(f"Starting broadcast on {total_count} client(s)...")
+
+        results = {'started': [], 'failed': []}
         
         for client_id in target_clients:
             if client_id not in self.clients:
-                Log.error(f"  {client_id}: Client not found")
+                results['failed'].append((client_id, 'not found'))
                 continue
+
             
             client = self.clients[client_id]
             
-            await self.ws_server.send(client_id, command)
-            
-            Log.success(f"  {client.get_display_name()}: START command sent")
-            success_count += 1
-        
-        Log.broadcast(f"Broadcast start commands sent: {success_count}/{total_count}")
+            try: 
+                response = await client.proto.send(
+                    Commands.START,
+                    filename=filename,
+                    freq=frequency,
+                    ps=ps,
+                    rt=rt,
+                    pi=pi,
+                    loop='true' if loop else 'false',
+                    start_at=start_at
+                )
+
+                Log.success(f"{client.get_display_name()}: {response['kwargs'].get('message', 'Broadcast started')}")
+                results['started'].append(client_id)
+
+            except TimeoutError:
+                Log.error(f"{client.get_display_name()}: Response timeout")
+                results['failed'].append((client_id, 'timeout'))
+
+            except RuntimeError as e:
+                err = str(e)
+
+                Log.error(f"{client.get_display_name()}: {err}")
+                results['failed'].append((client_id, err))
+
+        Log.print("")        
+        Log.info(f"Success: {len(results['started'])}, Failure: {len(results['failed'])}")
+
         self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": filename, "BW_BROADCAST_FREQ": str(frequency)})
-        return success_count > 0
+        return len(results['started']) > 0
 
     async def stop_broadcast(self, client_targets: str):
 
@@ -1535,26 +1503,38 @@ class BotWaveServer:
         if not target_clients:
             Log.warning("No client(s) found matching the query")
             return False
-        
-        command = ProtocolParser.build_command(Commands.STOP)
-        
-        success_count = 0
+                
+        results = {'stopped': [], 'failed': []}
         
         for client_id in target_clients:
             if client_id not in self.clients:
-                Log.error(f"  {client_id}: Client not found")
+                results['failed'].append((client_id, 'not found'))
                 continue
+
             
             client = self.clients[client_id]
             
-            await self.ws_server.send(client_id, command)
-            
-            Log.success(f"  {client.get_display_name()}: STOP command sent")
-            success_count += 1
-        
-        Log.broadcast(f"Broadcast stop commands sent: {success_count}/{len(target_clients)}")
+            try: 
+                response = await client.proto.send(Commands.STOP)
+
+                Log.success(f"{client.get_display_name()}: {response['kwargs'].get('message', 'Broadcast stopped')}")
+                results['stopped'].append(client_id)
+
+            except TimeoutError:
+                Log.error(f"{client.get_display_name()}: Response timeout")
+                results['failed'].append((client_id, 'timeout'))
+
+            except RuntimeError as e:
+                err = str(e)
+
+                Log.error(f"{client.get_display_name()}: {err}")
+                results['failed'].append((client_id, err))
+
+        Log.print("")        
+        Log.info(f"Success: {len(results['stopped'])}, Failure: {len(results['failed'])}")
+
         self.onstop_handlers()
-        return success_count > 0
+        return len(results['stopped']) > 0
 
     async def kick_client(self, client_targets: str, reason: str = "Kicked by administrator"):
         target_clients = self._parse_client_targets(client_targets)
@@ -1564,15 +1544,17 @@ class BotWaveServer:
         
         Log.client(f"Kicking {len(target_clients)} client(s)...")
         
+        results = {'kicked': [], 'failed': []}
+
         for client_id in target_clients:
             if client_id not in self.clients:
                 Log.error(f"  {client_id}: Client not found")
+                results["failed"].append(client_id)
                 continue
             
             client = self.clients[client_id]
             
-            command = ProtocolParser.build_command(Commands.KICK, reason=reason)
-            await self.ws_server.send(client_id, command)
+            await client.proto.fire(Commands.KICK, reason=reason)
             
             try:
                 await client.websocket.close()
@@ -1581,10 +1563,12 @@ class BotWaveServer:
             
             del self.clients[client_id]
             
+            results["kicked"].append(client_id)
             Log.success(f"  {client.get_display_name()}: Kicked - {reason}")
+
         
-        Log.client(f"Kick completed")
-        # self.ondisconnect_handlers() (is alr handeled by self.ws_server)
+        Log.info(f"Success: {len(results['kicked'])}, Failure: {len(results['failed'])}")
+        # self.ondisconnect_handlers() (is alr handled by self.ws_server)
         return True
 
     def _parse_client_targets(self, targets: str) -> List[str]:
@@ -1622,78 +1606,50 @@ class BotWaveServer:
             Log.warning("No client(s) found matching the query")
             return False
         
-        Log.info(f"Listing files from {len(target_clients)} client(s)")
-        
-        futures = {}
+        results = {'fetched': [], 'failed': []}
+
         for client_id in target_clients:
             if client_id not in self.clients:
-                Log.error(f"  {client_id}: Client not found")
                 continue
-            
-            future = asyncio.Future()
-            futures[client_id] = future
-            self.pending_responses[f"{client_id}_files"] = future
-            
+
             client = self.clients[client_id]
-            command = ProtocolParser.build_command(Commands.LIST_FILES)
-            await self.ws_server.send(client_id, command)
-        
-        for client_id, future in futures.items():
+
             try:
-                files = await asyncio.wait_for(future, timeout=10.0)
-                client = self.clients[client_id]
-                
+                response = await client.proto.send(Commands.LIST_FILES, timeout=10.0)
+                files = json.loads(response['kwargs'].get('files', '[]'))
+
                 Log.success(f"  {client.get_display_name()}: {len(files)} file(s)")
-                
-                if files:
-                    for file_info in files:
-                        filename = file_info.get('name', 'unknown')
-                        size = file_info.get('size', 0)
-                        
-                        if size < 1024:
-                            size_str = f"{size} B"
-                        elif size < 1024 * 1024:
-                            size_str = f"{size / 1024:.1f} KB"
-                        else:
-                            size_str = f"{size / (1024 * 1024):.1f} MB"
-                        
-                        Log.print(f"    {filename} ({size_str})", 'white')
-                else:
-                    Log.print("    No files found", 'yellow')
-                    
-            except asyncio.TimeoutError:
-                Log.error(f"  {client_id}: Timeout waiting for response")
-            except Exception as e:
-                Log.error(f"  {client_id}: Error - {e}")
-        
+
+                for f in files:
+                    size = f.get('size', 0)
+                    if size < 1024: size_str = f"{size} B"
+                    elif size < 1024 * 1024: size_str = f"{size / 1024:.1f} KB"
+                    else: size_str = f"{size / (1024 * 1024):.1f} MB"
+                    Log.print(f"    {f['name']} ({size_str})", 'white')
+
+                results['fetched'].append(client_id)
+
+            except TimeoutError:
+                Log.error(f"  {client_id}: Timeout")
+                results['failed'].append(client_id)
+
+            except RuntimeError as e:
+                Log.error(f"  {client_id}: {e}")
+                results['failed'].append(client_id)
+
+        Log.print("")
+        Log.info(f"Success: {len(results['fetched'])}, Failure: {len(results['failed'])}")
+
         return True
     
-    async def _request_file_list(self, client_id: str, timeout: int = 30) -> Optional[list]:
-        
+    async def _request_file_list(self, client_id: str, timeout: int = 30):
         if client_id not in self.clients:
             Log.error(f"Client {client_id} not found")
             return None
         
-        future = asyncio.Future()
-        self.pending_responses[f"{client_id}_files"] = future
-        
-        if client_id in self.file_list_responses:
-            del self.file_list_responses[client_id]
-        
-        command = ProtocolParser.build_command(Commands.LIST_FILES)
-        await self.ws_server.send(client_id, command)
-        
-        Log.file(f"Waiting for file list from {client_id}...")
-        
         try:
-            files = await asyncio.wait_for(future, timeout=timeout)
-            return files
-        
-        except asyncio.TimeoutError:
-            Log.error(f"Timeout waiting for file list from {client_id}")
-            if f"{client_id}_files" in self.pending_responses:
-                del self.pending_responses[f"{client_id}_files"]
-            return None
+            response = await self.clients[client_id].proto.send(Commands.LIST_FILES, timeout=float(timeout))
+            return json.loads(response['kwargs'].get('files', '[]'))
         
         except Exception as e:
             Log.error(f"Error getting file list: {e}")
