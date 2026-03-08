@@ -1,5 +1,4 @@
 import asyncio
-import json
 import threading
 from typing import Callable, Set, Optional
 import websockets
@@ -68,21 +67,18 @@ class WSCMDH: # WebSocket Command Handler
     async def _handle_client(self, websocket):
         try:
             # auth
-            auth_message = await asyncio.wait_for(websocket.recv(), timeout=5)
-            
-            try:
-                auth_data = json.loads(auth_message)
-            except json.JSONDecodeError:
-                await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
-                await websocket.close()
-                return
-            
-            if auth_data.get("type") != "auth" or (self.passkey and auth_data.get("passkey") != self.passkey):
-                await websocket.send(json.dumps({"type": "auth_failed", "message": "Invalid passkey"}))
-                await websocket.close()
-                return
-            
-            await websocket.send(json.dumps({"type": "auth_ok", "message": "Authenticated"}))
+            if self.passkey:
+                await websocket.send("Password: ")
+                password = await asyncio.wait_for(websocket.recv(), timeout=Env.get_int("WS_CMD_PWD_TIMEOUT", 60))
+                
+                if password.strip() != self.passkey:
+                    await websocket.send("Authentication failed.")
+                    await websocket.close()
+                    return
+                
+            await websocket.send("OK.")
+            await websocket.send(Env.get("WS_CMD_WELCOME", ""))
+
             self.ws_clients.add(websocket)
             Log.ws_clients = self.ws_clients
             
@@ -94,7 +90,7 @@ class WSCMDH: # WebSocket Command Handler
                 self._inject_command(message)
                 
         except asyncio.TimeoutError:
-            await websocket.send(json.dumps({"type": "error", "message": "Authentication timeout"}))
+            await websocket.send("Authentication timeout.")
             await websocket.close()
         finally:
             self.ws_clients.discard(websocket)
