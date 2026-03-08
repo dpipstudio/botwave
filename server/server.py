@@ -1182,12 +1182,8 @@ class BotWaveServer:
                     except SecurityError as e:
                         Log.error(f"Path traversal attempt in sync: {e}")
                         continue
-                                    
-                    # FIX 1: Use size 0 instead of 1GB for upload token
-                    token = self.http_server.create_upload_token(temp_filename, 0)
                     
-                    old_upload_dir = self.http_server.upload_dir
-                    self.http_server.upload_dir = target_dir
+                    token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=target_dir)
                     
                     await self.clients[source_client_id].proto.fire(
                         Commands.UPLOAD_TOKEN,
@@ -1197,16 +1193,12 @@ class BotWaveServer:
                     )
                     
                     Log.client(f"  [{success_count + 1}/{len(files)}] Downloading {filename}...")
- 
+
                     if not await self._wait_for_file_complete(temp_path):
-                            Log.error(f"  {filename} - file never unlocked")
-                            continue
-                    
-                    self.http_server.upload_dir = old_upload_dir
+                        Log.error(f"  {filename} - file never unlocked")
+                        continue
                     
                     if os.path.exists(temp_path):
-                        
-                        # FIX 3: More robust file replacement
                         try:
                             if os.path.exists(final_path):
                                 os.remove(final_path)
@@ -1216,7 +1208,6 @@ class BotWaveServer:
                             Log.file(f"  {filename} saved ({file_size} bytes)")
                             success_count += 1
                         except PermissionError:
-                            # If still locked, try a few more times
                             for retry in range(3):
                                 await asyncio.sleep(0.5)
                                 try:
@@ -1233,12 +1224,9 @@ class BotWaveServer:
                                         raise
                     else:
                         Log.error(f"  {filename} - timeout")
-                        self.http_server.upload_dir = old_upload_dir
-                    
+                
                 except Exception as e:
                     Log.error(f"  {filename} - {e}")
-                    self.http_server.upload_dir = old_upload_dir
-                    # Clean up temp file if it exists
                     try:
                         if os.path.exists(temp_path):
                             os.remove(temp_path)
@@ -1277,7 +1265,6 @@ class BotWaveServer:
             Log.info(f"Syncing from local folder: {source_dir} ({len(supported_files)} files)")
             Log.info(f"Targets: {', '.join(target_clients)}")
             
-            # Clear files
             Log.info("Clearing existing files on targets...")
             await self.remove_file(','.join(target_clients), "all")
             await asyncio.sleep(1)
@@ -1322,12 +1309,7 @@ class BotWaveServer:
                 Log.error("Could not get file list from source client")
                 return False
             
-            if not files:
-                Log.warning(f"Source client has no files")
-                return True
-            
             Log.info(f"Found {len(files)} files on source")
-            
             Log.info("Downloading files from source client...")
             
             temp_dir = tempfile.mkdtemp(prefix='botwave_sync_')
@@ -1343,11 +1325,7 @@ class BotWaveServer:
                         temp_path = os.path.join(temp_dir, temp_filename)
                         final_temp_path = os.path.join(temp_dir, filename)
                         
-                        old_upload_dir = self.http_server.upload_dir
-                        self.http_server.upload_dir = temp_dir
-                        
-                        # FIX 1: Use size 0 instead of 1GB
-                        token = self.http_server.create_upload_token(temp_filename, 0)
+                        token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=temp_dir)
                         
                         await self.clients[source_client_id].proto.fire(
                             Commands.UPLOAD_TOKEN,
@@ -1361,23 +1339,17 @@ class BotWaveServer:
                         if not await self._wait_for_file_complete(temp_path):
                             Log.error(f"  {filename} - file never unlocked")
                             continue
-
-                        
-                        self.http_server.upload_dir = old_upload_dir
                         
                         if os.path.exists(temp_path):
-                            # FIX 2: Add delay before rename
                             await asyncio.sleep(0.2)
                             os.rename(temp_path, final_temp_path)
                             downloaded_files.append(filename)
                             Log.file(f"  + {filename}")
                         else:
                             Log.error(f"  {filename} - timeout")
-                            self.http_server.upload_dir = old_upload_dir
-                        
+                    
                     except Exception as e:
                         Log.error(f"  {filename} - {e}")
-                        self.http_server.upload_dir = old_upload_dir
                 
                 if not downloaded_files:
                     Log.error("Failed to download any files from source")
