@@ -14,6 +14,44 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.0-morelia ---=
+### What Changed
+- **ProtoManager**: Commands sent to clients now wait for a confirmed response before reporting success or failure. You'll see clearer `Success: N, Failure: N` summaries after `start`, `stop`, `lf`, and `stream` operations instead of just "token sent".
+- **Protocol version**: Protocol `v2.1.0` comes with this release. It requires the client to send back a `transaction_id` kwarg if provided.
+- **Better auth feedback**: If a client connects with a wrong or missing passkey, it now gets a proper error and disconnects cleanly instead of hanging (see #49).
+- **Remote CLI** (`--rc`): The `--ws` flag has been renamed to `--rc`. It still works but will print a deprecation warning. The authentication flow has also changed: instead of a JSON handshake, you'll now just be prompted for a password, making it usable from any WebSocket-capable tool. The `REMOTE_CMD_WELCOME` environment message has been added.
+- **Bug fixes**: Fixed a stream broadcast issue that could cause it to stall or crash due to event loop conflicts. Fixed auth failures not exiting the registration loop cleanly on the client side.
+- **Miscellaneous**: Additional minor fixes have also been implemented.
+
+### Breaking Changes
+
+> [!CAUTION]
+> The following environment variables have been renamed. Your `.env` files and startup scripts will need to be updated:
+
+| Old | New |
+|---|---|
+| `WS_CMD_PORT` | `REMOTE_CMD_PORT` |
+| `WS_BLOCKED_CMD` | `REMOTE_BLOCKED_CMD` |
+| `ALLOW_WS_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` | `ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` |
+
+The [`Advanced/Using environment variables`](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables) wiki page has also been updated.
+
+### Additional Notes
+> [!CAUTION]
+> The `list` command has been removed in this release. Use `lf` instead.
+
+> [!NOTE]
+> The `--ws` flag is deprecated and will be removed in a future release. Please migrate to `--rc`.
+
+### Related
+- #48
+- #49
+- #50
+- #51
+- #52
+
+=--- END ---=
+
 =--- v1.0.14-psydrax ---=
 ### What Changed
 - **Environment variables**: BotWave now supports configuration via environment variables and `.env` files for ports, paths, RDS defaults, ALSA settings, and more. See the [wiki](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables) for the full list.
