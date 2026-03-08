@@ -45,11 +45,12 @@ class BWHTTPFileServer:
     def token_lifetime(self):
         return Env.get_int("FTOKEN_LIFETIME", 300)
     
-    def create_upload_token(self, filename: str, size: int) -> str:
+    def create_upload_token(self, filename: str, size: int, upload_dir: str = None) -> str:
         token = uuid.uuid4().hex
         self.upload_tokens[token] = {
             'filename': filename,
             'size': size,
+            'upload_dir': upload_dir or self.upload_dir,
             'expires': time.time() + self.token_lifetime
         }
         return token
@@ -118,7 +119,7 @@ class BWHTTPFileServer:
         expected_size = token_data['size']
         
         try:
-            filepath = PathValidator.safe_join(self.upload_dir, filename)
+            filepath = PathValidator.safe_join(token_data.get('upload_dir'), filename)
         except SecurityError as e:
             Log.error(f"Path traversal attempt in upload: {e}")
             return web.Response(status=403, text="Invalid file path")

@@ -200,7 +200,10 @@ class BotWaveClient:
                 return
 
             if command == Commands.AUTH_FAILED:
-                Log.error("Authentication failed: Invalid passkey")
+                self.registered = True # to exit the wait-for-register loop
+                reason = kwargs.get('message', 'Invalid passkey')
+                Log.error(f"Authentication failed: {reason}")
+
                 await self.stop()
                 return
 

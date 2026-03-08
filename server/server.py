@@ -332,7 +332,7 @@ class BotWaveServer:
                 Log.error("VER command missing version")
                 error = ProtocolParser.build_response(
                     Commands.ERROR,
-                    "Missing protocol version"
+                    message="Missing protocol version"
                 )
                 await websocket.send(error)
                 await websocket.close()
@@ -362,6 +362,17 @@ class BotWaveServer:
                 websocket.reg_data['protocol_version']):
                 
                 await self._complete_registration(websocket)
+
+            else:
+                if not websocket.reg_data['authenticated']:
+                    Log.auth("Client did not authenticate. Perhaps a missing passkey?")
+
+                    error = ProtocolParser.build_response(
+                        Commands.AUTH_FAILED,
+                        message="Authentication required"
+                    )
+                    await websocket.send(error)
+                    await websocket.close()
             
             return
         
@@ -601,7 +612,7 @@ class BotWaveServer:
             targets = cmd[1]
             img_path = cmd[2]
             mode = cmd[3] if len(cmd) > 3 else None
-            output_wav = cmd[4] if len(cmd) > 4 else os.path.splitext(os.path.basename(img_path))[0] + ".wav"
+            output_wav = cmd[4] if len(cmd) > 4 else os.path.join(tempfile.gettempdir(), os.path.splitext(os.path.basename(img_path))[0] + ".wav")
             frequency = float(cmd[5]) if len(cmd) > 5 else Env.get_int("DEFAULT_FREQ", 90)
             loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
             ps = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PS", "BotWave")
@@ -652,7 +663,7 @@ class BotWaveServer:
             rt = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_RT", "Morse")
             pi = cmd[8] if len(cmd) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
-            output_wav = f"morse_{uuid.uuid4().hex[:8]}.wav"
+            output_wav = os.path.join(tempfile.gettempdir(), f"morse_{uuid.uuid4().hex[:8]}.wav")
 
             Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
 
@@ -862,7 +873,7 @@ class BotWaveServer:
         extra_dirs = [d for d in extra.split(":") if d.strip()]
 
         ALLOWED_SOURCE_DIRS = [
-            "/tmp",
+            tempfile.gettempdir(),
             "/opt/BotWave",
             os.path.expanduser("~"),
             *extra_dirs
@@ -1182,14 +1193,10 @@ class BotWaveServer:
                     except SecurityError as e:
                         Log.error(f"Path traversal attempt in sync: {e}")
                         continue
-                                    
-                    # FIX 1: Use size 0 instead of 1GB for upload token
-                    token = self.http_server.create_upload_token(temp_filename, 0)
                     
-                    old_upload_dir = self.http_server.upload_dir
-                    self.http_server.upload_dir = target_dir
+                    token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=target_dir)
                     
-                    await self.clients[source_client_id].proto.fire(
+                    self.clients[source_client_id].proto.execute(
                         Commands.UPLOAD_TOKEN,
                         token=token,
                         filename=filename,
@@ -1197,16 +1204,12 @@ class BotWaveServer:
                     )
                     
                     Log.client(f"  [{success_count + 1}/{len(files)}] Downloading {filename}...")
- 
+
                     if not await self._wait_for_file_complete(temp_path):
-                            Log.error(f"  {filename} - file never unlocked")
-                            continue
-                    
-                    self.http_server.upload_dir = old_upload_dir
+                        Log.error(f"  {filename} - file never unlocked")
+                        continue
                     
                     if os.path.exists(temp_path):
-                        
-                        # FIX 3: More robust file replacement
                         try:
                             if os.path.exists(final_path):
                                 os.remove(final_path)
@@ -1216,7 +1219,6 @@ class BotWaveServer:
                             Log.file(f"  {filename} saved ({file_size} bytes)")
                             success_count += 1
                         except PermissionError:
-                            # If still locked, try a few more times
                             for retry in range(3):
                                 await asyncio.sleep(0.5)
                                 try:
@@ -1233,12 +1235,9 @@ class BotWaveServer:
                                         raise
                     else:
                         Log.error(f"  {filename} - timeout")
-                        self.http_server.upload_dir = old_upload_dir
-                    
+                
                 except Exception as e:
                     Log.error(f"  {filename} - {e}")
-                    self.http_server.upload_dir = old_upload_dir
-                    # Clean up temp file if it exists
                     try:
                         if os.path.exists(temp_path):
                             os.remove(temp_path)
@@ -1277,7 +1276,6 @@ class BotWaveServer:
             Log.info(f"Syncing from local folder: {source_dir} ({len(supported_files)} files)")
             Log.info(f"Targets: {', '.join(target_clients)}")
             
-            # Clear files
             Log.info("Clearing existing files on targets...")
             await self.remove_file(','.join(target_clients), "all")
             await asyncio.sleep(1)
@@ -1322,12 +1320,7 @@ class BotWaveServer:
                 Log.error("Could not get file list from source client")
                 return False
             
-            if not files:
-                Log.warning(f"Source client has no files")
-                return True
-            
             Log.info(f"Found {len(files)} files on source")
-            
             Log.info("Downloading files from source client...")
             
             temp_dir = tempfile.mkdtemp(prefix='botwave_sync_')
@@ -1343,13 +1336,9 @@ class BotWaveServer:
                         temp_path = os.path.join(temp_dir, temp_filename)
                         final_temp_path = os.path.join(temp_dir, filename)
                         
-                        old_upload_dir = self.http_server.upload_dir
-                        self.http_server.upload_dir = temp_dir
+                        token = self.http_server.create_upload_token(temp_filename, 0, upload_dir=temp_dir)
                         
-                        # FIX 1: Use size 0 instead of 1GB
-                        token = self.http_server.create_upload_token(temp_filename, 0)
-                        
-                        await self.clients[source_client_id].proto.fire(
+                        self.clients[source_client_id].proto.execute(
                             Commands.UPLOAD_TOKEN,
                             token=token,
                             filename=filename,
@@ -1361,23 +1350,17 @@ class BotWaveServer:
                         if not await self._wait_for_file_complete(temp_path):
                             Log.error(f"  {filename} - file never unlocked")
                             continue
-
-                        
-                        self.http_server.upload_dir = old_upload_dir
                         
                         if os.path.exists(temp_path):
-                            # FIX 2: Add delay before rename
                             await asyncio.sleep(0.2)
                             os.rename(temp_path, final_temp_path)
                             downloaded_files.append(filename)
                             Log.file(f"  + {filename}")
                         else:
                             Log.error(f"  {filename} - timeout")
-                            self.http_server.upload_dir = old_upload_dir
-                        
+                    
                     except Exception as e:
                         Log.error(f"  {filename} - {e}")
-                        self.http_server.upload_dir = old_upload_dir
                 
                 if not downloaded_files:
                     Log.error("Failed to download any files from source")
@@ -1871,7 +1854,11 @@ def main():
 
     set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
     set_prio("PROMPT_TEXT", None, "botwave › ")
-        
+
+    # for file uploads
+    if not Env.get("EXTRA_ALLOWED_DIRS"):
+        Env.set("EXTRA_ALLOWED_DIRS", os.getcwd())
+
     server = BotWaveServer()
     
     if Env.get_bool("DAEMON"):
@@ -1917,7 +1904,7 @@ def main():
             Log.print("|  If you do not know what is happening, please open an      |", style)
             Log.print("|  issue on GitHub:                                          |", style)
             Log.print("|                                                            |", style)
-            Log.print("|  https://github.com/dpipstudio/botwave/                    |", style)
+            Log.print("|  https://github.com/dpipstudio/botwave/issues/new/         |", style)
             Log.print("|                                                            |", style)
             Log.print("+------------------------------------------------------------+", style)
 
