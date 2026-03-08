@@ -224,11 +224,13 @@ class BotWaveServer:
                 await self._handle_registration(command, args, kwargs, websocket)
                 return
             
-            if client_id in self.clients:
-                self.clients[client_id].last_seen = datetime.now()
+            if client_id not in self.clients:
+                return
 
-                if self.clients[client_id].proto.dispatch(parsed):
-                    return
+            self.clients[client_id].last_seen = datetime.now()
+
+            if self.clients[client_id].proto.dispatch(parsed):
+                return
             
             if command == Commands.PONG:
                 return

@@ -345,11 +345,11 @@ class BotWaveClient:
 
         if success:
             Log.success(f"Download completed: {filename}")
-            self.proto.reply(parsed, Commands.OK, message=f"Downloaded {filename}")
+            await self.proto.reply(parsed, Commands.OK, message=f"Downloaded {filename}")
 
         else:
             Log.error(f"Download failed: {filename}")
-            self.proto.reply(parsed, Commands.ERROR, message="Download failed")
+            await self.proto.reply(parsed, Commands.ERROR, message="Download failed")
 
 
     async def _handle_download_url(self, parsed: dict):
@@ -712,7 +712,7 @@ class BotWaveClient:
             Log.file(f"Listed {len(wav_files)} files")
 
         except Exception as e:
-            await self.proto.reply(parsed, Commands.ERROR, str(e))
+            await self.proto.reply(parsed, Commands.ERROR, message=str(e))
 
     async def _handle_remove_file(self, parsed: dict):
         kwargs = parsed["kwargs"]
