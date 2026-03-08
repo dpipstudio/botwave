@@ -67,15 +67,22 @@ class WSCMDH: # WebSocket Command Handler
     async def _handle_client(self, websocket):
         try:
             # auth
+            ip = websocket.remote_address[0] or "unknown"
+
+            Log.client(f"Remote CLI connection attempt from {ip}")
+
             if self.passkey:
                 await websocket.send("Password: ")
                 password = await asyncio.wait_for(websocket.recv(), timeout=Env.get_int("REMOTE_CMD_PWD_TIMEOUT", 60))
                 
                 if password.strip() != self.passkey:
+                    Log.auth(f"{ip} failed to authenticate")
+
                     await websocket.send("Authentication failed.")
                     await websocket.close()
                     return
                 
+            Log.auth(f"{ip} connected")
             await websocket.send("OK.")
             await websocket.send(Env.get("REMOTE_CMD_WELCOME", ""))
 
@@ -86,7 +93,7 @@ class WSCMDH: # WebSocket Command Handler
                 self.onwsjoin_callback()
             
             async for message in websocket:
-                Log.client(f"WebSocket CMD: {message}")
+                Log.client(f"> {message}")
                 self._inject_command(message)
                 
         except asyncio.TimeoutError:
