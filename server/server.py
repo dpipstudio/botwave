@@ -1815,7 +1815,7 @@ def main():
 
     check() # from shared.cat !
     
-    parser = argparse.ArgumentParser(description='BotWave Server')
+    parser = argparse.ArgumentParser(prog="bw-server", description='BotWave Server')
     parser.add_argument('--host', default=None, help='Server host')
     parser.add_argument('--port', type=int, default=None, help='Server port')
     parser.add_argument('--fport', type=int, default=None, help='File transfer (HTTP) port')
