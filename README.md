@@ -174,10 +174,13 @@ sudo bw-local
 <summary><code>Local client options</code></summary>
 <hr>
 <pre>
-Usage: sudo bw-local [OPTIONS]
+usage: bw-local [-h] [--upload-dir UPLOAD_DIR]
+                [--handlers-dir HANDLERS_DIR]
+                [--skip-checks | --no-skip-checks]
+                [--daemon | --no-daemon] [--rc RC]
+                [--pk PK] [--talk | --no-talk]
 
-sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR]
-                [--skip-checks] [--daemon] [--ws WS] [--pk PK]
+BotWave Standalone CLI Client
 
 options:
   -h, --help            show this help message and exit
@@ -185,10 +188,14 @@ options:
                         Directory to store uploaded files
   --handlers-dir HANDLERS_DIR
                         Directory to retrieve l_ handlers from
-  --skip-checks         Skip system requirements checks
-  --daemon              Run in daemon mode (non-interactive)
-  --ws WS               WebSocket port for remote control
-  --pk PK               Optional passkey for WebSocket authentication
+  --skip-checks, --no-skip-checks
+                        Skip system requirements checks
+  --daemon, --no-daemon
+                        Run in daemon mode (non-interactive)
+  --rc RC               Remote CLI port for remote management
+  --pk PK               Optional passkey for WebSocket
+                        authentication
+  --talk, --no-talk     Show output logs
 </pre>
 <hr>
 </details>
@@ -265,11 +272,13 @@ bw-server
 <summary><code>Server options</code></summary>
 <hr>
 <pre>
-Usage: bw-server [OPTIONS]
+usage: bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT]
+                 [--pk PK] [--handlers-dir HANDLERS_DIR]
+                 [--start-asap | --no-start-asap]
+                 [--skip-checks | --no-skip-checks]
+                 [--rc RC] [--daemon | --no-daemon]
 
-bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK]
-                 [--handlers-dir HANDLERS_DIR] [--start-asap] [--ws WS]
-                 [--daemon]
+BotWave Server
 
 options:
   -h, --help            show this help message and exit
@@ -279,9 +288,14 @@ options:
   --pk PK               Passkey for authentication
   --handlers-dir HANDLERS_DIR
                         Directory to retrieve s_ handlers from
-  --start-asap          Start broadcasts immediately (may cause client desync)
-  --ws WS               WebSocket port for remote shell access
-  --daemon              Run in non-interactive daemon mode
+  --start-asap, --no-start-asap
+                        Start broadcasts immediately (may cause
+                        client desync)
+  --skip-checks, --no-skip-checks
+                        Skip system requirements checks
+  --rc RC               Remote CLI port for remote management
+  --daemon, --no-daemon
+                        Run in non-interactive daemon mode
 </pre>
 <hr>
 </details>
@@ -300,10 +314,10 @@ sudo bw-client 192.168.1.10    # replace with your server's IP
 <summary><code>Client options</code></summary>
 <hr>
 <pre>
-Usage: sudo bw-client [OPTIONS]
-
-sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT]
-                 [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks]
+usage: bw-client [-h] [--port PORT] [--fhost FHOST]
+                 [--fport FPORT] [--upload-dir UPLOAD_DIR]
+                 [--pk PK] [--skip-checks | --no-skip-checks]
+                 [--talk | --no-talk]
                  [server_host]
 
 positional arguments:
@@ -312,12 +326,16 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --port PORT           Server port
-  --fhost FHOST         File transfer server hostname/IP (defaults to server_host)
+  --fhost FHOST         File transfer server hostname/IP
+                        (defaults to server_host)
   --fport FPORT         File transfer (HTTP) port
   --upload-dir UPLOAD_DIR
                         Uploads directory
   --pk PK               Passkey for authentication
-  --skip-checks         Skip update and requirements checks
+  --skip-checks, --no-skip-checks
+                        Skip update and requirements checks
+  --talk, --no-talk     Makes PiWave (broadcast manager) output
+                        logs visible.
 </pre>
 <hr>
 </details>

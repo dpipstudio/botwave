@@ -31,7 +31,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 
 To start the BotWave Local Client, use the following command:
 ```bash
-sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--ws PORT] [--pk PASSKEY] [--talk]
+sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--rc REMOTE_PORT] [--pk PASSKEY] [--talk]
 ```
 
 ### Arguments
