@@ -28,7 +28,7 @@ class WSCMDH: # WebSocket Command Handler
 
     @property
     def port(self):
-        return Env.get_int("WS_CMD_PORT")
+        return Env.get_int("REMOTE_CMD_PORT")
     
     @property
     def passkey(self):
@@ -36,11 +36,11 @@ class WSCMDH: # WebSocket Command Handler
     
     @property
     def allow_commands(self):
-        return Env.get_bool("ALLOW_WS_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING")
+        return Env.get_bool("ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING")
     
     @property
     def blocked_commands(self):
-        blocked_env = Env.get("WS_BLOCKED_CMD")
+        blocked_env = Env.get("REMOTE_BLOCKED_CMD")
         if blocked_env:
             return [cmd for cmd in blocked_env.split(",") if cmd.strip()]
 
@@ -61,7 +61,7 @@ class WSCMDH: # WebSocket Command Handler
     
     async def _serve(self):
         async with websockets.serve(self._handle_client, self.host, self.port):
-            Log.server(f"WebSocket server started on {self.host}:{self.port}")
+            Log.server(f"Remote CLI server started on ws://{self.host}:{self.port}")
             await asyncio.Future()  # run forever
     
     async def _handle_client(self, websocket):
@@ -69,7 +69,7 @@ class WSCMDH: # WebSocket Command Handler
             # auth
             if self.passkey:
                 await websocket.send("Password: ")
-                password = await asyncio.wait_for(websocket.recv(), timeout=Env.get_int("WS_CMD_PWD_TIMEOUT", 60))
+                password = await asyncio.wait_for(websocket.recv(), timeout=Env.get_int("REMOTE_CMD_PWD_TIMEOUT", 60))
                 
                 if password.strip() != self.passkey:
                     await websocket.send("Authentication failed.")
@@ -77,7 +77,7 @@ class WSCMDH: # WebSocket Command Handler
                     return
                 
             await websocket.send("OK.")
-            await websocket.send(Env.get("WS_CMD_WELCOME", ""))
+            await websocket.send(Env.get("REMOTE_CMD_WELCOME", ""))
 
             self.ws_clients.add(websocket)
             Log.ws_clients = self.ws_clients
