@@ -1,85 +1,86 @@
-# BotWave WebSocket API Documentation
+# BotWave Remote CLI Documentation
 
 ## Overview
 
-The BotWave WebSocket API allows clients to connect to the BotWave server to send and receive real-time messages. This API is used for monitoring and controlling the BotWave server remotely.
+The BotWave Remote CLI allows clients to connect to the BotWave server to send commands and receive real-time output. It can be used to control a running BotWave instance from any WebSocket-capable tool.
 
 ## Connection Details
 
-- **WebSocket URL**: `ws://<server_host>:<ws_port>`
+- **WebSocket URL**: `ws://<server_host>:<rc_port>`
   - `<server_host>`: The hostname or IP address of the BotWave server.
-  - `<ws_port>`: The WebSocket port specified when starting the BotWave server.
+  - `<rc_port>`: The Remote CLI port specified via `--rc` when starting the server.
 
 ## Authentication
 
-Clients must authenticate with the server upon connecting. If a passkey is set on the server, it must be provided during authentication.
+If a passkey is set on the server, you will be prompted for it immediately after connecting. The server sends a plain-text prompt and expects a plain-text response.
 
-### Authentication Message
+### Flow
 
-```json
-{
-  "type": "auth",
-  "passkey": "your_passkey"
-}
+```
+Server: "Password: "
+Client: "your_passkey"
+Server: "OK."
+Server: "<welcome message, if set>"
 ```
 
-### Authentication Response
+If no passkey is configured, the server skips straight to `OK.` and you can start sending commands immediately.
 
-- **Success**:
-  ```json
-  {
-    "type": "auth_ok",
-    "message": "Authenticated"
-  }
-  ```
+### Failure
 
-- **Failure**:
-  ```json
-  {
-    "type": "auth_failed",
-    "message": "Invalid passkey"
-  }
-  ```
+If the wrong password is provided, the server responds with a plain-text message and closes the connection:
+
+```
+Authentication failed.
+```
+
+### Timeout
+
+If the client does not respond to the password prompt within the configured timeout (default: 60 seconds, configurable via `REMOTE_CMD_TIMEOUT`), the connection is closed:
+
+```
+Authentication timeout.
+```
 
 ## Commands
 
-Once authenticated, clients can send commands to the server. Commands are the same than the CLI version.
+Once authenticated, send any BotWave CLI command as a plain-text message. Commands are the same as the interactive shell.
 
 ## Example Usage
 
-Here is an example of how to connect and interact with the BotWave WebSocket API using JavaScript:
+### Using `websocat`
+
+```bash
+websocat ws://localhost:9936
+# When prompted:
+# Password: your_passkey
+# Then type commands normally
+```
+
+### Using JavaScript
 
 ```javascript
 const WebSocket = require('ws');
 const ws = new WebSocket('ws://localhost:9936');
 
-ws.on('open', function open() {
-  ws.send(JSON.stringify({
-    type: 'auth',
-    passkey: 'your_passkey'
-  }));
-});
-
 ws.on('message', function incoming(data) {
-  const message = JSON.parse(data);
-  console.log('Received:', message);
+  console.log(data);
 
-  if (message.type === 'auth_ok') {
-    ws.send('list');
+  if (data === 'Password: ') {
+    ws.send('your_passkey');
+  }
+
+  if (data === 'OK.') {
+    ws.send('lf');
   }
 });
 ```
 
-## Error Handling
+## Environment Variables
 
-- **Authentication Timeout**: If the client does not authenticate within 5 seconds, the connection will be closed.
-- **Invalid Commands**: If an invalid command is sent, an error message will be returned.
-
-Example error message:
-
-```json
-{
-  "type": "error",
-  "message": "Unknown command: invalid_command"
-}
-```
+| Variable | Description | Default |
+|---|---|---|
+| `REMOTE_CMD_PORT` | Port for the Remote CLI server | — |
+| `REMOTE_BLOCKED_CMD` | Comma-separated list of blocked commands | — |
+| `ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` | Bypass the blocked commands list | `false` |
+| `REMOTE_CMD_PWD_TIMEOUT` | Seconds to wait for password input | `60` |
+| `REMOTE_CMD_WELCOME` | Message sent to clients after successful auth | — |
