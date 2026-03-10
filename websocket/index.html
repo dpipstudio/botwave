@@ -1,28 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!--=============== FAVICON ===============-->
   <link rel="shortcut icon" href="https://images.dpip.lol/bw-logo-r.png" type="image/png">
   <link rel="icon" href="https://images.dpip.lol/bw-logo-r.png" type="image/png">
-  <title>BotWave - WebSocket terminal</title>
-  <meta property="og:title" content="BotWave - WebSocket terminal">
-  <meta property="og:description"
-    content="Connect to your BotWave Server via websocket !">
+  <title>BotWave - Remote CLI</title>
+  <meta property="og:title" content="BotWave - Remote CLI">
+  <meta property="og:description" content="Connect to your BotWave Server remotely.">
   <meta property="og:image" content="https://images.dpip.lol/bw-logo-r.png">
   <meta property="og:url" content="https://botwave.dpip.lol">
-  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="theme-color" content="#0d0d0d" />
   <meta property="og:type" content="website" />
   <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
-  <meta name='description'
-    content='Connect to your BotWave Server via websocket !'>
+  <meta name='description' content='Connect to your BotWave Server remotely.'>
   <meta name='subject' content='FM Broadcasting'>
   <meta name='copyright' content='botwave.dpip.lol'>
   <meta name='language' content='EN'>
-  <meta name='topic' content='BotWave'>
-  <meta name='Classification' content='BotWave'>
   <meta name='author' content='douxx.tech, douxx@douxx.tech'>
   <meta name='designer' content='douxx.tech'>
   <meta name='reply-to' content='admin@dpip.lol'>
@@ -30,158 +25,205 @@
   <meta name='identifier-URL' content='https://botwave.dpip.lol'>
   <meta name='distribution' content='Global'>
   <meta name='rating' content='General'>
-  <meta name='target' content='all'>
-  <meta name="news_keywords" content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
   <meta name='og:site_name' content="Your RPI FM Network">
   <meta name='og:email' content='admin@dpip.lol'>
 
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.42.1/css/jquery.terminal.min.css" />
   <style>
     body {
       margin: 0;
-      background: #111;
-      color: #0f0;
-      font-family: monospace;
-      font-size: 14px;
+      background: #0d0d0d;
     }
-    #terminal {
-      padding: 1em;
-      height: 90vh;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    #input-wrapper {
-      display: flex;
-      padding: 0.5em;
-      background: #000;
-    }
-    #prompt {
-      color: #0f0;
-    }
-    #commandInput {
-      background: #000;
-      color: #0f0;
-      border: none;
-      outline: none;
-      flex: 1;
-      font-family: monospace;
-      font-size: 14px;
+
+    .terminal {
+      height: 100vh;
     }
   </style>
 </head>
+
 <body>
-  <div id="terminal">Welcome to BotWave Terminal</div>
-  <div id="input-wrapper">
-    <span id="prompt">botwave ›</span>&nbsp;
-    <input type="text" id="commandInput" autocomplete="off" />
-  </div>
+  <div id="term"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.42.1/js/jquery.terminal.min.js"></script>
   <script>
-    let ws;
-    const terminal = document.getElementById("terminal");
-    const input = document.getElementById("commandInput");
+    (function () {
+      // tag -> hex color, mirrored from bwsc client.js
+      const TAG_COLORS = {
+        OK: '#92ff92',
+        ERR: '#ff6b6b',
+        WARN: '#f5c542',
+        INFO: '#4dc3ff',
+        CLIENT: '#cc88ff',
+        SERVER: '#00d7d7',
+        FILE: '#f5c542',
+        BCAST: '#ff88ff',
+        VER: '#4dc3ff',
+        UPD: '#f5c542',
+        HNDL: '#cc88ff',
+        SSTV: '#6699ff',
+        AUTH: '#6699cc',
+        TLS: '#ff6b6b',
+        MORSE: '#cc88ff',
+        ALSA: '#ff88ff',
+        QUEUE: '#f5c542',
+        CVRT: '#4dc3ff',
+      };
 
-    function appendToTerminal(text) {
-      terminal.textContent += "\n" + text;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+      function colorize(text, hex) {
+        return `[[;${hex};]${$.terminal.escape_brackets(text)}]`;
+      }
 
-    function printInputAsLine(value) {
-      const line = document.createElement("div");
-      line.textContent = "\nbotwave › " + value;
-      terminal.appendChild(line);
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+      function formatLine(line) {
+        // thanks claude
 
-    function waitForInput(promptText) {
-      return new Promise((resolve) => {
-        appendToTerminal(promptText);
-        input.value = "";
-        input.focus();
+        // extract leading whitespace before any processing
+        const indentMatch = line.match(/^(\s*)(.*)/);
+        const spaces = indentMatch[1].length;
+        const indent = '\u00a0'.repeat(spaces);
+        line = indentMatch[2];
 
-        function handleInput(e) {
-          if (e.key === "Enter") {
-            const val = input.value.trim();
-            printInputAsLine(val);
-            input.value = "";
-            input.removeEventListener("keydown", handleInput);
-            resolve(val);
+        // tagged messages: [OK] some text
+        const tagMatch = line.match(/^\[([A-Z]+)\]\s(.*)$/);
+        if (tagMatch) {
+          const [, tag, content] = tagMatch;
+          const hex = TAG_COLORS[tag];
+          if (hex) {
+            return indent + `${colorize(`[${tag}]`, hex)} ${$.terminal.escape_brackets(content)}`;
           }
         }
 
-        input.addEventListener("keydown", handleInput);
+        // separator lines
+        if (line.includes('─')) {
+          return colorize(indent + line, '#4466aa');
+        }
+
+        // client info fields
+        if (line.match(/^(Hostname|Address|Protocol|Connected|Last seen|Machine):/)) {
+          return colorize(indent + line, '#00d7d7');
+        }
+
+        // ID lines
+        if (line.match(/^ID:\s/)) {
+          return colorize(indent + line, '#ffffff');
+        }
+
+        // anything with indent — wrap in a neutral color span to preserve spaces
+        if (indent) {
+          return colorize(indent + line, '#999999');
+        }
+
+        return $.terminal.escape_brackets(line);
+      }
+
+      let ws = null;
+      let state = 'idle';
+      let pendingPw = false;
+
+      const term = $('#term').terminal(function (input) {
+
+        if (pendingPw) {
+          pendingPw = false;
+          term.set_mask(false);
+          ws.send(input);
+          return;
+        }
+
+        if (state === 'connected' && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(input);
+        }
+
+      }, {
+        greetings: 'BotWave Remote CLI\n',
+        prompt: '$ ',
+        history: true,
       });
-    }
 
-    async function promptConnect() {
-      const url = await waitForInput("Please enter WebSocket URL (e.g., ws://localhost:8080):");
-      const passkey = await waitForInput("Please enter Passkey (leave blank if none):");
+      function connect(url) {
+        try {
+          ws = new WebSocket(url);
+        } catch (e) {
+          term.error('Invalid URL: ' + url);
+          promptUrl();
+          return;
+        }
 
-      try {
-        ws = new WebSocket(url);
-
-        ws.onopen = () => {
-          appendToTerminal("Connected to " + url);
-          const authPayload = {
-            type: "auth",
-            ...(passkey ? { passkey } : {})
-          };
-          ws.send(JSON.stringify(authPayload));
+        ws.onopen = function () {
+          state = 'awaiting_password';
         };
 
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === "auth_ok") {
-              appendToTerminal("[AUTH] ✅ Authenticated");
+        ws.onmessage = function (ev) {
+          const data = ev.data;
+          const trimmed = data.trim();
 
-              appendToTerminal("[AUTH] Connected devices:");
-              ws.send('list');
-              startCommandLoop(); // enable main terminal
-            } else if (data.type === "auth_failed") {
-              appendToTerminal("[AUTH] ❌ " + data.message);
-              ws.close();
-            } else if (data.type === "error") {
-              appendToTerminal("[ERROR] " + data.message);
-            } else {
-              appendToTerminal(event.data);
+          if (state === 'awaiting_password') {
+            if (trimmed.startsWith('Password:')) {
+              term.set_prompt('password: ');
+              term.set_mask(true);
+              pendingPw = true;
+              return;
             }
-          } catch {
-            appendToTerminal("[WS] " + event.data);
+
+            if (trimmed === 'Authentication failed.' || trimmed === 'Authentication timeout.') {
+              term.error(trimmed);
+              ws.close();
+              return;
+            }
+
+            if (trimmed === 'OK.') {
+              state = 'connected';
+              term.set_prompt('botwave › ');
+              return;
+            }
+
+            // welcome message after OK or no-password server
+            if (trimmed) term.echo(formatLine(trimmed));
+
+            state = 'connected';
+            term.set_prompt('botwave › ');
+            return;
+          }
+
+          // normal output, split on newlines, preserve indentation
+          data.split('\n').forEach(function (line) {
+            if (!line.trim()) return;
+            if (/\[\d{1,3}(\.\d{1,3}){3}\]/.test(line)) return; // ignore client log echoes
+
+            term.echo(formatLine(line), { formatters: false });
+          });
+        };
+
+        ws.onerror = function () {
+          term.error('Connection failed. If on botwave.dpip.lol, your server needs wss:// (via a reverse proxy). Otherwise save this page and open it locally.');
+          state = 'idle';
+          ws = null;
+          term.set_prompt('$ ');
+          promptUrl();
+        };
+
+        ws.onclose = function () {
+          if (state !== 'idle') {
+            term.echo('Disconnected :|');
+            state = 'idle';
+            ws = null;
+            term.set_prompt('$ ');
+            promptUrl();
           }
         };
-
-        ws.onerror = () => {
-          appendToTerminal("[ERROR] Could not connect or bad server. Check if your websocket is wss://");
-        };
-
-        ws.onclose = () => {
-          appendToTerminal("[DISCONNECTED]");
-        };
-
-      } catch (err) {
-        appendToTerminal("[ERROR] Failed to connect. If you're running directly from botwave.dpip.lol/websocket, make sure your websocket is running on wss (eg. via a reverse proxy). If not, save this website (Ctrl + S) and open it from the file.");
       }
-    }
 
-    function startCommandLoop() {
-      input.focus();
-      input.addEventListener("keydown", handleCommandInput);
-    }
-
-    function handleCommandInput(e) {
-      if (e.key === "Enter") {
-        const cmd = input.value.trim();
-        if (cmd && ws?.readyState === WebSocket.OPEN) {
-          ws.send(cmd);
-          printInputAsLine(cmd);
-        }
-        input.value = "";
+      function promptUrl() {
+        term.read('Remote CLI URL (e.g. ws://192.168.1.1:9939): ').then(function (url) {
+          url = url.trim();
+          if (!url) { promptUrl(); return; }
+          connect(url);
+        });
       }
-    }
 
-    window.onload = () => {
-      promptConnect();
-    };
+      promptUrl();
+    })();
   </script>
 </body>
+
 </html>
