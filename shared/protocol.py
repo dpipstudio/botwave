@@ -28,10 +28,11 @@ class Commands:
     DOWNLOAD_URL = 'DOWNLOAD_URL'
     STREAM_TOKEN = 'STREAM_TOKEN'
     
-    # client managment
+    # client management
     KICK = 'KICK'
+    UPDATE = 'UPDATE'
     
-    # file managment
+    # file management
     LIST_FILES = 'LIST_FILES'
     REMOVE_FILE = 'REMOVE_FILE'
     
