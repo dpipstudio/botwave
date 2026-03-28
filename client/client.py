@@ -179,6 +179,7 @@ class BotWaveClient:
 
         except KeyboardInterrupt:
             Log.warning("Shutting down...")
+
         finally:
             await self.stop()
 
@@ -288,6 +289,9 @@ class BotWaveClient:
             Log.warning(f"Unknown command: {command}")
             await self.proto.reply(parsed, Commands.ERROR, message=f"Unknown command: {command}. Perhaps a protocol mismatch ?")
 
+        except RuntimeError:
+            raise # pass it down to exit cleanly 
+
         except Exception as e:
             Log.error(f"Error handling message: {e}")
 
@@ -332,8 +336,9 @@ class BotWaveClient:
 
         await self.proto.reply(parsed, Commands.OK, message="Update successful, restarting...")
         Log.update("Update finished, exiting...")
+        
         await self.stop()
-        sys.exit(0)
+        await self.ws_client.disconnect()
 
     async def _handle_upload_token(self, parsed: dict):
         kwargs = parsed["kwargs"]
