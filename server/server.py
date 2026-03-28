@@ -525,6 +525,14 @@ class BotWaveServer:
             await self.kick_client(cmd[1], reason)
             return
         
+        elif command_name == 'update':
+            if len(cmd) < 2:
+                Log.error("Usage: update <targets> [latest|<version>]")
+                return
+            update_args = ' '.join(cmd[2:]) if len(cmd) > 2 else ''
+            await self.send_update(cmd[1], update_args)
+            return
+        
         # FILE MANAGEMENT 
         elif command_name == 'upload':
             if len(cmd) < 3:
@@ -1555,6 +1563,39 @@ class BotWaveServer:
         Log.info(f"Success: {len(results['kicked'])}, Failure: {len(results['failed'])}")
         # self.ondisconnect_handlers() (is alr handled by self.ws_server)
         return True
+    
+    async def send_update(self, targets: str, specifier: str = ''):
+        client_ids = self._parse_client_targets(targets)
+
+        if not client_ids:
+            Log.warning(f"No clients found for target: {targets}")
+            return
+
+        # preprocess specifier into bw-update args
+        args = ''
+        if specifier:
+            s = specifier.strip().lower()
+            if s == 'latest':
+                args = '--latest'
+            elif re.match(r'^v?\d+\.\d+\.\d+', s):
+                args = f'--to {specifier.strip()}'
+            else:
+                Log.error(f"Invalid version specifier: '{specifier}'. Use 'latest' or a version like 'v1.0.0-oak'")
+                return
+
+        for client_id in client_ids:
+            client = self.clients.get(client_id)
+            if not client:
+                continue
+
+            Log.update(f"Sending update request to {client.get_display_name()}...")
+
+            await client.proto.send(
+                Commands.UPDATE,
+                args=args,
+                expected=(Commands.OK, Commands.ERROR),
+                timeout=300.0
+            )
 
     def _parse_client_targets(self, targets: str) -> List[str]:
         if not targets:
@@ -1749,6 +1790,15 @@ class BotWaveServer:
         Log.print("  Kick client(s) from the server", "white")
         Log.print("  Example:", "white")
         Log.print("    kick pi1 Maintenance", "cyan")
+        Log.print("")
+
+        Log.print("update <targets> [latest|<version>]", "bright_green")
+        Log.print("  Request client(s) to update and restart", "white")
+        Log.print("  Omit version to update to the latest release", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    update all", "cyan")
+        Log.print("    update pi1 latest", "cyan")
+        Log.print("    update all v1.0.0-oak", "cyan")
         Log.print("")
 
         Log.print("handlers [filename]", "bright_green")
