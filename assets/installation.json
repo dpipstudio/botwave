@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.1-malosma",
+      "commit": "c52952ce5548da43b3bc6e0922249a6e200be0ba"
+    },
+    {
       "codename": "v1.1.0-morelia",
       "commit": "51ef0ede024ab3482ba2923087d86fc8492853f0"
     },
