@@ -14,6 +14,20 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.1-malosma ---=
+### What Changed
+- **New `update` command**: The server-only `update` command allows you to update the target clients without requiring to manually log into the machine.
+- **Remote CLI** (`--rc`): The deprecated `--ws` flag has been fully removed from both the server and local client. If you were still using it, switch to `--rc`.
+- **Protocol version**: Bumped to `2.1.1`.
+- **Miscellaneous**: Minor comment typo fixes.
+
+### Breaking Changes
+
+> [!CAUTION]
+> The `--ws` flag has been removed. `--rc` is now the only supported option.
+
+=--- END ---=
+
 =--- v1.1.0-morelia ---=
 ### What Changed
 - **ProtoManager**: Commands sent to clients now wait for a confirmed response before reporting success or failure. You'll see clearer `Success: N, Failure: N` summaries after `start`, `stop`, `lf`, and `stream` operations instead of just "token sent".
