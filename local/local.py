@@ -919,7 +919,6 @@ def main():
     parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers/', help='Directory to retrieve l_ handlers from')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
-    parser.add_argument('--ws', type=int, default=None, help='DEPRECATED, use --rc')
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
@@ -943,10 +942,6 @@ def main():
     set_prio("TALK", args.talk, False)
     set_prio("PASSKEY", args.pk, None, immutable=True)
     set_prio("REMOTE_CMD_PORT", args.rc, None, immutable=True)
-
-    if args.ws:
-        Log.warning("--ws is deprecated and planned for deletion. Please use --rc instead.")
-        set_prio("REMOTE_CMD_PORT", args.ws, None, immutable=True)
 
     check_requirements(Env.get_bool("SKIP_CHECKS"))
 

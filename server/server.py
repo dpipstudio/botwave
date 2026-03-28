@@ -1892,7 +1892,6 @@ def main():
     parser.add_argument('--handlers-dir', default=None, help='Directory to retrieve s_ handlers from')
     parser.add_argument('--start-asap', action=argparse.BooleanOptionalAction, default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, default=None, help='Skip system requirements checks')
-    parser.add_argument('--ws', type=int, default=None, help='DEPRECATED, use --rc')
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in non-interactive daemon mode')
     args = parser.parse_args()
@@ -1915,10 +1914,6 @@ def main():
     set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
     set_prio("PROMPT_TEXT", None, "botwave › ")
     set_prio("EXTRA_ALLOWED_DIRS", None, os.getcwd())
-
-    if args.ws:
-        Log.warning("--ws is deprecated and planned for deletion. Please use --rc instead.")
-        set_prio("REMOTE_CMD_PORT", args.ws, None, immutable=True)
 
     if args.start_asap is not None:
         Env.set("WAIT_START", str(not args.start_asap))
