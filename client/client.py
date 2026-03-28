@@ -179,6 +179,7 @@ class BotWaveClient:
 
         except KeyboardInterrupt:
             Log.warning("Shutting down...")
+
         finally:
             await self.stop()
 
@@ -197,6 +198,27 @@ class BotWaveClient:
                 self.client_id = kwargs.get('client_id', 'unknown')
                 self.registered = True
                 Log.success(f"Registered as: {self.client_id}")
+
+                # check if we previously exited to update
+                update_flag = os.path.join(tempfile.gettempdir(), ".bw_updated")
+
+                if os.path.exists(update_flag):
+                    try:
+                        release_file = "/opt/BotWave/last_release"
+                        if os.path.exists(release_file):
+                            with open(release_file, "r") as f:
+                                ver = f.read().strip()
+
+                            message = f"Updated to {ver}"
+
+                        else:
+                            message = "Updated successfully"
+
+                        await self.proto.fire(Commands.OK, message=message)
+                        os.remove(update_flag)
+
+                    except Exception:
+                        pass
                 return
 
             if command == Commands.AUTH_FAILED:
@@ -254,6 +276,10 @@ class BotWaveClient:
                 return
 
             # client management
+            if command == Commands.UPDATE:
+                await self._handle_update(parsed)
+                return
+
             if command == Commands.KICK:
                 reason = kwargs.get('reason', 'Kicked by administrator')
                 Log.warning(f"Kicked: {reason}")
@@ -263,8 +289,56 @@ class BotWaveClient:
             Log.warning(f"Unknown command: {command}")
             await self.proto.reply(parsed, Commands.ERROR, message=f"Unknown command: {command}. Perhaps a protocol mismatch ?")
 
+        except RuntimeError:
+            raise # pass it down to exit cleanly 
+
         except Exception as e:
             Log.error(f"Error handling message: {e}")
+
+    async def _handle_update(self, parsed: dict):
+        kwargs = parsed['kwargs']
+        update_args = kwargs.get('args', '')
+
+        Log.update("Update requested by server, preparing...")
+
+        if self.broadcasting:
+            await self._stop_broadcast()
+
+        Log.update(f"Running bw-update {update_args}".strip())
+
+        try:
+            proc = await asyncio.create_subprocess_shell(
+                f"bw-update {update_args}".strip(),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT
+            )
+            stdout, _ = await proc.communicate()
+
+            if stdout:
+                for line in stdout.decode(errors='replace').splitlines():
+                    Log.update(line)
+
+            if proc.returncode != 0:
+                Log.error(f"bw-update exited with code {proc.returncode}")
+                await self.proto.reply(parsed, Commands.ERROR, message=f"Update failed (exit code {proc.returncode})")
+                return
+
+        except Exception as e:
+            Log.error(f"Update failed: {e}")
+            await self.proto.reply(parsed, Commands.ERROR, message=f"Update failed: {e}")
+            return
+
+        try:
+            with open(os.path.join(tempfile.gettempdir(), ".bw_updated"), "w") as f:
+                f.write("1")
+        except Exception:
+            pass
+
+        await self.proto.reply(parsed, Commands.OK, message="Update successful, restarting...")
+        Log.update("Update finished, exiting...")
+        
+        await self.stop()
+        await self.ws_client.disconnect()
 
     async def _handle_upload_token(self, parsed: dict):
         kwargs = parsed["kwargs"]
