@@ -1565,11 +1565,10 @@ class BotWaveServer:
         return True
     
     async def send_update(self, targets: str, specifier: str = ''):
-        client_ids = self._parse_client_targets(targets)
-
-        if not client_ids:
-            Log.warning(f"No clients found for target: {targets}")
-            return
+        target_clients = self._parse_client_targets(targets)
+        if not target_clients:
+            Log.warning("No client(s) found matching the query")
+            return False
 
         # preprocess specifier into bw-update args
         args = ''
@@ -1581,21 +1580,41 @@ class BotWaveServer:
                 args = f'--to {specifier.strip()}'
             else:
                 Log.error(f"Invalid version specifier: '{specifier}'. Use 'latest' or a version like 'v1.0.0-oak'")
-                return
+                return False
 
-        for client_id in client_ids:
-            client = self.clients.get(client_id)
-            if not client:
+        Log.update(f"Sending update request to {len(target_clients)} client(s)...")
+
+        results = {'updated': [], 'failed': []}
+
+        for client_id in target_clients:
+            if client_id not in self.clients:
+                Log.error(f"  {client_id}: Client not found")
                 continue
 
-            Log.update(f"Sending update request to {client.get_display_name()}...")
+            client = self.clients[client_id]
 
-            await client.proto.send(
-                Commands.UPDATE,
-                args=args,
-                expected=(Commands.OK, Commands.ERROR),
-                timeout=300.0
-            )
+            try:
+                response = await client.proto.send(
+                    Commands.UPDATE,
+                    args=args,
+                    expected=(Commands.OK, Commands.ERROR),
+                    timeout=300.0
+                )
+                results['updated'].append(client_id)
+                Log.success(f"  {client.get_display_name()}: {response['kwargs'].get('message', 'OK')}")
+
+            except TimeoutError:
+                results['failed'].append(client_id)
+                Log.error(f"  {client.get_display_name()}: Timed out")
+
+            except RuntimeError as e:
+                results['failed'].append(client_id)
+                Log.error(f"  {client.get_display_name()}: {e}")
+
+        Log.print("")
+        Log.info(f"Success: {len(results['updated'])}, Failure: {len(results['failed'])}")
+
+        return len(results['updated']) > 0
 
     def _parse_client_targets(self, targets: str) -> List[str]:
         if not targets:
