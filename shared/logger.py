@@ -105,7 +105,7 @@ class Logger(DLogger):
                     pass
 
     def __redact_ipv4(self, text: str) -> str:
-        return re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '[REDACTED]', text)
+        return re.sub(r'(?:\d{1,3}\.){3}\d{1,3}', '[REDACTED]', text)
 
 def toggle_input(is_active=None):
     global INPUT_ACTIVE
