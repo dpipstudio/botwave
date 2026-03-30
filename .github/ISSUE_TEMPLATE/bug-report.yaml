@@ -28,8 +28,8 @@ body:
     id: os
     attributes:
       label: OS
-      description: e.g. macOS, Ubuntu
-      placeholder: macOS 14.0
+      description: e.g. Debian, Ubuntu
+      placeholder: Debian 12
     validations:
       required: true
   - type: input
