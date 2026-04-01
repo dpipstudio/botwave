@@ -60,7 +60,7 @@ class CCMD:
 
                         if line.startswith("#"):
                             # remove '#' and after char
-                            help_lines.append(line[1:].lstrip())
+                            help_lines.append(line[1:])
                         else:
                             help_lines.append(line)
 

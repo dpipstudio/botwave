@@ -29,6 +29,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from shared.alsa import Alsa
 from shared.cat import check
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
+from shared.custom_cmds import CCMD
 from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
@@ -83,6 +84,7 @@ class BotWaveServer:
         # utilities
         self.tips = TipEngine()
         self.handlers_executor = HandlerExecutor(self._execute_command)
+        self.custom_commands = CCMD(is_server=True)
         self.last_argv = []
 
         self.loop = None
@@ -1872,6 +1874,17 @@ class BotWaveServer:
         Log.print("  Example:", "white")
         Log.print("    help", "cyan")
         Log.print("")
+
+        custom_commands = self.custom_commands.get_all()
+
+        if custom_commands:
+            Log.section("Custom Commands")
+
+            for command in custom_commands:
+                for line in command["help"]:
+                    Log.print(line, style="yellow")
+
+                Log.print("")
 
         Log.section("Targets")
 
