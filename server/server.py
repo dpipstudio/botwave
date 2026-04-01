@@ -748,8 +748,17 @@ class BotWaveServer:
             return
         
         else:
-            Log.error(f"Unknown command: {command_name}")
-            return
+
+            if self.custom_commands.exists(command_name):
+                self.handlers_executor.execute_handler(
+                    os.path.join(self.handlers_dir, f"{command_name}.cmd"),
+                    self._build_context(),
+                    silent=True
+                    )
+                
+            else:
+
+                Log.error(f"Unknown command: {command_name}")
         
 
     def _build_context(self, client_id: str = None) -> dict:
