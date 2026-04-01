@@ -464,8 +464,9 @@ Got a question or an issue?
 
 
 ## Mentions
-**BotWave mentions**: Here are some posts that talk about BotWave. Thanks to their creators!
+**BotWave mentions**: Here are some posts/websites that talk about BotWave. Thanks to their creators!
 <div align="center">
+<a href="https://nightrunners.eu/" target="_blank"><img src="assets/readme_assets/badge_nightrunners.svg" alt="nigthrunners"/></a>
 <a href="https://tom-doerr.github.io/repo_posts/" target="_blank"><img src="assets/readme_assets/badge_repository_showcase.svg" alt="tom-doerr"/></a>
 <a href="https://peppe8o.com/?s=botwave" target="_blank"><img src="assets/readme_assets/badge_peppe8o.svg" alt="peppe8o"/></a>
 <a href="https://hn.algolia.com/?dateRange=all&page=0&prefix=true&query=botwave%20radio&sort=byDate&type=all" target="_blank"><img src="assets/readme_assets/badge_hacker_news.svg" alt="show hn"/></a>
