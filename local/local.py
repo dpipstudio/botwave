@@ -111,7 +111,10 @@ class BotWaveCLI:
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
             command_executor=self._execute_command,
+            onwsjoin_callback=self.onwsjoin_handlers,
+            onwsleave_callback=self.onwsleave_handlers
         )
+        
         self.ws_handler.start()
 
     def _execute_command(self, command: str, interpolate: bool = True):
@@ -367,6 +370,12 @@ class BotWaveCLI:
 
     def onstop_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onstop", dir_path, context or self._build_context())
+
+    def onwsjoin_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onwsjoin", dir_path, context or self._build_context())
+
+    def onwsleave_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onwsleave", dir_path, context or self._build_context())
 
 
     def run_shell_command(self, command: str, env: Dict[str, str] = None):
