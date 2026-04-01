@@ -30,6 +30,7 @@ from shared.alsa import Alsa
 from shared.bw_custom import BWCustom
 from shared.cat import check
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.custom_cmds import CCMD
 from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.logger import Log, toggle_input
@@ -65,6 +66,7 @@ class BotWaveCLI:
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
         self.handlers_executor = HandlerExecutor(self._execute_command)
+        self.custom_commands = CCMD(is_server=False)
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
         self.queue = Queue(client_instance=self, is_local=True)
@@ -332,8 +334,19 @@ class BotWaveCLI:
                 return False
             
             else:
-                Log.error(f"Unknown command: {cmd}")
-                return True
+            
+                if self.custom_commands.exists(cmd):
+                    self.handlers_executor.execute_handler(
+                        os.path.join(self.handlers_dir, f"{cmd}.cmd"),
+                        self._build_context(),
+                        silent=True
+                        )
+                    
+                    return True
+                    
+                else:
+                    Log.error(f"Unknown command: {cmd}")
+                    return True
             
         except Exception as e:
             Log.error(f"Error executing command '{command}': {e}")
@@ -907,6 +920,17 @@ class BotWaveCLI:
         Log.print("  Example:", "white")
         Log.print("    help", "cyan")
         Log.print("")
+
+        custom_commands = self.custom_commands.get_all()
+
+        if custom_commands:
+            Log.section("Custom Commands")
+
+            for command in custom_commands:
+                for line in command["help"]:
+                    Log.print(line, style="yellow")
+
+                Log.print("")
 
 
     def stop(self):
