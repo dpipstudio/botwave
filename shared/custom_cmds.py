@@ -62,7 +62,7 @@ class CCMD:
                             # remove '#' and after char
                             help_lines.append(line[1:])
                         else:
-                            help_lines.append(line)
+                            break
 
                     matches.append({
                         "name": cmd_name,
