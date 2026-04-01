@@ -72,6 +72,7 @@ class BotWaveCLI:
         self.ws_clients = set()
         self.ws_loop = None
         self.tips = TipEngine(is_server=False)
+        self.last_argv = []
 
         self.tips.start()
 
@@ -110,7 +111,10 @@ class BotWaveCLI:
     def _start_websocket_server(self):
         self.ws_handler = WSCMDH(
             command_executor=self._execute_command,
+            onwsjoin_callback=self.onwsjoin_handlers,
+            onwsleave_callback=self.onwsleave_handlers
         )
+        
         self.ws_handler.start()
 
     def _execute_command(self, command: str, interpolate: bool = True):
@@ -136,6 +140,8 @@ class BotWaveCLI:
 
             if not cmd_parts:
                 return True
+            
+            self.last_argv = cmd_parts
             
             cmd = cmd_parts[0].lower()
 
@@ -335,9 +341,12 @@ class BotWaveCLI:
         
     def _build_context(self) -> dict:
         ctx = {}
+
         try:
-            # System info (always available)
+            argv_env = {f"BW_ARGV{i}": str(v) for i, v in enumerate(self.last_argv)}
+
             ctx = {
+                **argv_env,
                 "BW_SYSTEM_HOSTNAME": os.uname().nodename,
                 "BW_SYSTEM_MACHINE": os.uname().machine,
                 "BW_SYSTEM_SYSTEM": os.uname().sysname,
@@ -361,6 +370,12 @@ class BotWaveCLI:
 
     def onstop_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onstop", dir_path, context or self._build_context())
+
+    def onwsjoin_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onwsjoin", dir_path, context or self._build_context())
+
+    def onwsleave_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onwsleave", dir_path, context or self._build_context())
 
 
     def run_shell_command(self, command: str, env: Dict[str, str] = None):

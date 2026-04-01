@@ -83,6 +83,7 @@ class BotWaveServer:
         # utilities
         self.tips = TipEngine()
         self.handlers_executor = HandlerExecutor(self._execute_command)
+        self.last_argv = []
 
         self.loop = None
 
@@ -467,13 +468,15 @@ class BotWaveServer:
 
             if not command:
                 return True
-            
+                        
             try:
                 cmd = shlex.split(command)
 
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
                 return True
+            
+            self.last_argv = cmd
             
             command_name = cmd[0].lower()
             
@@ -749,9 +752,12 @@ class BotWaveServer:
 
     def _build_context(self, client_id: str = None) -> dict:
         ctx = {}
+
         try:
-            # System info (always available)
+            argv_env = {f"BW_ARGV{i}": str(v) for i, v in enumerate(self.last_argv)}
+
             ctx = {
+                **argv_env,
                 "BW_SYSTEM_HOSTNAME": os.uname().nodename,
                 "BW_SYSTEM_MACHINE": os.uname().machine,
                 "BW_SYSTEM_SYSTEM": os.uname().sysname,

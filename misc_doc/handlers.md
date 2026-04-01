@@ -10,6 +10,8 @@ Handler files must start with specific prefixes and have the correct file extens
   - `l_onready`: Executes when the system is ready. | `Local client`
   - `l_onstart`: Executes when the system starts. | `Local client`
   - `l_onstop`: Executes when the system stops. | `Local client`
+  - `s_onwsjoin`: Executes when a websocket connection is established. | `Local client`
+  - `s_onwsleave`: Executes when a websocket connection is terminated. | `Local client`
   - `s_onready`: Executes when the system is ready. | `Server`
   - `s_onstart`: Executes when the system starts. | `Server`
   - `s_onstop`: Executes when the system stops. | `Server`
@@ -58,6 +60,7 @@ These variables describe the machine running the handler:
 | `BW_HANDLERS_DIR` | Handlers directory path |
 | `BW_WS_PORT` | WebSocket port (`0` if unset) |
 | `BW_PASSKEY_SET` | `true` or `false` |
+| `BW_ARGV{n}` | Every arg value of the last command |
 
 ### Always available (Server Only)
 
