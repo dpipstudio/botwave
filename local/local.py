@@ -72,6 +72,7 @@ class BotWaveCLI:
         self.ws_clients = set()
         self.ws_loop = None
         self.tips = TipEngine(is_server=False)
+        self.last_argv = []
 
         self.tips.start()
 
@@ -136,6 +137,8 @@ class BotWaveCLI:
 
             if not cmd_parts:
                 return True
+            
+            self.last_argv = cmd_parts
             
             cmd = cmd_parts[0].lower()
 
@@ -335,9 +338,12 @@ class BotWaveCLI:
         
     def _build_context(self) -> dict:
         ctx = {}
+
         try:
-            # System info (always available)
+            argv_env = {f"BW_ARGV{i}": str(v) for i, v in enumerate(self.last_argv)}
+
             ctx = {
+                **argv_env,
                 "BW_SYSTEM_HOSTNAME": os.uname().nodename,
                 "BW_SYSTEM_MACHINE": os.uname().machine,
                 "BW_SYSTEM_SYSTEM": os.uname().sysname,
