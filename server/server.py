@@ -754,7 +754,7 @@ class BotWaveServer:
         ctx = {}
 
         try:
-            argv_env = {f"bw_argv{i}": str(v) for i, v in enumerate(self.last_argv)}
+            argv_env = {f"BW_ARGV{i}": str(v) for i, v in enumerate(self.last_argv)}
 
             ctx = {
                 **argv_env,
