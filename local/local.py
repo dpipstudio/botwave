@@ -412,9 +412,9 @@ class BotWaveCLI:
     
     def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
-            process = subprocess.run(command, shell=True, capture_output=True, text=True, env=env)
-            
-            for line in process.stdout.splitlines():
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True, env=env)
+
+            for line in process.stdout:
                 line = line.strip()
                 if line:
                     self._execute_command(line)
