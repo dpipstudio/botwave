@@ -823,7 +823,9 @@ class BotWaveServer:
 
     async def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
-            #Log.info(f"Executing: {command}")
+            shell = Env.get("CMD_INTERPRETER")
+            if shell:
+                command = f"{shell} \"{command}\""
             
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -833,18 +835,26 @@ class BotWaveServer:
             )
             
             try:
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
+                async def read_stream(stream, is_stderr=False):
+                    while True:
+                        line = await stream.readline()
+                        if not line:
+                            break
+
+                        if is_stderr:
+                            Log.print(line.decode('utf-8'), style="red", end='')
+                        
+                        else:
+                            Log.print(line.decode('utf-8'), end='')
+
+                await asyncio.wait_for(
+                    asyncio.gather(
+                        read_stream(process.stdout),
+                        read_stream(process.stderr, is_stderr=True)
+                    ),
                     timeout=30.0
                 )
                 
-                if stdout:
-                    Log.print(stdout.decode('utf-8'), end='')
-                
-                if process.returncode != 0 and stderr:
-                    Log.info(f"STDERR ({process.returncode}):")
-                    Log.print(stderr.decode('utf-8'), end='')
-                    
             except asyncio.TimeoutError:
                 process.kill()
                 await process.wait()
@@ -855,16 +865,21 @@ class BotWaveServer:
 
     async def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
+            
+            shell = Env.get("CMD_INTERPRETER")
+
+            if shell:
+                command = f"{shell} \"{command}\""
+
             process = await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=env
             )
-            stdout, _ = await process.communicate()
             
-            for line in stdout.decode('utf-8').splitlines():
-                line = line.strip()
+            async for line in process.stdout:
+                line = line.decode('utf-8').strip()
                 if line:
                     # schedule each command as a task instead of awaiting directly to prevent blocking
                     asyncio.create_task(
