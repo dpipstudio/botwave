@@ -101,12 +101,13 @@
     ]
   },
   "always": {
-    "files": [
+        "files": [
       "autorun/autorun.py",
       "shared/alsa.py",
       "shared/cat.py",
       "shared/cat.jpg",
       "shared/converter.py",
+      "shared/custom_cmds.py",
       "shared/env.py",
       "shared/handlers.py",
       "shared/http.py",
