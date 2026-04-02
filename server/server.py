@@ -879,7 +879,7 @@ class BotWaveServer:
             )
             
             async for line in process.stdout:
-                line = line.strip().decode('utf-8')
+                line = line.decode('utf-8').strip()
                 if line:
                     # schedule each command as a task instead of awaiting directly to prevent blocking
                     asyncio.create_task(
