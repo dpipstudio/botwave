@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.2-stellata",
+      "commit": "4a50ab9efdfbbf3b7a0b57201c77999cb35b751d"
+    },
+    {
       "codename": "v1.1.1-malosma",
       "commit": "c52952ce5548da43b3bc6e0922249a6e200be0ba"
     },
