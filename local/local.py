@@ -393,6 +393,10 @@ class BotWaveCLI:
 
     def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
+            shell = Env.get("CMD_INTERPRETER")
+            if shell:
+                command = f"{shell} \"{command}\""
+
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
             for line in process.stdout:
                 Log.print(line, end='')
@@ -412,6 +416,10 @@ class BotWaveCLI:
     
     def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
+            shell = Env.get("CMD_INTERPRETER")
+            if shell:
+                command = f"{shell} \"{command}\""
+
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True, env=env)
 
             for line in process.stdout:
