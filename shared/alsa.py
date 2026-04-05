@@ -16,7 +16,7 @@ class Alsa:
 
     @property
     def device_name(self):
-        return f"hw:{Env.get('ALSA_CARD', 'BotWave')},1"
+        return f"{Env.get('ALSA_INTERFACE', 'hw')}:{Env.get('ALSA_CARD', 'BotWave')},{Env.get('ALSA_DEVICE', '1')}"
 
     @property
     def rate(self):
