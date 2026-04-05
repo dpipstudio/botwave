@@ -23,11 +23,12 @@ class CCMD:
             return False
         
         shebang = f"#!/{'server' if self.is_server else 'local'}/{command}"
+        wildcard = f"#!/*/{command}"
 
         with open(path, 'r') as f:
             first_line = f.readline().strip()
 
-        return first_line == shebang
+        return first_line == shebang or first_line == wildcard
     
     def get_all(self) -> List[Dict]:
         matches = []
@@ -42,6 +43,7 @@ class CCMD:
 
             cmd_name = os.path.splitext(name)[0]
             shebang = f"#!/{'server' if self.is_server else 'local'}/{cmd_name}"
+            wildcard = f"#!/*/{cmd_name}"
 
             try:
                 with open(full_path, "r") as f:
@@ -50,7 +52,7 @@ class CCMD:
                         continue
 
                     first_line = lines[0].rstrip("\n")
-                    if first_line != shebang:
+                    if first_line != shebang and first_line != wildcard:
                         continue
 
                     # process help lines 
