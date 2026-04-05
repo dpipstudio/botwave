@@ -707,7 +707,8 @@ class BotWaveCLI:
             else:
                 Log.warning(f"PiWave returned a non-true status ?")
 
-            Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
+            card = Env.get("ALSA_CARD", 'BotWave')
+            Log.alsa(f"To play live, please set your output sound card (ALSA) to '{card}'.")
             Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
             return True
         

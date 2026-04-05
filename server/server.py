@@ -1115,8 +1115,9 @@ class BotWaveServer:
 
         Log.print("")    
         Log.info(f"Success: {len(results['streamed'])}, Failure: {len(results['failed'])}")
-                    
-        Log.alsa("To play live, please set your output sound card (ALSA) to 'BotWave'.")
+        
+        card = Env.get("ALSA_CARD", 'BotWave')
+        Log.alsa(f"To play live, please set your output sound card (ALSA) to '{card}'.")
         Log.alsa(f"We're expecting {self.alsa.rate}kHz on {self.alsa.channels} channels.")
 
         return len(results["streamed"]) > 0
