@@ -86,6 +86,7 @@ class BotWaveServer:
         self.handlers_executor = HandlerExecutor(self._execute_command)
         self.custom_commands = CCMD(is_server=True)
         self.last_argv = []
+        self.rc_clients = 0
 
         self.loop = None
 
@@ -538,6 +539,11 @@ class BotWaveServer:
             await self.send_update(cmd[1], update_args)
             return
         
+        elif command_name == 'status':
+            targets = cmd[1] if len(cmd) > 1 else None
+            await self.display_status(targets)
+            return
+        
         # FILE MANAGEMENT 
         elif command_name == 'upload':
             if len(cmd) < 3:
@@ -817,9 +823,11 @@ class BotWaveServer:
 
     def onwsjoin_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("s_onwsjoin", dir_path, context or self._build_context())
+        self.rc_clients += 1
 
     def onwsleave_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("s_onwsleave", dir_path, context or self._build_context())
+        self.rc_clients -= 1
 
     async def run_shell_command(self, command: str, env: Dict[str, str] = None):
         try:
@@ -1759,6 +1767,64 @@ class BotWaveServer:
         
         self.print_envkeys([key])
 
+    async def display_status(self, client_targets: str = None):
+        # clients
+        if client_targets:
+            target_clients = self._parse_client_targets(client_targets)
+
+            if not target_clients:
+                Log.warning("No client(s) found matching the query")
+
+            else:
+                results = {'success': [], 'failed': []}
+
+                for client_id in target_clients:
+                    if client_id not in self.clients:
+                        continue
+
+                    client = self.clients[client_id]
+
+                    try:
+                        response = await client.proto.send(Commands.STATUS)
+                        kwargs = response['kwargs']
+                        status = kwargs.get('status', 'unknown')
+
+                        Log.print(f"{client.get_display_name()}:", "bright_yellow")
+
+                        if status == 'onair':
+                            Log.print(f"  On Air", "bright_green")
+                            Log.print(f"  File      : {kwargs.get('file', '?')}", "white")
+                            Log.print(f"  Frequency : {kwargs.get('frequency', '?')} MHz", "white")
+                            Log.print(f"  Uptime    : {kwargs.get('uptime', '?')}", "white")
+                        else:
+                            Log.print(f"  Idle", "orange")
+
+                        results['success'].append(client_id)
+
+                    except TimeoutError:
+                        Log.error(f"  {client.get_display_name()}: Timeout")
+                        results['failed'].append(client_id)
+
+                    except RuntimeError as e:
+                        Log.error(f"  {client.get_display_name()}: {e}")
+                        results['failed'].append(client_id)
+
+                Log.print("")
+                Log.info(f"Success: {len(results['success'])}, Failure: {len(results['failed'])}")
+                Log.print("")
+
+        # server
+        Log.print(f"Connected clients : {len(self.clients)}", "white")
+        Log.print(f"Port              : {self.ws_port}", "white")
+        Log.print(f"File Port         : {Env.get('FPORT')}", "white")
+
+        rmt = Env.get("REMOTE_CMD_PORT")
+        if rmt:
+            Log.print(f"RC Port           : {rmt}", "white")
+            Log.print(f"RC Clients        : {self.rc_clients}", "white")
+
+        Log.print(f"Passkey           : {'yes' if self.passkey else 'no'}", "white")
+
     def display_help(self):
         Log.header("BotWave Server - Help")
         Log.section("Available Commands")
@@ -1886,6 +1952,13 @@ class BotWaveServer:
         Log.print("  Examples:", "white")
         Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
         Log.print("    set PASSKEY mykey true", "cyan")
+        Log.print("")
+
+        Log.print("status [targets]", "bright_green")
+        Log.print("  Show server status, and optionally the broadcast status of client(s)", "white")
+        Log.print("  Examples:", "white")
+        Log.print("    status", "cyan")
+        Log.print("    status all", "cyan")
         Log.print("")
 
         Log.print("exit", "bright_green")
