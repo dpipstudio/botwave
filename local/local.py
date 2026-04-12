@@ -63,6 +63,7 @@ class BotWaveCLI:
         self.running = False
         self.current_file = None
         self.broadcasting = False
+        self.broadcast_start_time = None
         self.original_sigint_handler = None
         self.original_sigterm_handler = None
         self.handlers_executor = HandlerExecutor(self._execute_command)
@@ -70,9 +71,7 @@ class BotWaveCLI:
         self.piwave_monitor = PWM()
         self.alsa = Alsa()
         self.queue = Queue(client_instance=self, is_local=True)
-        self.ws_server = None
-        self.ws_clients = set()
-        self.ws_loop = None
+        self.rc_clients = 0
         self.tips = TipEngine(is_server=False)
         self.last_argv = []
 
@@ -279,6 +278,10 @@ class BotWaveCLI:
 
                 return True
             
+            elif cmd == 'status':
+                self.display_status()
+                return True
+            
             elif cmd == 'help':
                 self.display_help()
                 return True
@@ -386,9 +389,11 @@ class BotWaveCLI:
 
     def onwsjoin_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onwsjoin", dir_path, context or self._build_context())
+        self.rc_clients += 1
 
     def onwsleave_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onwsleave", dir_path, context or self._build_context())
+        self.rc_clients -= 1
 
 
     def run_shell_command(self, command: str, env: Dict[str, str] = None):
@@ -654,14 +659,17 @@ class BotWaveCLI:
             
             if success:
                 Log.success(f"Started broadcasting {file_path} on {frequency}MHz")
+                self.broadcast_start_time = time.time()
+
             else:
-                Log.warning(f"PiWave returned a non-true status ?")
+                raise Exception("PiWave returned a non-true status, set talk to true to debug.")
 
             return True
         
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")
             self.broadcasting = False
+            self.broadcast_start_time = None
             self.current_file = None
             self.piwave = None
             return False
@@ -704,8 +712,10 @@ class BotWaveCLI:
 
             if success:
                 Log.success(f"Live broadcast started on {frequency}MHz")
+                self.broadcast_start_time = time.time()
+
             else:
-                Log.warning(f"PiWave returned a non-true status ?")
+                raise Exception("PiWave returned a non-true status, set talk to true to debug.")
 
             card = Env.get("ALSA_CARD", 'BotWave')
             Log.alsa(f"To play live, please set your output sound card (ALSA) to '{card}'.")
@@ -716,6 +726,7 @@ class BotWaveCLI:
             Log.error(f"Error starting broadcast: {e}")
             self.alsa.stop()
             self.broadcasting = False
+            self.broadcast_start_time = None
             self.current_file = None
             self.piwave = None
             return False
@@ -738,6 +749,7 @@ class BotWaveCLI:
         self.alsa.stop()
 
         self.broadcasting = False
+        self.broadcast_start_time = None
         self.current_file = None
         return True
 
@@ -820,6 +832,25 @@ class BotWaveCLI:
             return
         
         self.print_envkeys([key])
+
+    def display_status(self):
+        if self.broadcasting and self.current_file:
+            Log.print("On Air", "bright_green")
+            Log.print(f"File       : {os.path.basename(self.current_file)}", "white")
+            if self.piwave:
+                Log.print(f"Frequency  : {self.piwave.get_status()["frequency"]} MHz", "white")
+
+            if self.broadcast_start_time:
+                elapsed = int(time.time() - self.broadcast_start_time)
+                h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
+                Log.print(f"Uptime     : {h:02d}:{m:02d}:{s:02d}", "white")
+        else:
+            Log.print("Idle", "yellow")
+
+        if self.ws_port:
+            Log.print(f"RC Port    : {self.ws_port}", "white")
+            Log.print(f"RC Clients : {self.rc_clients}", "white")
+            Log.print(f"Passkey    : {'yes' if self.passkey else 'no'}", "white")
 
     def display_help(self):
         Log.header("BotWave Local Client - Help")
@@ -917,6 +948,10 @@ class BotWaveCLI:
         Log.print("  Examples:", "white")
         Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
         Log.print("    set PASSKEY mykey true", "cyan")
+        Log.print("")
+
+        Log.print("status", "bright_green")
+        Log.print("  Show current broadcast and remote status", "white")
         Log.print("")
 
         Log.print("exit", "bright_green")
