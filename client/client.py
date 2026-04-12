@@ -18,6 +18,7 @@ import json
 import os
 import platform
 import queue
+import time
 import ssl
 import sys
 import tempfile
@@ -61,6 +62,7 @@ class BotWaveClient:
         self.piwave = None
         self.piwave_monitor = PWM()
         self.broadcasting = False
+        self.broadcast_start_time = None
         self.current_file = None
         self.broadcast_lock = asyncio.Lock() # using asyncio instead of thereading now
         self.alsa = Alsa()
@@ -251,6 +253,10 @@ class BotWaveClient:
 
             if command == Commands.STOP:
                 await self._handle_stop_broadcast(parsed)
+                return
+            
+            if command == Commands.STATUS:
+                await self._handle_status(parsed)
                 return
 
             # files
@@ -657,14 +663,17 @@ class BotWaveClient:
 
                 if success:
                     Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
+                    self.broadcast_start_time = time.time()
+
                 else:
-                    Log.warning(f"PiWave returned a non-true status ?")
+                    raise Exception("PiWave returned a non-true status, set talk to true to debug.")
 
                 return True
 
             except Exception as e:
                 Log.error(f"Stream broadcast error: {e}")
                 self.broadcasting = False
+                self.broadcast_start_time = None
                 return e
 
     async def _delayed_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop, delay):
@@ -717,14 +726,18 @@ class BotWaveClient:
 
                 if success:
                     Log.broadcast(f"Currently broadcasting {filename} on {frequency} MHz")
+                    self.broadcast_start_time = time.time()
+
                 else:
-                    Log.warning(f"PiWave returned a non-true status ?")
+                    raise Exception("PiWave returned a non-true status, set talk to true to debug.")
+
 
                 return True
 
             except Exception as e:
                 Log.error(f"Broadcast error: {e}")
                 self.broadcasting = False
+                self.broadcast_start_time = None
                 return e
 
     async def _stop_broadcast(self, acquire_lock=True):
@@ -753,6 +766,7 @@ class BotWaveClient:
                     self.piwave = None
 
             self.broadcasting = False
+            self.broadcast_start_time = None
             self.current_file = None
 
         if acquire_lock:
@@ -844,6 +858,23 @@ class BotWaveClient:
         except Exception as e:
             Log.error(f"Stop error: {e}")
             await self.proto.reply(parsed, Commands.ERROR, message=str(e))
+
+    async def _handle_status(self, parsed: dict):
+        if self.broadcasting and self.current_file:
+            status = "onair"
+            file = os.path.basename(self.current_file)
+            freq = self.piwave.get_status()["frequency"]
+            uptime = "??:??:??"
+            
+            if self.broadcast_start_time:
+                elapsed = int(time.time() - self.broadcast_start_time)
+                h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
+                uptime = "{h:02d}:{m:02d}:{s:02d}"
+        
+            await self.proto.reply(parsed, Commands.OK, status=status, file=file, frequency=freq, uptime=uptime)
+
+        else:
+            await self.proto.reply(parsed, Commands.OK, status = "idle")
 
     async def stop(self):
         if not self.running:
