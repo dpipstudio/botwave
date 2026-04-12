@@ -869,7 +869,7 @@ class BotWaveClient:
             if self.broadcast_start_time:
                 elapsed = int(time.time() - self.broadcast_start_time)
                 h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
-                uptime = "{h:02d}:{m:02d}:{s:02d}"
+                uptime = f"{h:02d}:{m:02d}:{s:02d}"
         
             await self.proto.reply(parsed, Commands.OK, status=status, file=file, frequency=freq, uptime=uptime)
 
