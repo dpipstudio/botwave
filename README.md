@@ -453,8 +453,8 @@ curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
 ### BotWave Server For Cloud Instances
 You can try the BotWave server directly on cloud platforms:
 
-[![Run in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/dpipstudio/botwave)
+[![Run in Cloud Shell](/assets/readme_assets/google_shell.svg)](https://shell.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/dpipstudio/botwave&cloudshell_tutorial=misc_doc/google-shell.md&show=terminal)
+[![Open in GitHub Codespaces](/assets/readme_assets/github_codespaces.svg)](https://codespaces.new/dpipstudio/botwave)
 
 
 ### Get Help
