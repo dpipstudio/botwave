@@ -1809,7 +1809,8 @@ class BotWaveServer:
                         Log.error(f"  {client.get_display_name()}: {e}")
                         results['failed'].append(client_id)
 
-                Log.print("")
+                    Log.print("")
+
                 Log.info(f"Success: {len(results['success'])}, Failure: {len(results['failed'])}")
                 Log.print("")
 
