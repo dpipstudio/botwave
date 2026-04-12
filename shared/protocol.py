@@ -3,7 +3,7 @@ import shlex
 import time
 from typing import Dict, Tuple
 
-PROTOCOL_VERSION = "2.1.1"
+PROTOCOL_VERSION = "2.1.2"
 
 
 class Commands:
@@ -31,6 +31,7 @@ class Commands:
     # client management
     KICK = 'KICK'
     UPDATE = 'UPDATE'
+    STATUS = 'STATUS'
     
     # file management
     LIST_FILES = 'LIST_FILES'
