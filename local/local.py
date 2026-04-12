@@ -845,7 +845,7 @@ class BotWaveCLI:
                 h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
                 Log.print(f"Uptime     : {h:02d}:{m:02d}:{s:02d}", "white")
         else:
-            Log.print("Idle", "yellow")
+            Log.print("Idle", "orange")
 
         if self.ws_port:
             Log.print(f"RC Port    : {self.ws_port}", "white")
