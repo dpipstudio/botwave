@@ -838,7 +838,7 @@ class BotWaveCLI:
             Log.print("On Air", "bright_green")
             Log.print(f"File       : {os.path.basename(self.current_file)}", "white")
             if self.piwave:
-                Log.print(f"Frequency  : {self.piwave.get_status()["frequency"]} MHz", "white")
+                Log.print(f"Frequency  : {self.piwave.get_status()['frequency']} MHz", "white")
 
             if self.broadcast_start_time:
                 elapsed = int(time.time() - self.broadcast_start_time)
