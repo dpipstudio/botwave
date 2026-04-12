@@ -103,6 +103,9 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 `set`: Set an environment variable. (If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.)  
     - Usage: `botwave> | <key> <value> [immutable]`  
 
+`status`: Show server status, and optionally the broadcast status of client(s)
+    - Usage: `botwave> status [targets]`  
+
 `exit`: Stops and exit the BotWave server.  
     - Usage: `botwave> exit`  
 

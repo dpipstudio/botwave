@@ -98,6 +98,9 @@ Once the client is running, you can use the following commands:
 - `set`: Set an environment variable. (If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.)  
     - Usage: `botwave> set <key> <value> [immutable]`
 
+- `status`: Show current broadcast and remote status.  
+    - Usage: `botwave> status`
+
 - `help`: Display the help message.  
     - Usage: `botwave> help`
 
