@@ -563,7 +563,7 @@ class BotWaveCLI:
 
         try:
             headers = {
-                "User-Agent": f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)"
+                "User-Agent": Env.get("DOWNLOAD_UA", f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
             }
 
             if not dest_name:
