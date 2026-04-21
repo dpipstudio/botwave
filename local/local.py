@@ -1015,8 +1015,11 @@ def main():
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
-
+    parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     args = parser.parse_args()
+
+    if args.config:
+        Env.load(args.config) # will silently drop if file doesn't exist
 
     def set_prio(key, cli_value, default, immutable=False):
         if cli_value is not None:
