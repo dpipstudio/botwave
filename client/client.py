@@ -16,6 +16,7 @@ import asyncio
 from datetime import datetime, timezone
 import json
 import os
+from pathlib import Path
 import platform
 import queue
 import time
@@ -77,8 +78,6 @@ class BotWaveClient:
         # utilities
         self.tips = TipEngine(is_server=False)
 
-        backend_classes["bw_custom"] = BWCustom
-
     @property
     def server_host(self):
         return Env.get("SERVER_HOST")
@@ -110,6 +109,11 @@ class BotWaveClient:
     @property
     def silent(self):
         return not self.talk
+    
+    @property
+    def backend_name(self):
+        return Path(Env.get("BACKEND_PATH", "bw_custom")).name
+
 
     def _create_ssl_context(self):
         # Creates SSL context accepting self-signed certificates
@@ -595,13 +599,15 @@ class BotWaveClient:
                 await self._stop_broadcast(acquire_lock=False)
 
             try:
+                backend_classes[self.backend_name] = BWCustom
+
                 self.piwave = PiWave(
                     frequency=frequency,
                     ps=ps,
                     rt=rt,
                     pi=pi,
                     loop=False,
-                    backend="bw_custom",
+                    backend=self.backend_name,
                     debug=not self.silent,
                     silent=self.silent,
                     force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
@@ -707,13 +713,15 @@ class BotWaveClient:
                 await self._stop_broadcast(acquire_lock=False)
 
             try:
+                backend_classes[self.backend_name] = BWCustom
+
                 self.piwave = PiWave(
                     frequency=frequency,
                     ps=ps,
                     rt=rt,
                     pi=pi,
                     loop=loop,
-                    backend="bw_custom",
+                    backend=self.backend_name,
                     debug=not self.silent,
                     silent=self.silent,
                     force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
