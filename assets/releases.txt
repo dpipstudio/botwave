@@ -14,6 +14,20 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.4-chione ---=
+### What Changed
+- **`--config` flag**: All three components now accept `--config <path>` to load a config file into the environment at startup. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables#dotenv).
+- **`BACKEND_PATH`**: `BWCUSTOM_PATH` is deprecated in favor of `BACKEND_PATH`. A warning will be shown if the old variable is still set.
+- **Frequency range**: `BACKEND_MIN_FREQ` and `BACKEND_MAX_FREQ` let you configure your backend's allowed frequency range.
+- **`BACKEND_BYPASS_CACHE`**: Skips the cached backend path and forces a fresh search.
+- **`DOWNLOAD_UA`**: Overrides the user agent used when downloading files (was already there on `bw-client`, added it to `bw-local`).
+- **Miscellaneous**: Internal env file parser cleanup and a [piwave](https://piwave.xyz) dependency bump.
+
+### Breaking Changes
+> [!WARNING]
+> `BWCUSTOM_PATH` is deprecated and will be removed in a future release. Please migrate to `BACKEND_PATH`.
+=--- END ---=
+
 =--- v1.1.3-aria ---=
 ### What Changed
 - **`status` command**: Shows broadcast state (file, frequency, uptime) on the local client. On the server, you can query clients with `status all` or a specific target.
