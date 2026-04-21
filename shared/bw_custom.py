@@ -35,13 +35,7 @@ class BWCustom(Backend):
         return True
 
     def _get_executable_name(self):
-        path = Env.get("BWCUSTOM_PATH")
-
-        if path:
-            Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
-            Log.warning("Please use BACKEND_PATH instead.")
-        else:
-            path = Env.get("BACKEND_PATH")
+        path = Env.get("BACKEND_PATH")
 
         if path:
             return Path(path).name
@@ -49,13 +43,7 @@ class BWCustom(Backend):
         return "bw_custom"
 
     def _get_search_paths(self):
-        path = Env.get("BWCUSTOM_PATH")
-
-        if path:
-            Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
-            Log.warning("Please use BACKEND_PATH instead.")
-        else:
-            path = Env.get("BACKEND_PATH")
+        path = Env.get("BACKEND_PATH")
 
         if path:
             return [str(Path(path).parent)]
