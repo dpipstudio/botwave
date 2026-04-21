@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.4-chione",
+      "commit": "6f81bc7edc1f5177360bf52f3057bce31a919308"
+    },
+    {
       "codename": "v1.1.3-aria",
       "commit": "0c2f5f95cbe9d8a37f9e6f9c6a2a0d866f6cbb3a"
     },
