@@ -9,13 +9,7 @@ from shared.logger import Log
 class BWCustom(Backend):
     @property
     def name(self):
-        path = Env.get("BWCUSTOM_PATH")
-
-        if path:
-            Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
-            Log.warning("Please use BACKEND_PATH instead.")
-        else:
-            path = Env.get("BACKEND_PATH")
+        path = Env.get("BACKEND_PATH")
 
         if path:
             return Path(path).name
