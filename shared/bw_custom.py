@@ -12,7 +12,9 @@ class BWCustom(Backend):
 
     @property
     def frequency_range(self):
-        return (76.0, 108.0)
+        min_freq = Env.get_int("BWCUSTOM_MIN_FREQ", 76)
+        max_freq = Env.get_int("BWCUSTOM_MAX_FREQ", 108)
+        return (min_freq, max_freq)
 
     @property
     def supports_rds(self):
