@@ -647,7 +647,9 @@ class BotWaveCLI:
                 loop=loop,
                 backend="bw_custom",
                 debug=not self.silent,
-                silent=self.silent
+                silent=self.silent,
+                force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                unsafe=Env.get_bool("SKIP_CHECKS")
             )
 
             self.current_file = file_path
@@ -698,7 +700,9 @@ class BotWaveCLI:
                 pi=pi,
                 backend="bw_custom",
                 debug=not self.silent,
-                silent=self.silent
+                silent=self.silent,
+                force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                unsafe=Env.get_bool("SKIP_CHECKS")
             )
 
             self.alsa.start()
