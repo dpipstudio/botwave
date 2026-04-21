@@ -603,7 +603,9 @@ class BotWaveClient:
                     loop=False,
                     backend="bw_custom",
                     debug=not self.silent,
-                    silent=self.silent
+                    silent=self.silent,
+                    force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                    unsafe=Env.get_bool("SKIP_CHECKS")
                 )
 
                 self.stream_task = self.http_client.stream_pcm_generator(
@@ -713,7 +715,9 @@ class BotWaveClient:
                     loop=loop,
                     backend="bw_custom",
                     debug=not self.silent,
-                    silent=self.silent
+                    silent=self.silent,
+                    force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                    unsafe=Env.get_bool("SKIP_CHECKS")
                 )
 
                 success = self.piwave.play(file_path, blocking=False)
