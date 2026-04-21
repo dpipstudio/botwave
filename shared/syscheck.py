@@ -12,13 +12,7 @@ def is_valid_executable(path: str) -> bool:
 def check_backends_paths() -> Optional[str]:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cache_file = os.path.join(current_dir, "..", "backend_path")
-    envpath = Env.get("BWCUSTOM_PATH")
-
-    if envpath:
-        Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
-        Log.warning("Please use BACKEND_PATH instead.")
-    else:
-        envpath = Env.get("BACKEND_PATH")
+    envpath = Env.get("BACKEND_PATH")
 
     search_paths = [str(Path(envpath).parent)] if envpath else ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
     exe_name = str(Path(envpath).name) if envpath else "bw_custom"
