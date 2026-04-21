@@ -24,7 +24,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 To start the BotWave Server, use the following command:
 
 ```bash
-sudo bw-server [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap] [--skip-checks] [--rc REMOTE_PORT] [--daemon]
+sudo bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap | --no-start-asap] [--skip-checks | --no-skip-checks] [--rc RC] [--config CONFIG] [--daemon | --no-daemon]
 ```
 
 ### Arguments
