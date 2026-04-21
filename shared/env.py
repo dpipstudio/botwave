@@ -1,6 +1,5 @@
 import os
 import re
-import shlex
 from typing import Dict
 
 
@@ -16,8 +15,7 @@ class EnvManager:
         if not os.path.exists(filepath):
             return
 
-        dotenv = self.__load_env(filepath)
-        os.environ.update(dotenv)
+        self.__load_env(filepath)
 
     def get(self, key: str, default = None, get_immutability: bool = False, strip_immutable: bool = True) -> tuple | str | None:
         """Return the value of a key case-insensitively, or default if not found.
@@ -87,8 +85,6 @@ class EnvManager:
     def __load_env(self, filepath: str) -> Dict[str, str]:
         """Parse a .env file and return a dict of key-value pairs."""
 
-        env_dict = {}
-
         try:
             with open(filepath, "r") as file:
                 for line in file:
@@ -98,13 +94,20 @@ class EnvManager:
                         continue
 
                     key, value = line.split("=", 1)
+
+                    key = key.strip()
                     value = value.strip()
-                    env_dict[key.strip()] = shlex.split(value)[0] if value else ""
+
+                    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                        value = value[1:-1]
+
+                    try:
+                        self.set(key, value if value else "")
+                    except Exception:
+                        pass
 
         except Exception:
             pass
-
-        return env_dict
 
     def __is_immutable(self, key: str) -> bool:
         """Return True if the key's value is marked as immutable."""

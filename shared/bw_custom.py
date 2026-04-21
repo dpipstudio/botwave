@@ -4,16 +4,22 @@ from piwave.backends.base import Backend, BackendError
 from pathlib import Path
 
 from shared.env import Env
+from shared.logger import Log
 
 class BWCustom(Backend):
     @property
     def name(self):
+        path = Env.get("BACKEND_PATH")
+
+        if path:
+            return Path(path).name
+        
         return "bw_custom"
 
     @property
     def frequency_range(self):
-        min_freq = Env.get_int("BWCUSTOM_MIN_FREQ", 76)
-        max_freq = Env.get_int("BWCUSTOM_MAX_FREQ", 108)
+        min_freq = Env.get_int("BACKEND_MIN_FREQ", 76)
+        max_freq = Env.get_int("BACKEND_MAX_FREQ", 108)
         return (min_freq, max_freq)
 
     @property
@@ -32,12 +38,24 @@ class BWCustom(Backend):
         path = Env.get("BWCUSTOM_PATH")
 
         if path:
+            Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
+            Log.warning("Please use BACKEND_PATH instead.")
+        else:
+            path = Env.get("BACKEND_PATH")
+
+        if path:
             return Path(path).name
         
         return "bw_custom"
 
     def _get_search_paths(self):
         path = Env.get("BWCUSTOM_PATH")
+
+        if path:
+            Log.warning("BWCUSTOM_PATH is deprecated and will be removed in the next version.")
+            Log.warning("Please use BACKEND_PATH instead.")
+        else:
+            path = Env.get("BACKEND_PATH")
 
         if path:
             return [str(Path(path).parent)]

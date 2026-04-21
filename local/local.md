@@ -31,7 +31,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 
 To start the BotWave Local Client, use the following command:
 ```bash
-sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks] [--daemon] [--rc REMOTE_PORT] [--pk PASSKEY] [--talk]
+sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks | --no-skip-checks] [--daemon | --no-daemon] [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG]
 ```
 
 ### Arguments
@@ -43,6 +43,7 @@ sudo bw-local [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-ch
 - `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
 - `--pk`: Optional passkey for websocket authentication.
 - `--talk`: Show the debug logs.
+- `--config`: Path to a config file to load into environment.
 
 
 

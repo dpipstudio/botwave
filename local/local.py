@@ -12,6 +12,7 @@
 
 import argparse
 import os
+from pathlib import Path
 import uuid
 import re
 import signal
@@ -77,9 +78,6 @@ class BotWaveCLI:
 
         self.tips.start()
 
-        # load custom piwave backend
-        backend_classes["bw_custom"] = BWCustom
-
     @property
     def upload_dir(self):
         return Env.get("UPLOAD_DIR", "/opt/BotWave/uploads/")
@@ -99,6 +97,10 @@ class BotWaveCLI:
     @property
     def silent(self): # if silent = True, piwave wont output any logs
         return not Env.get_bool("TALK")
+    
+    @property
+    def backend_name(self):
+        return Path(Env.get("BACKEND_PATH", "bw_custom")).name
 
     def _setup_signal_handlers(self):
         self.original_sigint_handler = signal.signal(signal.SIGINT, self._signal_handler)
@@ -639,15 +641,19 @@ class BotWaveCLI:
             self.stop_broadcast()
 
         try:
+            backend_classes[self.backend_name] = BWCustom
+
             self.piwave = PiWave(
                 frequency=frequency,
                 ps=ps,
                 rt=rt,
                 pi=pi,
                 loop=loop,
-                backend="bw_custom",
+                backend=self.backend_name,
                 debug=not self.silent,
-                silent=self.silent
+                silent=self.silent,
+                force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                unsafe=Env.get_bool("SKIP_CHECKS")
             )
 
             self.current_file = file_path
@@ -691,14 +697,18 @@ class BotWaveCLI:
             self.stop_broadcast()
 
         try:
+            backend_classes["bw_custom"] = BWCustom
+
             self.piwave = PiWave(
                 frequency=frequency,
                 ps=ps,
                 rt=rt,
                 pi=pi,
-                backend="bw_custom",
+                backend=self.backend_name,
                 debug=not self.silent,
-                silent=self.silent
+                silent=self.silent,
+                force_search=Env.get_bool("BACKEND_BYPASS_CACHE"),
+                unsafe=Env.get_bool("SKIP_CHECKS")
             )
 
             self.alsa.start()
@@ -1005,8 +1015,11 @@ def main():
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
     parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
-
+    parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     args = parser.parse_args()
+
+    if args.config:
+        Env.load(args.config) # will silently drop if file doesn't exist
 
     def set_prio(key, cli_value, default, immutable=False):
         if cli_value is not None:

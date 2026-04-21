@@ -2011,8 +2011,12 @@ def main():
     parser.add_argument('--start-asap', action=argparse.BooleanOptionalAction, default=None, dest='start_asap', help='Start broadcasts immediately (may cause client desync)')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, default=None, help='Skip system requirements checks')
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
+    parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in non-interactive daemon mode')
     args = parser.parse_args()
+
+    if args.config:
+        Env.load(args.config) # will silently drop if file doesn't exist
 
     def set_prio(key, cli_value, default, immutable=False):
         if cli_value is not None:

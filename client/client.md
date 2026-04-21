@@ -28,7 +28,7 @@ We highly recommand using the official installer (Check the [main README](/READM
 To start the BotWave Client, use the following command:
 
 ```bash
-sudo bw-client [server_host] [--port PORT] [--fhost HTTP_HOST] [--fport HTTP_PORT] [--upload-dir UPLOAD_DIR] [--skip-checks] [--pk PASSKEY] []
+sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [server_host]
 ```
 
 ### Arguments
@@ -40,7 +40,8 @@ sudo bw-client [server_host] [--port PORT] [--fhost HTTP_HOST] [--fport HTTP_POR
 * `--skip-checks`: Skip system requirements checks.
 * `--pk`: Optional passkey for authentication.
 * `--talk`: Makes PiWave (broadcast manager) output logs visible.
-* 
+* `--config`: Path to a config file to load into environment.
+
 ### Example
 ```bash
 sudo bw-client 9.9.9.9 --port 9939 --upload-dir /tmp/my_uploads --pk mypasskey

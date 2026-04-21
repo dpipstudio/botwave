@@ -196,6 +196,7 @@ options:
   --pk PK               Optional passkey for WebSocket
                         authentication
   --talk, --no-talk     Show output logs
+  --config CONFIG       Path to a config file to load into environment
 </pre>
 <hr>
 </details>
@@ -294,6 +295,7 @@ options:
   --skip-checks, --no-skip-checks
                         Skip system requirements checks
   --rc RC               Remote CLI port for remote management
+  --config CONFIG       Path to a config file to load into environment
   --daemon, --no-daemon
                         Run in non-interactive daemon mode
 </pre>
@@ -336,6 +338,7 @@ options:
                         Skip update and requirements checks
   --talk, --no-talk     Makes PiWave (broadcast manager) output
                         logs visible.
+  --config CONFIG       Path to a config file to load into environment
 </pre>
 <hr>
 </details>
