@@ -922,7 +922,11 @@ def main():
     parser.add_argument('--pk', help='Passkey for authentication')
     parser.add_argument('--skip-checks', dest='skip_checks', action=argparse.BooleanOptionalAction, default=None, help='Skip update and requirements checks')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, default=None, help='Makes PiWave (broadcast manager) output logs visible.')
+    parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     args = parser.parse_args()
+
+    if args.config:
+        Env.load(args.config) # will silently drop if file doesn't exist
 
     # Set the env from the params
 
