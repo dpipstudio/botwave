@@ -44,7 +44,7 @@ class WSCMDH: # WebSocket Command Handler
         if blocked_env:
             return [cmd for cmd in blocked_env.split(",") if cmd.strip()]
 
-        return ['get', 'set', '<', '|', 'exit'] # defaults
+        return ['get', 'set', '<', '|'] # defaults
 
     def start(self):
         
@@ -94,7 +94,7 @@ class WSCMDH: # WebSocket Command Handler
             
             async for message in websocket:
                 Log.print(f"{message}", 'bright_green', icon=ip)
-                self._inject_command(message)
+                self._inject_command(message, websocket)
                 
         except asyncio.TimeoutError:
             await websocket.send("Authentication timeout.")
@@ -105,8 +105,11 @@ class WSCMDH: # WebSocket Command Handler
             
             if self.onwsleave_callback:
                 self.onwsleave_callback()
+
+    async def _close_client(self, websocket):
+        await websocket.close()
     
-    def _inject_command(self, message: str):
+    def _inject_command(self, message: str, websocket):
         def execute():
 
             self.command_history.append(message)
@@ -116,11 +119,18 @@ class WSCMDH: # WebSocket Command Handler
             if cmd_parts:
                 command = cmd_parts[0].lower()
 
+                if command == '#':
+                    return
+
+                if command == 'exit':
+                    asyncio.run_coroutine_threadsafe(
+                        self._close_client(websocket),
+                        self.ws_loop
+                    )
+                    return
+
                 if command in self.blocked_commands and not self.allow_commands:
                     Log.warning(f"Hmmm, you can't do that. ;)")
-                    return
-                
-                if command == '#':
                     return
 
             self.command_executor(message, interpolate=False)
