@@ -166,8 +166,8 @@ class BotWaveCLI:
             if cmd == 'live':
                 frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_int("DEFAULT_FREQ", 90)
                 ps = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_PS", "BotWave")
-                rt = " ".join(cmd_parts[3:-1]) if len(cmd_parts) > 3 else Env.get("DEFAULT_RT", "Broadcasting")
-                pi = cmd_parts[-1] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")
+                rt = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", cmd_parts[1])
+                pi = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
 
                 self.start_live(frequency, ps, rt, pi)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
