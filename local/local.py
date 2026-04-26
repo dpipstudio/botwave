@@ -157,8 +157,8 @@ class BotWaveCLI:
                 frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_FREQ", 90)
                 loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
                 ps = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PS", "BotWave")
-                rt = " ".join(cmd_parts[5:-1]) if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", cmd_parts[1]) # (file name)
-                pi = cmd_parts[-1] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
+                rt = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", cmd_parts[1])
+                pi = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 return True
