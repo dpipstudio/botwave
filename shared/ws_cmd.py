@@ -92,9 +92,12 @@ class WSCMDH: # WebSocket Command Handler
             if self.onwsjoin_callback:
                 self.onwsjoin_callback()
             
-            async for message in websocket:
-                Log.print(f"{message}", 'bright_green', icon=ip)
-                self._inject_command(message, websocket)
+            try:
+                async for message in websocket:
+                    Log.print(f"{message}", 'bright_green', icon=ip)
+                    self._inject_command(message, websocket)
+            except websockets.exceptions.ConnectionClosed:
+                pass  # exit
                 
         except asyncio.TimeoutError:
             await websocket.send("Authentication timeout.")
@@ -108,6 +111,7 @@ class WSCMDH: # WebSocket Command Handler
 
     async def _close_client(self, websocket):
         await websocket.close()
+        await websocket.wait_closed()
     
     def _inject_command(self, message: str, websocket):
         def execute():
@@ -126,7 +130,7 @@ class WSCMDH: # WebSocket Command Handler
                     asyncio.run_coroutine_threadsafe(
                         self._close_client(websocket),
                         self.ws_loop
-                    )
+                    ).result()  # block until actually closed
                     return
 
                 if command in self.blocked_commands and not self.allow_commands:
