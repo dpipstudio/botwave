@@ -64,9 +64,19 @@ class Logger(DLogger):
     def __init__(self):
         # Initialize with prebuilt icons & styles and ws support.
         
+        show_time = Env.get_bool("LOG_TIME")
+        time_format = Env.get("LOG_TIME_FORMAT", "%Y-%m-%d %H:%M:%S")
+        save_to = Env.get("LOG_FILE")
+        save = True if save_to else False
+
         super().__init__(
             icons=self.ICONS,
-            styles=self.STYLES
+            styles=self.STYLES,
+            show_time=show_time,
+            time_format=time_format,
+            save=save,
+            save_to=save_to,
+            single_file=True
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
