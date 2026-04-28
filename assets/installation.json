@@ -134,7 +134,7 @@
     ],
     "requirements": [
       "websockets==11.0.3",
-      "dlogger==1.0.4",
+      "dlogger==1.0.5",
       "aiofiles==0.8.0",
       "aiohttp",
       "morse-talk==0.2",
