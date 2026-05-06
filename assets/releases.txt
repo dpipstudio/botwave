@@ -14,6 +14,20 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.5-erycibe ---=
+### What Changed
+- **Log timestamps & file output**: New `LOG_TIME`, `LOG_TIME_FORMAT`, and `LOG_FILE` env vars let you add timestamps to logs and save them to a file.
+- **`BWCUSTOM_PATH` removed**: The deprecated `BWCUSTOM_PATH` variable has been fully dropped. Use `BACKEND_PATH`.
+- **`broadcast` / `live` command fix**: RT and PI arguments are now parsed correctly. Previously, RT values with spaces would break the PI code.
+- **`exit` over WebSocket**: Typing `exit` in a remote session now properly closes the connection instead of being blocked.
+- **WebSocket disconnect handling**: Unexpected client disconnections no longer throw an error.
+- **Miscellaneous**: `dlogger` dependency bump to `1.0.5`.
+
+### Breaking Changes
+> [!CAUTION]
+> `BWCUSTOM_PATH` has been removed. Please migrate to `BACKEND_PATH`.
+=--- END ---=
+
 =--- v1.1.4-chione ---=
 ### What Changed
 - **`--config` flag**: All three components now accept `--config <path>` to load a config file into the environment at startup. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables#dotenv).
