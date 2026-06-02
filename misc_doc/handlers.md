@@ -60,6 +60,7 @@ These variables describe the machine running the handler:
 | `BW_HANDLERS_DIR` | Handlers directory path |
 | `BW_WS_PORT` | WebSocket port (`0` if unset) |
 | `BW_PASSKEY_SET` | `true` or `false` |
+| `BW_TRANSACTION_ID` | User-provided transaction ID or empty |
 | `BW_ARGV{n}` | Every arg value of the last command |
 
 ### Always available (Server Only)
