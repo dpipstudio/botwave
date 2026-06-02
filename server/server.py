@@ -456,6 +456,14 @@ class BotWaveServer:
 
     def _execute_command(self, command: str, interpolate: bool = True):
         try:
+            
+            tx_match = re.search(r'transaction_id=([^\s]+)', command)
+            if tx_match:
+                Log.set_transaction_id(tx_match.group(1))
+                command = re.sub(r'\s*transaction_id=[^\s]+', '', command)
+            else:
+                Log.clear_transaction_id()
+
             if "#" in command:
                 command = command.split("#", 1)[0]
 
