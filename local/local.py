@@ -383,6 +383,7 @@ class BotWaveCLI:
                 "BW_HANDLERS_DIR": self.handlers_dir,
                 "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
                 "BW_PASSKEY_SET": "true" if self.passkey else "false",
+                "BW_TRANSACTION_ID": Log.transaction_id.get() or "",
             }
         except:
             ...
