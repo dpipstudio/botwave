@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.5-erycibe-rev-1",
+      "commit": "612ce1e366077fd9f8371443dfe6bb8526b01418"
+    },
+    {
       "codename": "v1.1.5-erycibe",
       "commit": "c5b3d678797ee9c5befcb0a6ea20b8df1cb37703"
     },
