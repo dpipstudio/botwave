@@ -14,6 +14,11 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.5-erycibe-rev-1 ---=
+### What Changed
+- Bumped PiWave dependency to `2.1.14` to fix various functionalities.
+=--- END ---=
+
 =--- v1.1.5-erycibe ---=
 ### What Changed
 - **Log timestamps & file output**: New `LOG_TIME`, `LOG_TIME_FORMAT`, and `LOG_FILE` env vars let you add timestamps to logs and save them to a file.
