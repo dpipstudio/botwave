@@ -1,5 +1,6 @@
 from dlogger import DLogger
 import asyncio
+import contextvars
 import re
 import sys
 
@@ -69,6 +70,8 @@ class Logger(DLogger):
         save_to = Env.get("LOG_FILE")
         save = True if save_to else False
 
+        self.transaction_id = contextvars.ContextVar('transaction_id', default=None)
+
         super().__init__(
             icons=self.ICONS,
             styles=self.STYLES,
@@ -90,6 +93,9 @@ class Logger(DLogger):
                 sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
                 sys.stdout.flush()
 
+        tx_id = self.transaction_id.get()
+        if tx_id:
+            message = f"{message}transaction_id={tx_id}"
 
         if Env.get_bool("REDACT_IPV4"):
             message = self.__redact_ipv4(message)
@@ -116,6 +122,12 @@ class Logger(DLogger):
 
     def __redact_ipv4(self, text: str) -> str:
         return re.sub(r'(?:\d{1,3}\.){3}\d{1,3}', '[REDACTED]', text)
+    
+    def set_transaction_id(self, tx_id: str):
+        self.transaction_id.set(tx_id)
+
+    def clear_transaction_id(self):
+        self.transaction_id.set(None)
 
 def toggle_input(is_active=None):
     global INPUT_ACTIVE
@@ -125,6 +137,5 @@ def toggle_input(is_active=None):
     else:
         INPUT_ACTIVE = bool(is_active)
 
-        
 
 Log = Logger()

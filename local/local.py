@@ -123,6 +123,13 @@ class BotWaveCLI:
     def _execute_command(self, command: str, interpolate: bool = True):
         try:
 
+            tx_match = re.search(r'transaction_id=([^\s]+)', command)
+            if tx_match:
+                Log.set_transaction_id(tx_match.group(1))
+                command = re.sub(r'\s*transaction_id=[^\s]+', '', command)
+            else:
+                Log.clear_transaction_id()
+
             if "#" in command:
                 command = command.split("#", 1)[0]
 
@@ -357,6 +364,9 @@ class BotWaveCLI:
             Log.error(f"Error executing command '{command}': {e}")
             return True
         
+        finally:
+            Log.clear_transaction_id()
+        
     def _build_context(self) -> dict:
         ctx = {}
 
@@ -373,6 +383,7 @@ class BotWaveCLI:
                 "BW_HANDLERS_DIR": self.handlers_dir,
                 "BW_WS_PORT": str(self.ws_port) if self.ws_port else "0",
                 "BW_PASSKEY_SET": "true" if self.passkey else "false",
+                "BW_TRANSACTION_ID": Log.transaction_id.get() or "",
             }
         except:
             ...
