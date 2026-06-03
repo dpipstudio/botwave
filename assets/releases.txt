@@ -14,6 +14,18 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+
+=--- v1.1.6-neea ---=
+### What Changed
+- **`transaction_id` support**: Commands sent over the remote shell can now carry a `transaction_id=<value>` tag. BotWave echoes it back on every log line produced by that command, making it easy to correlate responses and filter out ambient log noise. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Integrating-botwave-in-your-apps) for usage examples and integration patterns.
+- **`BW_TRANSACTION_ID` handler variable**: The current transaction ID is now exposed to handler scripts as a `BW_TRANSACTION_ID` environment variable (empty string if not set).
+- **Remote output isolation**: Log output from a remote shell command is now sent back only to the client that ran it, instead of being blasted to every connected client. This behavior is on by default and can be disabled with `ISOLATE_REMOTE=false`. This does **NOT** affect STDOUT and eventual file logs.
+- **Docs**: New [Integrating custom backends](https://github.com/dpipstudio/botwave/wiki/Integrating-custom-backends) wiki page covering how to build and register your own backend binary.
+
+> [!WARNING]
+> This update may break scripts relying on the full shared log stream. Either update your scripts, or set `ISOLATE_REMOTE=false`.
+=--- END ---=
+
 =--- v1.1.5-erycibe-rev-1 ---=
 ### What Changed
 - Bumped PiWave dependency to `2.1.14` to fix various functionalities.
