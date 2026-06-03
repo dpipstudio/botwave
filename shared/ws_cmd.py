@@ -1,6 +1,7 @@
 import asyncio
 import threading
 from typing import Callable, Set, Optional
+import uuid
 import websockets
 
 from shared.env import Env
@@ -94,8 +95,8 @@ class WSCMDH: # WebSocket Command Handler
             
             try:
                 async for message in websocket:
-                    Log.print(f"{message}", 'bright_green', icon=ip)
-                    self._inject_command(message, websocket)
+                    self._inject_command(message, websocket, ip)
+
             except websockets.exceptions.ConnectionClosed:
                 pass  # exit
                 
@@ -113,8 +114,9 @@ class WSCMDH: # WebSocket Command Handler
         await websocket.close()
         await websocket.wait_closed()
     
-    def _inject_command(self, message: str, websocket):
+    def _inject_command(self, message: str, websocket, ip: str):
         def execute():
+            Log.print(f"{message}", 'bright_green', icon=ip)
 
             self.command_history.append(message)
             self.history_index = len(self.command_history)
@@ -137,8 +139,10 @@ class WSCMDH: # WebSocket Command Handler
                     Log.warning(f"Hmmm, you can't do that. ;)")
                     return
 
+            Log.set_remote_cmd(websocket) # Output of the exec cmd will eventually be isolated
             self.command_executor(message, interpolate=False)
-        
+            Log.clear_remote_cmd()
+
         self.ws_loop.call_soon_threadsafe(
             lambda: self.ws_loop.run_in_executor(None, execute)
         )
