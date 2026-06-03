@@ -71,7 +71,8 @@ class Logger(DLogger):
         save = True if save_to else False
 
         self.transaction_id = contextvars.ContextVar('transaction_id', default=None)
-
+        self.remote_cmd_socket = contextvars.ContextVar('remote_cmd_socket', default=None)
+        
         super().__init__(
             icons=self.ICONS,
             styles=self.STYLES,
@@ -109,16 +110,28 @@ class Logger(DLogger):
 
         ws_message = f"[{icon}] {message}" if icon else message
 
-        for ws in list(self.ws_clients):
+        origin_ws = self.remote_cmd_socket.get()
+
+        if Env.get_bool("ISOLATE_REMOTE", True) and origin_ws:
+            # If we want to isolate remote outputs AND the log was triggered
+            # by a remote conn, send it only to the remote conn
             try:
                 if self.ws_loop:
-                    asyncio.run_coroutine_threadsafe(ws.send(ws_message), self.ws_loop)
+                    asyncio.run_coroutine_threadsafe(origin_ws.send(ws_message), self.ws_loop)
             except Exception as e:
                 self.warn(f"Error sending to WebSocket client: {e}")
+        else:
+            # if not, blast it to everyone
+            for ws in list(self.ws_clients):
                 try:
-                    self.ws_clients.discard(ws)
-                except Exception:
-                    pass
+                    if self.ws_loop:
+                        asyncio.run_coroutine_threadsafe(ws.send(ws_message), self.ws_loop)
+                except Exception as e:
+                    self.warn(f"Error sending to WebSocket client: {e}")
+                    try:
+                        self.ws_clients.discard(ws)
+                    except Exception:
+                        pass
 
     def __redact_ipv4(self, text: str) -> str:
         return re.sub(r'(?:\d{1,3}\.){3}\d{1,3}', '[REDACTED]', text)
@@ -128,6 +141,12 @@ class Logger(DLogger):
 
     def clear_transaction_id(self):
         self.transaction_id.set(None)
+
+    def set_remote_cmd(self, socket):
+        self.remote_cmd_socket.set(socket)
+
+    def clear_remote_cmd(self):
+        self.remote_cmd_socket.set(None)
 
 def toggle_input(is_active=None):
     global INPUT_ACTIVE
