@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.6-neea",
+      "commit": "7ed07f2d8b29bfb86b9e89cd23e6cf4cc4d632aa"
+    },
+    {
       "codename": "v1.1.5-erycibe-rev-1",
       "commit": "612ce1e366077fd9f8371443dfe6bb8526b01418"
     },
