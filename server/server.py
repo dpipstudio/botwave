@@ -508,11 +508,13 @@ class BotWaveServer:
                             self.loop
                         )
                         future.result(timeout=300)
+                        
                 except asyncio.TimeoutError:
                     Log.error("Command timeout")
+                    Log.end()
+
                 except Exception as e:
                     Log.error(f"Command error: {e}")
-                finally:
                     Log.end()
                     
             else:
