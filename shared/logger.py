@@ -133,6 +133,11 @@ class Logger(DLogger):
                     except Exception:
                         pass
 
+    def end(self):
+        # sends "ENDtransaction_id=<tid>" if a transaction_id is set
+        if self.transaction_id.get():
+            self.print("END") # transaction_id will automatically be appended
+
     def __redact_ipv4(self, text: str) -> str:
         return re.sub(r'(?:\d{1,3}\.){3}\d{1,3}', '[REDACTED]', text)
     
