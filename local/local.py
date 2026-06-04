@@ -144,11 +144,15 @@ class BotWaveCLI:
                 )
 
             if not command:
+                Log.end()
                 return True
 
-            cmd_parts = shlex.split(command)
+            try:
+                cmd_parts = shlex.split(command)
 
-            if not cmd_parts:
+            except ValueError as e:
+                Log.error(f"Invalid command syntax: {e}")
+                Log.end()
                 return True
             
             self.last_argv = cmd_parts
@@ -158,6 +162,7 @@ class BotWaveCLI:
             if cmd == 'start':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
+                    Log.end()
                     return True
                 
                 file_path = os.path.join(self.upload_dir, cmd_parts[1])
@@ -168,6 +173,7 @@ class BotWaveCLI:
                 pi = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
                 self.start_broadcast(file_path, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
+                Log.end()
                 return True
             
             if cmd == 'live':
@@ -178,6 +184,7 @@ class BotWaveCLI:
 
                 self.start_live(frequency, ps, rt, pi)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
+                Log.end()
                 return True
 
 
@@ -186,15 +193,18 @@ class BotWaveCLI:
                 self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": self.current_file or ""})
                 self.queue.manual_pause()
                 Log.broadcast("Broadcast stopped")
+                Log.end()
                 return True
             
             elif cmd == 'queue':
                 self.queue.parse(' '.join(cmd_parts[1:]))
+                Log.end()
                 return True
             
             elif cmd == 'sstv':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]")
+                    Log.end()
                     return True
 
                 img_path = cmd_parts[1]
@@ -208,6 +218,7 @@ class BotWaveCLI:
 
                 if not os.path.exists(img_path):
                     Log.error(f"Image file {img_path} not found")
+                    Log.end()
                     return True
 
                 Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
@@ -215,11 +226,14 @@ class BotWaveCLI:
                 if success:
                     Log.sstv(f"Broadcasting {output_wav} on {frequency} MHz...")
                     self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
+
+                Log.end()
                 return True
             
             elif cmd == 'morse':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]")
+                    Log.end()
                     return True
 
                 text_source = cmd_parts[1]
@@ -231,6 +245,7 @@ class BotWaveCLI:
                         Log.morse(f"Loaded Morse text from file: {text_source}")
                     except Exception as e:
                         Log.error(f"Failed to read text file: {e}")
+                        Log.end()
                         return True
                 else:
                     text = text_source
@@ -250,32 +265,39 @@ class BotWaveCLI:
                 
                 if not success or not os.path.exists(output_wav):
                     Log.error("Failed to generate Morse WAV")
+                    Log.end()
                     return True
                 
                 Log.morse(f"Broadcasting {output_wav}...")
                 self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
                 self.onstart_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": output_wav, "BW_BROADCAST_FREQ": str(frequency)})
+                Log.end()
                 return True
             
             elif cmd == 'lf':
                 self.list_files()
+                Log.end()
                 return True
 
             elif cmd == 'rm':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: rm <filename|all>")
+                    Log.end()
                     return True
                 
                 self.remove_file(cmd_parts[1])
+                Log.end()
                 return True
             
             elif cmd == 'upload':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: upload <source>")
+                    Log.end()
                     return True
                 
                 source = cmd_parts[1]
                 self.upload_file(source)
+                Log.end()
                 return True
             
             elif cmd == 'handlers':
@@ -285,64 +307,78 @@ class BotWaveCLI:
                 else:
                     self.handlers_executor.list_handlers()
 
+                Log.end()
                 return True
             
             elif cmd == 'status':
                 self.display_status()
+                Log.end()
                 return True
             
             elif cmd == 'help':
                 self.display_help()
+                Log.end()
                 return True
             
             elif cmd == '<':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: < <shell command>")
+                    Log.end()
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])
                 self.run_shell_command(shell_command, env)
 
+                Log.end()
                 return True
             
             elif cmd == '|':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: | <shell command>")
+                    Log.end()
                     return True
                 
                 shell_command = ' '.join(cmd_parts[1:])
                 self.run_pipe_command(shell_command, env)
+                Log.end()
                 return True
             
             elif cmd == 'dl':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: dl <url> [destination]")
+                    Log.end()
                     return True
                 
                 url = cmd_parts[1]
                 dest_name = cmd_parts[2] if len(cmd_parts) > 2 else None
 
                 self.download_file(url, dest_name)
+                Log.end()
                 return True
             
             elif cmd == 'get':
                 if len(cmd_parts) < 2:
                     Log.error("Usage: get <keys|*>")
+                    Log.end()
                     return True
                 
                 self.print_envkeys(cmd_parts[1:])
+                Log.end()
                 return True
             
             elif cmd == 'set':
                 if len(cmd_parts) < 3:
                     Log.error("Usage: set <key> <value> [immutable]")
+                    Log.end()
                     return True
                 
                 self.set_envkey(cmd_parts[1], cmd_parts[2], cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False)
+                Log.end()
                 return True
             
             elif cmd == 'exit':
                 self.stop()
+                Log.end()
                 return False
             
             else:
@@ -354,14 +390,17 @@ class BotWaveCLI:
                         silent=True
                         )
                     
+                    Log.end()
                     return True
                     
                 else:
                     Log.error(f"Unknown command: {cmd}")
+                    Log.end()
                     return True
             
         except Exception as e:
             Log.error(f"Error executing command '{command}': {e}")
+            Log.end()
             return True
         
         finally:
