@@ -72,7 +72,6 @@ parse_arguments() {
     SETUP_ALSA=""
     TARGET_BRANCH="main"
 
-
     while [[ $# -gt 0 ]]; do
         case $1 in
             -l|--latest)
@@ -279,23 +278,23 @@ check_root_privileges() {
     fi
 }
 
-validate_os() {
-    source /etc/os-release
-
-    if ! [[ "$ID_LIKE" == *"debian"* || "$ID" == "debian" ]]; then
-        log ERROR "This doesn't seem to be a Debian-based Linux distribution."
-        log WARN "Installation may not work as expected on this system."
-        log WARN "Continue anyway?"
-
+detect_package_manager() {
+    if command -v apt-get &>/dev/null; then
+        PKG_MANAGER="apt"
+    elif command -v dnf &>/dev/null; then
+        PKG_MANAGER="dnf"
+    elif command -v pacman &>/dev/null; then
+        PKG_MANAGER="pacman"
+    else
+        log WARN "Could not detect a supported package manager (apt/dnf/pacman)."
+        log WARN "Continue anyway? You may need to install dependencies manually."
         export MENU_SELECT_COLOR="$RED"
         select_option "No (exit)" "Yes (continue)"
-
-        if [[ $? -eq 0 ]]; then
-            exit 1
-        fi
-
+        [[ $? -eq 0 ]] && exit 1
+        PKG_MANAGER="unknown"
         set -e
     fi
+    log INFO "Detected package manager: $PKG_MANAGER"
 }
 
 validate_hardware() {
@@ -414,22 +413,31 @@ resolve_target_commit() {
 
 install_system_dependencies() {
     log INFO "Installing system dependencies..."
-    silent apt update
-    silent apt install -y \
-        python3 \
-        python3-pip \
-        python3-venv \
-        python3-dev \
-        libsndfile1-dev \
-        libasound2-dev \
-        libffi-dev \
-        libssl-dev \
-        build-essential \
-        make \
-        ffmpeg \
-        git \
-        curl \
-        jq
+
+    case "$PKG_MANAGER" in
+        apt)
+            silent apt-get update
+            silent apt-get install -y \
+                python3 python3-pip python3-venv python3-dev \
+                libsndfile1-dev libasound2-dev libffi-dev libssl-dev \
+                build-essential make ffmpeg git curl jq
+            ;;
+        dnf)
+            silent dnf install -y \
+                python3 python3-pip python3-devel \
+                libsndfile-devel alsa-lib-devel libffi-devel openssl-devel \
+                gcc make ffmpeg git curl jq
+            ;;
+        pacman)
+            silent pacman -Sy --noconfirm \
+                python python-pip \
+                libsndfile alsa-lib libffi openssl \
+                base-devel ffmpeg git curl jq
+            ;;
+        unknown)
+            log WARN "Skipping dependency installation."
+            ;;
+    esac
 }
 
 setup_directory_structure() {
@@ -734,7 +742,7 @@ main() {
 
     log INFO "Full log transcript will be written in $LOG_FILE"
 
-    validate_os
+    detect_package_manager
 
     # find installation mode
     local mode="$INSTALL_MODE"
