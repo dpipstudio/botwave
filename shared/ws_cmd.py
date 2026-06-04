@@ -1,7 +1,7 @@
 import asyncio
 import threading
 from typing import Callable, Set, Optional
-import uuid
+import re
 import websockets
 
 from shared.env import Env
@@ -116,7 +116,7 @@ class WSCMDH: # WebSocket Command Handler
     
     def _inject_command(self, message: str, websocket, ip: str):
         def execute():
-            Log.print(f"{message}", 'bright_green', icon=ip)
+            Log.print(f"{re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()}", 'bright_green', icon=ip)
 
             self.command_history.append(message)
             self.history_index = len(self.command_history)
