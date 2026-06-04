@@ -478,6 +478,7 @@ class BotWaveServer:
                 )
 
             if not command:
+                Log.end()
                 return True
                         
             try:
@@ -485,6 +486,7 @@ class BotWaveServer:
 
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
+                Log.end()
                 return True
             
             self.last_argv = cmd
@@ -510,6 +512,9 @@ class BotWaveServer:
                     Log.error("Command timeout")
                 except Exception as e:
                     Log.error(f"Command error: {e}")
+                finally:
+                    Log.end()
+                    
             else:
                 Log.error("Server not running")
             
