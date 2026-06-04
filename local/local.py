@@ -1058,8 +1058,8 @@ def main():
     check() #from shared.cat
 
     parser = argparse.ArgumentParser(prog="bw-local", description='BotWave Standalone CLI Client')
-    parser.add_argument('--upload-dir', default='/opt/BotWave/uploads/', help='Directory to store uploaded files')
-    parser.add_argument('--handlers-dir', default='/opt/BotWave/handlers/', help='Directory to retrieve l_ handlers from')
+    parser.add_argument('--upload-dir', default=None, help='Directory to store uploaded files')
+    parser.add_argument('--handlers-dir', default=None, help='Directory to retrieve l_ handlers from')
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
