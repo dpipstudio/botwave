@@ -110,7 +110,7 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 
 ### Installation
 
-For Debian-based systems (Raspberry Pi OS, Ubuntu, Zorin OS, etc.), we provide an install script:
+For Linux systems (Raspberry Pi OS, Ubuntu, Fedora, Arch, etc.), we provide an install script:
 ```sh
 curl -sSL https://botwave.dpip.lol/install | sudo bash
 ```
