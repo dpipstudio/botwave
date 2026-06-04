@@ -529,69 +529,93 @@ class BotWaveServer:
         # CLIENT MANAGEMENT 
         elif command_name == 'list':
             self.list_clients()
+            Log.end()
             return
         
         elif command_name == 'kick':
             if len(cmd) < 2:
                 Log.error("Usage: kick <targets> [reason]")
+                Log.end()
                 return
+            
             reason = " ".join(cmd[2:]) if len(cmd) > 2 else "Kicked by administrator"
             await self.kick_client(cmd[1], reason)
+            Log.end()
             return
         
         elif command_name == 'update':
             if len(cmd) < 2:
                 Log.error("Usage: update <targets> [latest|<version>]")
+                Log.end()
                 return
+            
             update_args = ' '.join(cmd[2:]) if len(cmd) > 2 else ''
             await self.send_update(cmd[1], update_args)
+            Log.end()
             return
         
         elif command_name == 'status':
             targets = cmd[1] if len(cmd) > 1 else None
             await self.display_status(targets)
+            Log.end()
             return
         
         # FILE MANAGEMENT 
         elif command_name == 'upload':
             if len(cmd) < 3:
                 Log.error("Usage: upload <targets> <file|folder>")
+                Log.end()
                 return
+            
             await self.upload_file(cmd[1], cmd[2])
+            Log.end()
             return
         
         elif command_name == 'dl':
             if len(cmd) < 3:
                 Log.error("Usage: dl <targets> <url>")
+                Log.end()
                 return
+            
             await self.download_file(cmd[1], cmd[2])
+            Log.end()
             return
         
         elif command_name == 'lf':
             if len(cmd) < 2:
                 Log.error("Usage: lf <targets>")
+                Log.end()
                 return
+            
             await self.list_files(cmd[1])
+            Log.end()
             return
         
         elif command_name == 'rm':
             if len(cmd) < 3:
                 Log.error("Usage: rm <targets> <filename|all>")
+                Log.end()
                 return
+            
             await self.remove_file(cmd[1], cmd[2])
+            Log.end()
             return
         
         elif command_name == 'sync':
             if len(cmd) < 3:
                 Log.error("Usage: sync <targets|folder/> <source_target|folder/>")
+                Log.end()
                 return
+            
             await self.sync_files(cmd[1], cmd[2])
+            Log.end()
             return
         
         # BROADCAST CONTROL 
         elif command_name == 'start':
             if len(cmd) < 3:
                 Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
+                Log.end()
                 return
                 
             frequency = float(cmd[3]) if len(cmd) > 3 else Env.get_int("DEFAULT_FREQ", 90)
@@ -601,11 +625,13 @@ class BotWaveServer:
             pi = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PI", "FFFF")
             
             await self.start_broadcast(cmd[1], cmd[2], frequency, ps, rt, pi, loop)
+            Log.end()
             return
 
         elif command_name == 'live':
             if len(cmd) < 2:
                 Log.error("Usage: live <targets> [freq] [ps] [rt] [pi]")
+                Log.end()
                 return
             
             frequency = float(cmd[2]) if len(cmd) > 2 else Env.get_int("DEFAULT_FREQ", 90)
@@ -614,26 +640,31 @@ class BotWaveServer:
             pi = cmd[5] if len(cmd) > 5 else Env.get("DEFAULT_PI", "FFFF")
 
             await self.start_live(cmd[1], frequency, ps, rt, pi)
+            Log.end()
             return
 
         elif command_name == 'stop':
             if len(cmd) < 2:
                 Log.error("Usage: stop <targets>")
+                Log.end()
                 return
             
             self.queue.manual_pause()
             
             await self.stop_broadcast(cmd[1])
+            Log.end()
             return
         
         elif command_name == 'queue':
             self.queue.parse(' '.join(cmd[1:]))
+            Log.end()
             return
         
         # OTHER MEDIA FORM
         elif command_name == 'sstv':
             if len(cmd) < 3:
                 Log.error("Usage: sstv <targets> <image_path> [mode] [output_wav] [freq] [loop] [ps] [rt] [pi]")
+                Log.end()
                 return
             
             targets = cmd[1]
@@ -648,6 +679,7 @@ class BotWaveServer:
             
             if not os.path.exists(img_path):
                 Log.error(f"Image file {img_path} not found")
+                Log.end()
                 return
             
             Log.sstv(f"Generating SSTV WAV from {img_path}...")
@@ -660,12 +692,15 @@ class BotWaveServer:
                 
                 Log.sstv(f"Broadcasting {os.path.basename(output_wav)}...")
                 await self.start_broadcast(targets, os.path.basename(output_wav), frequency, ps, rt, pi, loop)
+            
+            Log.end()
             return
         
         # MORSE
         elif command_name == 'morse':
             if len(cmd) < 3:
                 Log.error("Usage: morse <targets> <text|file> [wpm] [freq] [loop] [ps] [rt] [pi]")
+                Log.end()
                 return
 
             targets = cmd[1]
@@ -698,6 +733,7 @@ class BotWaveServer:
 
             if not success or not os.path.exists(output_wav):
                 Log.error("Failed to generate Morse WAV")
+                Log.end()
                 return
 
             Log.morse(f"Uploading {output_wav} to {targets}...")
@@ -708,26 +744,28 @@ class BotWaveServer:
 
             Log.morse("Broadcasting Morse...")
             await self.start_broadcast(targets, os.path.basename(output_wav), frequency=frequency, ps=ps, rt=rt, pi=pi, loop=loop)
-
+            Log.end()
             return
         
         # ENVIRONMENT
         elif command_name == 'get':
             if len(cmd) < 2:
                 Log.error("Usage: get <keys|*>")
+                Log.end()
                 return
             
             self.print_envkeys(cmd[1:])
-
+            Log.end()
             return
 
         elif command_name == 'set':
             if len(cmd) < 3:
                 Log.error("Usage: set <key> <value> [immutable]")
+                Log.end()
                 return
             
             self.set_envkey(cmd[1], cmd[2], cmd[3].lower() == 'true' if len(cmd) > 3 else False)
-            
+            Log.end()
             return
 
 
@@ -737,28 +775,35 @@ class BotWaveServer:
                 self.handlers_executor.list_handler_commands(cmd[1])
             else:
                 self.handlers_executor.list_handlers()
+
+            Log.end()
             return
         
         elif command_name == '<':
             if len(cmd) < 2:
                 Log.error("Usage: < <shell command>")
+                Log.end()
                 return
             
             shell_command = ' '.join(cmd[1:])
             await self.run_shell_command(shell_command, env)
+            Log.end()
             return
         
         elif command_name == '|':
             if len(cmd) < 2:
                 Log.error("Usage: | <shell command>")
+                Log.end()
                 return
             
             shell_command = ' '.join(cmd[1:])
             await self.run_pipe_command(shell_command, env)
+            Log.end()
             return
         
         elif command_name == 'help':
             self.display_help()
+            Log.end()
             return
         
         else:
@@ -769,10 +814,11 @@ class BotWaveServer:
                     self._build_context(),
                     silent=True
                     )
+                Log.end()
                 
             else:
-
                 Log.error(f"Unknown command: {command_name}")
+                Log.end()
         
 
     def _build_context(self, client_id: str = None) -> dict:
