@@ -15,6 +15,7 @@ class TipEngine:
         self.__lockfile = os.path.join(tempfile.gettempdir(), f"botwave_{'server' if is_server else 'client'}.pid")
         self.__monitor_thread = None
         self.__monitor_stop = threading.Event()
+        self.__is_server = is_server
 
     def __monitor_resources(self):
         poll_interval = Env.get_int("RESOURCE_POLL_INTERVAL", 10) # seconds between each cpu/ram check
@@ -103,13 +104,13 @@ class TipEngine:
         self.__check_lock_conflict()
         self.__write_lockfile()
 
-        psutil.cpu_percent(interval=None) # kick psutil interval sampler
-        self.__monitor_thread = threading.Thread(target=self.__monitor_resources, daemon=True)
-        self.__monitor_thread.start()
+        if not self.__is_server: # monitor resources on clients
+            psutil.cpu_percent(interval=None) # kick psutil interval sampler
+            self.__monitor_thread = threading.Thread(target=self.__monitor_resources, daemon=True)
+            self.__monitor_thread.start()
 
     def stop(self):
         self.__monitor_stop.set()
-
 
         if os.path.exists(self.__lockfile):
             try:
