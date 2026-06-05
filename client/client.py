@@ -657,9 +657,6 @@ class BotWaveClient:
                     finally:
                         self.stream_active = False
 
-                self.broadcasting = True
-                self.current_file = f"stream:{token[:8]}"
-
                 success = self.piwave.play(
                     sync_generator_wrapper(),
                     sample_rate=rate,
@@ -672,6 +669,9 @@ class BotWaveClient:
                 if success:
                     Log.broadcast(f"Broadcasting stream on {frequency} MHz (rate={rate}, channels={channels})")
                     self.broadcast_start_time = time.time()
+                    self.tips.is_broadcasting = True
+                    self.broadcasting = True
+                    self.current_file = f"stream:{token[:8]}"
 
                 else:
                     raise Exception("PiWave returned a non-true status, set talk to true to debug.")
@@ -681,6 +681,7 @@ class BotWaveClient:
             except Exception as e:
                 Log.error(f"Stream broadcast error: {e}")
                 self.broadcasting = False
+                self.tips.is_broadcasting = False
                 self.broadcast_start_time = None
                 return e
 
@@ -730,15 +731,15 @@ class BotWaveClient:
 
                 success = self.piwave.play(file_path, blocking=False)
 
-                self.broadcasting = True
-                self.current_file = filename
-
                 if not loop:
                     self.piwave_monitor.start(self.piwave, finished, asyncio.get_event_loop())
 
                 if success:
                     Log.broadcast(f"Currently broadcasting {filename} on {frequency} MHz")
                     self.broadcast_start_time = time.time()
+                    self.tips.is_broadcasting = True
+                    self.broadcasting = True
+                    self.current_file = filename
 
                 else:
                     raise Exception("PiWave returned a non-true status, set talk to true to debug.")
@@ -749,6 +750,7 @@ class BotWaveClient:
             except Exception as e:
                 Log.error(f"Broadcast error: {e}")
                 self.broadcasting = False
+                self.tips.is_broadcasting = False
                 self.broadcast_start_time = None
                 return e
 
@@ -778,6 +780,7 @@ class BotWaveClient:
                     self.piwave = None
 
             self.broadcasting = False
+            self.tips.is_broadcasting = False
             self.broadcast_start_time = None
             self.current_file = None
 
