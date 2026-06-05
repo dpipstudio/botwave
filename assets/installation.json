@@ -150,7 +150,8 @@
       "aiofiles==0.8.0",
       "aiohttp",
       "morse-talk==0.2",
-      "pyalsaaudio==0.11.0"
+      "pyalsaaudio==0.11.0",
+      "psutil==7.2.2"
     ],
     "binaries": [
       "bin/bw-autorun",
