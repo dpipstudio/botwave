@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.7-dyera ---=
+### What Changed
+- **Multi-distro install support**: The install script now auto-detects your package manager (`apt`, `dnf`, or `pacman`) and installs the right dependencies. Fedora and Arch are now supported out of the box.
+- **Resource monitor**: BotWave now warns you when CPU or RAM usage gets high during a broadcast. Configurable via `RESOURCE_POLL_INTERVAL`, `RESOURCE_WARN_COOLDOWN`, `RESOURCE_CPU_THRESHOLD`, and `RESOURCE_RAM_THRESHOLD`.
+- **`l_onexit` / `s_onexit` handlers**: New handler events that fire when the local client or server shuts down.
+- **Bug fixes**: Broadcasting state is now only set after a confirmed successful start. `live` command RT/PI argument indices were off and have been corrected. Commands now consistently emit an `END` marker on all exit paths, including errors when given a transaction ID.
+=--- END ---=
 
 =--- v1.1.6-neea ---=
 ### What Changed
