@@ -432,6 +432,9 @@ class BotWaveCLI:
 
     def onready_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onready", dir_path, context or self._build_context())
+    
+    def onexit_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("l_onexit", dir_path, context or self._build_context())
 
     def onstart_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("l_onstart", dir_path, context or self._build_context())
@@ -1049,6 +1052,8 @@ class BotWaveCLI:
             signal.signal(signal.SIGTERM, self.original_sigterm_handler)
 
         self.tips.stop()
+
+        self.onexit_handlers()
 
         Log.client("Client stopped")
 
