@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.7-dyera",
+      "commit": "de068f8d0badcfe32c7654f6f666e41f8752cbd0"
+    },
+    {
       "codename": "v1.1.6-neea",
       "commit": "7ed07f2d8b29bfb86b9e89cd23e6cf4cc4d632aa"
     },
