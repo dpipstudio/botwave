@@ -8,13 +8,15 @@ Handler files must start with specific prefixes and have the correct file extens
 
 - **Prefixes**:
   - `l_onready`: Executes when the system is ready. | `Local client`
-  - `l_onstart`: Executes when the system starts. | `Local client`
-  - `l_onstop`: Executes when the system stops. | `Local client`
+  - `l_onexit`: Executes when the system exits. | `Local client`
+  - `l_onstart`: Executes when a broadcast starts. | `Local client`
+  - `l_onstop`: Executes when a broadcast stops. | `Local client`
   - `s_onwsjoin`: Executes when a websocket connection is established. | `Local client`
   - `s_onwsleave`: Executes when a websocket connection is terminated. | `Local client`
   - `s_onready`: Executes when the system is ready. | `Server`
-  - `s_onstart`: Executes when the system starts. | `Server`
-  - `s_onstop`: Executes when the system stops. | `Server`
+  - `s_onexit`: Executes when the system exits. | `Server`
+  - `s_onstart`: Executes when a broadcast starts. | `Server`
+  - `s_onstop`: Executes when a broadcast stops. | `Server`
   - `s_onconnect`: Executes when a connection is established. | `Server`
   - `s_ondisconnect`: Executes when a connection is terminated. | `Server`
   - `s_onwsjoin`: Executes when a websocket connection is established. | `Server`
