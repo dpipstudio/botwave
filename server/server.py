@@ -188,6 +188,8 @@ class BotWaveServer:
             Log.server("File transfer (HTTP) server stopped")
 
         self.tips.stop()
+
+        self.onexit_handlers()
         
         self.running = False
         Log.success("Server shutdown complete")
@@ -870,6 +872,9 @@ class BotWaveServer:
 
     def onready_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("s_onready", dir_path, context or self._build_context())
+
+    def onexit_handlers(self, dir_path=None, context=None):
+        self.handlers_executor.run_handlers("s_onexit", dir_path, context or self._build_context())
 
     def onstart_handlers(self, dir_path=None, context=None):
         self.handlers_executor.run_handlers("s_onstart", dir_path, context or self._build_context())
