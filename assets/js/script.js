@@ -1,1 +1,0 @@
-fetch('https://track.dpip.lol?id=botwave') // dpip.lol/privacy for the privacy policy

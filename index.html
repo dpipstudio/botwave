@@ -1,134 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!--=============== FAVICON ===============-->
     <link rel="shortcut icon" href="https://images.dpip.lol/bw-logo-r.png" type="image/png">
     <link rel="icon" href="https://images.dpip.lol/bw-logo-r.png" type="image/png">
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <title>BotWave - Your RPI FM Network</title>
-    <meta property="og:title" content="BotWave - Your RPI FM Network">
-    <meta property="og:description"
-        content="Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.">
+
+    <!--=============== FONTS ===============-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!--=============== CSS ===============-->
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <title>Your RPI FM Network</title>
+    <meta property="og:title" content="Your Raspberry Pi FM Network">
+    <meta property="og:description" content="Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.">
     <meta property="og:image" content="https://images.dpip.lol/bw-logo-r.png">
     <meta property="og:url" content="https://botwave.dpip.lol">
-    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta property="og:type" content="website" />
     <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
-    <meta name='description'
-        content='Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.'>
-    <meta name='subject' content='FM Broadcasting'>
-    <meta name='copyright' content='botwave.dpip.lol'>
-    <meta name='language' content='EN'>
-    <meta name='topic' content='BotWave'>
-    <meta name='Classification' content='BotWave'>
+    <meta name='description' content='Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.'>
     <meta name='author' content='douxx.tech, douxx@douxx.tech'>
     <meta name='designer' content='douxx.tech'>
     <meta name='reply-to' content='admin@dpip.lol'>
     <meta name='url' content='https://botwave.dpip.lol/'>
     <meta name='identifier-URL' content='https://botwave.dpip.lol'>
-    <meta name='distribution' content='Global'>
-    <meta name='rating' content='General'>
-    <meta name='target' content='all'>
-    <meta name="news_keywords" content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
     <meta name='og:site_name' content="Your RPI FM Network">
     <meta name='og:email' content='admin@dpip.lol'>
 </head>
+
 <body>
-    <header>
-        <nav class="container">
-            <img class="logo" src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave Logo">
+
+    <header id="header">
+        <nav>
+            <a href="/" class="logo">
+                <img src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave" />
+            </a>
             <ul class="nav-links">
-                <li><a href="#features">Home</a></li>
+                <li><a href="#top">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#installation">Install</a></li>
             </ul>
+            <div class="mobile-menu-btn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </nav>
     </header>
 
+    <div id="top"></div>
+    <section class="hero">
+        <div class="hero-overlay">
+            <div class="hero-text">
+                <span class="hero-label">Raspberry Pi FM Network</span>
+                <p class="hero-tagline">Broadcast.<br>Anywhere.<br>Now.</p>
+            </div>
+        </div>
+    </section>
+
     <main>
-        <section class="hero">
+
+        <section class="about-section" id="about">
             <div class="container">
-                <div class="hero-content">
-                    <h1>BotWave</h1>
-                    <p>Your Raspberry Pi FM Network. Broadcast audio files over FM radio using a powerful server-client architecture.</p>
-                    <a href="#installation" class="cta-button">Get Started</a> <a href="https://github.com/dpipstudio/botwave" target="_blank" class="cta-button">GitHub</a>
+                <h1 class="about-title">FM radio, reimagined for the maker.</h1>
+                <p class="about-body">BotWave is a server-client platform built around Raspberry Pi. Upload audio, configure frequencies, manage multiple Pi clients from one place — and broadcast over the airwaves. Prefer to keep it simple? Run the client standalone on a single Pi, no server needed.</p>
+                <div class="hero-actions">
+                    <a href="#installation" class="cta-btn">Get Started</a>
+                    <a href="https://github.com/dpipstudio/botwave" target="_blank" rel="noopener" class="cta-btn cta-btn--ghost">
+                        GitHub
+                        <img src="assets/icons/external-link-line.svg" alt="" class="cta-icon">
+                    </a>
                 </div>
             </div>
         </section>
 
-        <section id="features" class="features">
+        <!-- Features -->
+        <section class="features-section" id="features">
             <div class="container">
-                <h2>Features</h2>
+                <span class="section-label">What it does</span>
+                <h2 class="section-title">Everything you need<br>to run your station.</h2>
+            </div>
+            <div class="container">
                 <div class="features-grid">
                     <div class="feature-card">
+                        <span class="feature-num">01</span>
                         <h3>Server-Client Architecture</h3>
-                        <p>Manage multiple Raspberry Pi clients from a central server with ease.</p>
+                        <p>Manage multiple Raspberry Pi clients from a single central server.</p>
                     </div>
                     <div class="feature-card">
+                        <span class="feature-num">02</span>
                         <h3>Audio Broadcasting</h3>
-                        <p>Broadcast audio files over FM radio with high quality transmission.</p>
+                        <p>Broadcast audio files or live streams over FM radio with high-quality transmission.</p>
                     </div>
                     <div class="feature-card">
-                        <h3>File Upload</h3>
-                        <p>Upload audio files to clients for broadcasting remotely.</p>
+                        <span class="feature-num">03</span>
+                        <h3>Remote File Upload</h3>
+                        <p>Upload audio files directly to clients for broadcasting, from anywhere.</p>
                     </div>
                     <div class="feature-card">
+                        <span class="feature-num">04</span>
                         <h3>Remote Management</h3>
-                        <p>Start, stop, and manage broadcasts from anywhere.</p>
+                        <p>Start, stop, and manage broadcasts without touching your Pi.</p>
                     </div>
                     <div class="feature-card">
+                        <span class="feature-num">05</span>
                         <h3>Authentication</h3>
-                        <p>Secure client-server authentication with passkeys.</p>
+                        <p>Secure client-server communication with passkey-based auth.</p>
                     </div>
                     <div class="feature-card">
-                        <h3>Protocol Versioning</h3>
-                        <p>Ensure compatibility between server and clients automatically.</p>
+                        <span class="feature-num">06</span>
+                        <h3>Integration</h3>
+                        <p>Easy integration with other applications and scripts.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="installation" class="getting-started">
+        <section class="install-section" id="installation">
             <div class="container">
-                <h2>Getting Started</h2>
-                <div class="installation-content">
-                    <div class="install-step">
-                        <h3>1. Installation</h3>
-                        <p>For Linux systems, use our automatic installation script:</p>
-                        <code>curl -sSL https://botwave.dpip.lol/install | sudo bash</code>
-                        <p>Add <code>-s &lt;server, client or both&gt;</code> to directly install the chosen component.</p>
+                <span class="section-label">Setup</span>
+                <h2 class="section-title">Up and running<br>in minutes.</h2>
+                <div class="steps">
+
+                    <div class="step">
+                        <span class="step-num">01</span>
+                        <div class="step-body">
+                            <h3>Installation</h3>
+                            <p>For Linux systems, run the automatic install script:</p>
+                            <div class="code-block">
+                                <code>curl -sSL https://botwave.dpip.lol/install | sudo bash</code>
+                                <button class="copy-btn" aria-label="Copy command">Copy</button>
+                            </div>
+                            <p>Append <code class="inline">-s &lt;server, client or both&gt;</code> to install a specific component directly.</p>
+                        </div>
                     </div>
-                    <div class="install-step">
-                        <h3>2. Hardware Setup</h3>
-                        <p>Connect an antenna or cable to your Raspberry Pi's GPIO 4 (pin 7) for broadcasting.</p>
+
+                    <div class="step">
+                        <span class="step-num">02</span>
+                        <div class="step-body">
+                            <h3>Hardware Setup</h3>
+                            <p>Connect an antenna or wire to your Raspberry Pi's <code class="inline">GPIO 4 (pin 7)</code> for FM broadcast.</p>
+                        </div>
                     </div>
-                    <div class="install-step">
-                        <h3>3. Start Broadcasting</h3>
-                        <p>Use the BotWave server to manage clients, upload audio files, and start broadcasting over FM radio.</p>
+
+                    <div class="step">
+                        <span class="step-num">03</span>
+                        <div class="step-body">
+                            <h3>Start Broadcasting</h3>
+                            <p>Use the BotWave server to manage your clients, upload audio files, and go live over FM.</p>
+                        </div>
                     </div>
+
                 </div>
-                <div class="docs-link">
-                    <a href="https://github.com/dpipstudio/botwave/wiki" target="_blank" class="cta-button">Read Full Documentation</a>
-                </div>
+                <a href="https://github.com/dpipstudio/botwave/wiki" target="_blank" rel="noopener" class="gh-link">
+                    Read full documentation ↗
+                </a>
             </div>
         </section>
 
     </main>
 
     <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-links">
+        <div class="container footer-inner">
+            <div class="footer-left">
+                <div class="footer-logo">BotWave</div>
+                <p class="footer-sub">Your Raspberry Pi FM Network.<br>Built by DPIP Studio.</p>
+            </div>
+            <div class="footer-right">
+                <nav class="footer-nav">
                     <a href="mailto:admin@dpip.lol">Contact</a>
-                    <a href="https://github.com/dpipstudio/botwave">Github</a>
-                </div>
-                <div class="credits">
-                    <a href="https://dpip.lol" target="_blank"><img src="https://images.dpip.lol/big_logo.png" alt="DPIP Logo"></a>
-                </div>
+                    <a href="https://github.com/dpipstudio/botwave" target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://dpip.lol" target="_blank" rel="noopener">DPIP Studio</a>
+                </nav>
+                <p class="footer-copy">&copy; 2025-2026 DPIP Studio. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="/assets/js/script.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
+
 </html>
