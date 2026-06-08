@@ -315,7 +315,7 @@ if [[ ! -f "$TARGET_FILE" ]]; then
 # Each line represents a command to be executed
 # Empty lines and lines starting with # are ignored
 # 
-# Check documentation on github.com/dpipstudio/botwave for more details
+# Check documentation on github.com/dpipstudio/botwave/wiki/Automate-your-setup for more details
 #
 # Available commands: ${VALID_COMMANDS[*]}
 #
