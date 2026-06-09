@@ -116,7 +116,8 @@ class WSCMDH: # WebSocket Command Handler
     
     def _inject_command(self, message: str, websocket, ip: str):
         def execute():
-            Log.print(f"{re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()}", 'bright_green', icon=ip)
+            cmd = re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()
+            Log.print(cmd, 'bright_green', icon=ip)
 
             self.command_history.append(message)
             self.history_index = len(self.command_history)
