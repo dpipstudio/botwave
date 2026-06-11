@@ -5,11 +5,12 @@
 BotWave Client is a client application designed to connect to a BotWave Server, allowing for the upload and broadcast of audio files over FM radio using a Raspberry Pi.
 
 ## Requirements
-* Raspberry Pi - Officially working : RPI 0 1, 2, 3, and 4
-* Root Access
-* Python >= 3.6
-* [bw_custom](https://github.com/dpipstudio/bw_custom) installed
-* [PiWave](https://github.com/douxxtech/piwave) python module
+
+- Raspberry Pi (Officially working: RPI 0, 1, 2, 3, and 4)
+- Root Access
+- Python >= 3.9
+- [bw_custom](https://github.com/dpipstudio/bw_custom) installed
+- [PiWave](https://github.com/douxxtech/piwave) Python module
 
 ## Installation
 
@@ -22,27 +23,29 @@ BotWave Client is a client application designed to connect to a BotWave Server, 
 >
 > Please exercise caution and ensure you have the proper permissions, equipment, and knowledge of regulations before using BotWave for broadcasting purposes.
 
-We highly recommand using the official installer (Check the [main README](/README.md)) -- Note that if you aren't on a raspberry pi, the client is very unlikely to work.
+We highly recommend using the official installer (Check the [main README](/README.md)). Note that if you aren't on a Raspberry Pi, the client is very unlikely to work.
 
 ## Usage
-To start the BotWave Client, use the following command:
 
+To start the BotWave Client, use the following command:
 ```bash
 sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [server_host]
 ```
 
 ### Arguments
-* `server_host`: The hostname or IP address of the BotWave Server. Will prompt for value if not provided.
-* `--port`: The port on which the server is listening (default: `9938`).
-* `--fhost`: The hostname or IP address of the BotWave File Server (default: `>server_host`).
-* `--fport`: The port on which the server is listening (default: `9921`).
-* `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads`).
-* `--skip-checks`: Skip system requirements checks.
-* `--pk`: Optional passkey for authentication.
-* `--talk`: Makes PiWave (broadcast manager) output logs visible.
-* `--config`: Path to a config file to load into environment.
+
+- `server_host`: The hostname or IP address of the BotWave Server. Will prompt for a value if not provided.
+- `--port`: The port on which the server is listening (default: `9938`).
+- `--fhost`: The hostname or IP address of the file transfer server (default: `server_host`).
+- `--fport`: The port on which the file transfer server is listening (default: `9921`).
+- `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads/`).
+- `--pk`: Optional passkey for authentication.
+- `--skip-checks`: Skip system requirements checks.
+- `--talk`: Makes PiWave (broadcast manager) output logs visible.
+- `--config`: Path to a config file to load into environment.
 
 ### Example
+
 ```bash
-sudo bw-client 9.9.9.9 --port 9939 --upload-dir /tmp/my_uploads --pk mypasskey
+sudo bw-client 192.168.1.10 --port 9938 --upload-dir /tmp/my_uploads --pk mypasskey
 ```
