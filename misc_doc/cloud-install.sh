@@ -80,82 +80,17 @@ install_botwave() {
 }
 
 create_tunnel_script() {
-    log INFO "Creating bore tunnel script..."
-    
-    local script_dir="/opt/BotWave/cloudtunnel"
-    local script_file="$script_dir/tunnel.sh"
-    
-    sudo mkdir -p "$script_dir"
-    
-    sudo tee "$script_file" > /dev/null <<'EOF'
-#!/bin/bash
+    local BW_INSTALL="/opt/BotWave"
+    sudo mkdir -p "$BW_INSTALL/scripts/tunnels"
+    sudo mkdir -p "$BW_INSTALL/handlers"
 
-# BotWave bore.pub Tunnel Starter
+    # those paths are supposing we run this from the repo root
+    # maybe fix one day
 
+    sudo cp misc_doc/cloud_tunnels/scripts/* "$BW_INSTALL/scripts/tunnels/"
+    sudo chmod +x "$BW_INSTALL/scripts/tunnels/"*.sh
 
-echo "Starting bore.pub tunnels..."
-echo "This will expose your BotWave server to the internet."
-echo ""
-
-pkill bore 2>/dev/null || true
-sleep 1
-
-# Start tunnels (bore.pub assigns random ports)
-bore local 9938 --to bore.pub > /tmp/bore_9938.log 2>&1 &
-echo $! > /tmp/bore_9938.pid
-
-bore local 9921 --to bore.pub > /tmp/bore_9921.log 2>&1 &
-echo $! > /tmp/bore_9921.pid
-
-sleep 1
-
-echo ""
-echo "=========================================="
-WS_PORT=$(grep -oP 'listening at bore.pub:\K\d+' /tmp/bore_9938.log 2>/dev/null | head -1)
-HTTP_PORT=$(grep -oP 'listening at bore.pub:\K\d+' /tmp/bore_9921.log 2>/dev/null | head -1)
-
-if [ -n "$WS_PORT" ] && [ -n "$HTTP_PORT" ]; then
-    echo "WebSocket: bore.pub:$WS_PORT (local 9938)"
-    echo "HTTP:      bore.pub:$HTTP_PORT (local 9921)"
-    echo "=========================================="
-    echo ""
-    echo "Connect with: sudo bw-client bore.pub --port $WS_PORT --fport $HTTP_PORT"
-    echo ""
-else
-    echo "Error: Could not get tunnel ports."
-    echo "Check logs:"
-    echo "  /tmp/bore_9938.log"
-    echo "  /tmp/bore_9921.log"
-fi
-echo "=========================================="
-
-# Tunnels will continue running in background
-# No 'wait' needed - let bw-server continue
-EOF
-
-    sudo chmod +x "$script_file"
-    log INFO "Tunnel script created at $script_file"
-}
-
-create_tunnel_handler() {
-    log INFO "Creating tunnel handler..."
-    
-    local handler_file="/opt/BotWave/handlers/s_onready.shdl"
-    
-    sudo mkdir -p "$(dirname "$handler_file")"
-    
-    sudo tee "$handler_file" > /dev/null <<'EOF'
-# BotWave Server Ready Handler
-# Automatically starts bore.pub tunnels when server is ready
-< echo "=========================================="
-< echo "BotWave Server Started!"
-< echo "=========================================="
-< echo ""
-< echo "Launching tunnels, please wait."
-< bash /opt/BotWave/cloudtunnel/tunnel.sh
-EOF
-
-    log INFO "Tunnel handler created at $handler_file"
+    sudo cp misc_doc/cloud_tunnels/handlers/* "$BW_INSTALL/handlers/"
 }
 
 # ============================================================================
@@ -178,7 +113,6 @@ main() {
     
     create_tunnel_script
     
-    create_tunnel_handler
     
     echo ""
     log INFO "Installation complete!"

@@ -1,0 +1,3 @@
+< echo "Stopping tunnels..."
+< pkill bore
+< echo "Tunnels stopped"
