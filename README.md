@@ -437,8 +437,8 @@ For more detailed documentation, check the following resources:
 - **Client help**: [`/client/client.md`](/client/client.md)
 - **Local client help**: [`/local/local.md`](/local/local.md)
 - **AutoRun help**: [`/autorun/autorun.md`](/autorun/autorun.md)
-- **Automated actions**: [`/misc_doc/handlers.md`](/misc_doc/handlers.md), [`Main/Automate Your Setup`](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup)
-- **Remote management protocol**: [`/misc_doc/websocket.md`](/misc_doc/websocket.md)
+- **Automated actions**: [`Main/Automate Your Setup`](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup)
+- **Remote management**: [`Main/Connecting remotely`](https://github.com/dpipstudio/botwave/wiki/Connecting-remotely)
 
 ### Updating BotWave
 ```bash
