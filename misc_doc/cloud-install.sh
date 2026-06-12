@@ -87,7 +87,7 @@ create_tunnel_script() {
     # those paths are supposing we run this from the repo root
     # maybe fix one day
 
-    sudp cp misc_doc/cloud_tunnels/scripts/* "$BW_INSTALL/scripts/tunnels/"
+    sudo cp misc_doc/cloud_tunnels/scripts/* "$BW_INSTALL/scripts/tunnels/"
     sudo chmod +x "$BW_INSTALL/scripts/tunnels/"*.sh
 
     sudo cp misc_doc/cloud_tunnels/handlers/* "$BW_INSTALL/handlers/"
