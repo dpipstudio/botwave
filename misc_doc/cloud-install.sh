@@ -113,7 +113,6 @@ main() {
     
     create_tunnel_script
     
-    create_tunnel_handler
     
     echo ""
     log INFO "Installation complete!"
