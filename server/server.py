@@ -346,7 +346,7 @@ class BotWaveServer:
             
             client_version = args[0]
             
-            if not versions_compatible(PROTOCOL_VERSION, client_version):
+            if not versions_compatible(PROTOCOL_VERSION, client_version) and not Env.get_bool("ALLOW_PROTO_MISMATCH"):
                 Log.error(f"Protocol version mismatch!")
                 Log.error(f"  Server version: {PROTOCOL_VERSION}")
                 Log.error(f"  Client version: {client_version}")
