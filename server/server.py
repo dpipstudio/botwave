@@ -346,7 +346,7 @@ class BotWaveServer:
             
             client_version = args[0]
             
-            if not versions_compatible(PROTOCOL_VERSION, client_version):
+            if not versions_compatible(PROTOCOL_VERSION, client_version) and not Env.get_bool("ALLOW_PROTO_MISMATCH"):
                 Log.error(f"Protocol version mismatch!")
                 Log.error(f"  Server version: {PROTOCOL_VERSION}")
                 Log.error(f"  Client version: {client_version}")
@@ -443,7 +443,7 @@ class BotWaveServer:
         Log.success(f"Client registered: {client.get_display_name()}")
 
         if protocol_version != PROTOCOL_VERSION:
-            Log.version(f"  Client protocol version: {protocol_version}. Some features may not work correctly.")
+            Log.version(f"Client protocol version ({protocol_version}) does not match ours ({PROTOCOL_VERSION}). Some features may not work correctly.")
         
         delattr(websocket, 'reg_data')
         self.onconnect_handlers(context=self._build_context(client_id))
