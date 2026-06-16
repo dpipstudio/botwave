@@ -71,6 +71,17 @@ class EnvManager:
         
         except ValueError:
             return default
+        
+    def get_float(self, key: str, default: float | None = None) -> float | None:
+        """Return the value of a key as a float, or default if missing or invalid."""
+
+        value = self.get(key)
+
+        try:
+            return float(value) if value is not None else default
+        
+        except ValueError:
+            return default
 
     def get_bool(self, key: str, default: bool = False) -> bool:
         """Return the value of a key as a boolean, or default if missing."""
