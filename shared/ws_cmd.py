@@ -141,7 +141,7 @@ class WSCMDH: # WebSocket Command Handler
                     return
 
             Log.set_remote_cmd(websocket) # Output of the exec cmd will eventually be isolated
-            self.command_executor(message, interpolate=False)
+            self.command_executor(message, interpolate=Env.get_bool("INTERPOLATE_REMOTE"))
             Log.clear_remote_cmd()
 
         self.ws_loop.call_soon_threadsafe(
