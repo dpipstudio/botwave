@@ -627,7 +627,7 @@ class BotWaveServer:
                 Log.end()
                 return
                 
-            frequency = float(cmd[3]) if len(cmd) > 3 else Env.get_int("DEFAULT_FREQ", 90)
+            frequency = float(cmd[3]) if len(cmd) > 3 else Env.get_float("DEFAULT_FREQ", 90)
             loop = cmd[4].lower() == 'true' if len(cmd) > 4 else False
             ps = cmd[5] if len(cmd) > 5 else Env.get("DEFAULT_PS", "BotWave")
             rt = cmd[6] if len(cmd) > 6 else Env.get("DEFAULT_RT", cmd[2]) # file name
@@ -643,7 +643,7 @@ class BotWaveServer:
                 Log.end()
                 return
             
-            frequency = float(cmd[2]) if len(cmd) > 2 else Env.get_int("DEFAULT_FREQ", 90)
+            frequency = float(cmd[2]) if len(cmd) > 2 else Env.get_float("DEFAULT_FREQ", 90)
             ps = cmd[3] if len(cmd) > 3 else Env.get("DEFAULT_PS", "BotWave")
             rt = cmd[4] if len(cmd) > 4 else Env.get("DEFAULT_RT", "Broadcasting")
             pi = cmd[5] if len(cmd) > 5 else Env.get("DEFAULT_PI", "FFFF")
@@ -680,7 +680,7 @@ class BotWaveServer:
             img_path = cmd[2]
             mode = cmd[3] if len(cmd) > 3 else None
             output_wav = cmd[4] if len(cmd) > 4 else os.path.join(tempfile.gettempdir(), os.path.splitext(os.path.basename(img_path))[0] + ".wav")
-            frequency = float(cmd[5]) if len(cmd) > 5 else Env.get_int("DEFAULT_FREQ", 90)
+            frequency = float(cmd[5]) if len(cmd) > 5 else Env.get_float("DEFAULT_FREQ", 90)
             loop = cmd[6].lower() == 'true' if len(cmd) > 6 else False
             ps = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_PS", "BotWave")
             rt = cmd[8] if len(cmd) > 8 else Env.get("DEFAULT_RT", output_wav)
@@ -728,7 +728,7 @@ class BotWaveServer:
 
             wpm = int(cmd[3]) if len(cmd) > 3 else Env.get_int("DEFAULT_MORSE_WPM", 20)
             morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
-            frequency = float(cmd[4]) if len(cmd) > 4 else Env.get_int("DEFAULT_FREQ", 90)
+            frequency = float(cmd[4]) if len(cmd) > 4 else Env.get_float("DEFAULT_FREQ", 90)
             loop = cmd[5].lower() == 'true' if len(cmd) > 5 else False
             ps = cmd[6] if len(cmd) > 6 else Env.get("DEFAULT_PS", "BotWave")
             rt = cmd[7] if len(cmd) > 7 else Env.get("DEFAULT_RT", "Morse")
