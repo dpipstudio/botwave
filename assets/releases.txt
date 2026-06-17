@@ -14,6 +14,15 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.8-kalmia ---=
+### What Changed
+- **Frequency defaults bug fix**: `DEFAULT_FREQ` was being read as an integer, silently truncating decimal frequencies (e.g. `87.5` became `87`). Now read as a float in `start`, `live`, `sstv`, and `morse` on both local client and server.
+- **`ALLOW_PROTO_MISMATCH`**: New server-side env var to bypass the protocol version mismatch check and let outdated/newer clients connect anyway.
+- **Remote command interpolation**: `{VAR}` interpolation in remote shell commands is now available, gated behind the new `INTERPOLATE_REMOTE` env var (off by default).
+- **Cloud tunnel install refactor**: The bore.pub tunnel setup in `cloud-install.sh` now has a better plugin structure to match [the standards](https://github.com/dpipstudio/bw_plugin). A new `s_onexit` handler also stops the tunnels when the server shuts down.
+- **Misc doc fixes**: Fixed a lot of inconsistent stuff across different doc files.
+=--- END ---=
+
 =--- v1.1.7-dyera ---=
 ### What Changed
 - **Multi-distro install support**: The install script now auto-detects your package manager (`apt`, `dnf`, or `pacman`) and installs the right dependencies. Fedora and Arch are now supported out of the box.
