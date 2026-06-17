@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.8-kalmia",
+      "commit": "699656b3230b585b8d4262a54dbee713b2bf4b79"
+    },
+    {
       "codename": "v1.1.7-dyera",
       "commit": "de068f8d0badcfe32c7654f6f666e41f8752cbd0"
     },
