@@ -750,7 +750,7 @@ class BotWaveCLI:
             self.stop_broadcast()
 
         try:
-            backend_classes["bw_custom"] = BWCustom
+            backend_classes[self.backend_name] = BWCustom
 
             self.piwave = PiWave(
                 frequency=frequency,
