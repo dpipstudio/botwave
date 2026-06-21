@@ -1597,8 +1597,6 @@ class BotWaveServer:
 
     async def stop_broadcast(self, client_targets: str):
 
-        self.alsa.stop()
-
         target_clients = self._parse_client_targets(client_targets)
         
         if not target_clients:
@@ -1634,6 +1632,7 @@ class BotWaveServer:
         Log.print("")        
         Log.info(f"Success: {len(results['stopped'])}, Failure: {len(results['failed'])}")
 
+        self.alsa.stop()
         self.onstop_handlers()
         return len(results['stopped']) > 0
 
