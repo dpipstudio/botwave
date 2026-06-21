@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.9-poitea ---=
+### What Changed
+- **Audio streaming reliability fix**: Multiple simultaneous audio consumers (e.g. multiple server streams) no longer compete for the same ALSA reads, which could cause stalls or corrupted playback. A single internal reader now distributes audio to every active listener, fixing stuttering on multiple streams.
+- **Cleaner broadcast stop**: Stopping a server broadcast now waits until clients are confirmed stopped before releasing the audio capture, avoiding a stop race issue.
+- **Bug fix**: Fixed custom backend registration on the local client `live` command.
+=--- END ---=
+
 =--- v1.1.8-kalmia ---=
 ### What Changed
 - **Frequency defaults bug fix**: `DEFAULT_FREQ` was being read as an integer, silently truncating decimal frequencies (e.g. `87.5` became `87`). Now read as a float in `start`, `live`, `sstv`, and `morse` on both local client and server.
