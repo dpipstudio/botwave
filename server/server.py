@@ -1163,8 +1163,8 @@ class BotWaveServer:
             
             client = self.clients[client_id]
             
-            token = self.http_server.create_stream_token(self.alsa.audio_generator(), self.alsa.rate, self.alsa.channels)
-
+            client_queue = self.alsa.subscribe()
+            token = self.http_server.create_stream_token(self.alsa.audio_generator(client_queue), self.alsa.rate, self.alsa.channels)
             try:
                 response = await client.proto.send(
                     Commands.STREAM_TOKEN,
