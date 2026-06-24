@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.9-poitea-rev-2",
+      "commit": "53ea20b28c39d49668090471aaab5061d99bf113"
+    },
+    {
       "codename": "v1.1.9-poitea",
       "commit": "6af2f75eddf1732fa58a0dcb4d554dceb39d7ee6"
     },
