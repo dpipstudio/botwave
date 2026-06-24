@@ -157,11 +157,13 @@ class BotWaveServer:
             
             self.running = True
 
-            if Env.get("WS_CMD_PORT"):
+            if Env.get("REMOTE_CMD_PORT"):
                 threading.Thread(target=self._start_websocket_server, daemon=True).start()
             
             if not self.skip_checks:
                 self._check_updates()
+
+            threading.Thread(target=self.onready_handlers, daemon=True).start() # otherwise it genuinely breaks async stuff
             
             while self.running:
                 await asyncio.sleep(1)
@@ -940,7 +942,6 @@ class BotWaveServer:
 
     async def run_pipe_command(self, command: str, env: Dict[str, str] = None):
         try:
-            
             shell = Env.get("CMD_INTERPRETER")
 
             if shell:
@@ -952,14 +953,24 @@ class BotWaveServer:
                 stderr=asyncio.subprocess.PIPE,
                 env=env
             )
-            
+
+            tasks = []
+
             async for line in process.stdout:
                 line = line.decode('utf-8').strip()
                 if line:
-                    # schedule each command as a task instead of awaiting directly to prevent blocking
-                    asyncio.create_task(
-                        self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+                    tasks.append(
+                        asyncio.create_task(
+                            self._execute_command_async(line.split()[0].lower(), shlex.split(line))
+                        )
                     )
+
+            # wait for the subprocess itself to finish too
+            await process.wait()
+
+            # wait for every scheduled command to actually complete before returning
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
 
         except Exception as e:
             Log.error(f"Error executing pipe command: {e}")
@@ -2111,10 +2122,6 @@ def main():
     server = BotWaveServer()
     
     if Env.get_bool("DAEMON"):
-        if Env.get("REMOTE_CMD_PORT"):
-            threading.Thread(target=server._start_websocket_server, daemon=True).start()
-            time.sleep(1)
-
         Log.info("Running in daemon mode. Server will continue to run in the background.")
         
         loop = asyncio.new_event_loop()
@@ -2160,9 +2167,6 @@ def main():
 
             sys.exit(1)
 
-        if Env.get("REMOTE_CMD_PORT"):
-            server._start_websocket_server()
-
         if HAS_READLINE:
             readline.parse_and_bind('tab: complete')
             readline.parse_and_bind('set editing-mode emacs')
@@ -2174,10 +2178,7 @@ def main():
         
         Log.print("Type 'help' for commands", 'bright_yellow')
         
-        try:
-
-            server.onready_handlers()
-            
+        try:            
             while server.running:
                 try:
                     print()
