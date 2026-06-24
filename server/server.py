@@ -2119,6 +2119,7 @@ def main():
         
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        server.loop = loop
         
         try:
             loop.run_until_complete(server.start())
