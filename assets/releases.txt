@@ -14,6 +14,12 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.9-poitea-rev-2 ---=
+### What Changed
+- **Bug fix**: In daemon mode, the server wasn't properly tracking its own background process loop, which could cause commands and handlers to behave inconsistently or hang. This is now correctly set up on startup.
+- **Bug fix**: `s_onready` handlers now run on a separate thread instead of blocking the main process, restoring correct sequential execution of `|` and `<` commands inside handler scripts.
+=--- END ---=
+
 =--- v1.1.9-poitea ---=
 ### What Changed
 - **Audio streaming reliability fix**: Multiple simultaneous audio consumers (e.g. multiple server streams) no longer compete for the same ALSA reads, which could cause stalls or corrupted playback. A single internal reader now distributes audio to every active listener, fixing stuttering on multiple streams.
