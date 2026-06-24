@@ -13,10 +13,8 @@ import sys
 import subprocess
 import argparse
 import platform
-import pwd
-import grp
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from dlogger import DLogger
 
 # Configuration
@@ -59,12 +57,10 @@ Log = DLogger(
 )
 
 class SystemdService:
-    def __init__(self, service_name: str, script_path: str, args: List[str], run_as_root: bool = False, user: Optional[str] = None):
+    def __init__(self, service_name: str, script_path: str, args: List[str]):
         self.service_name = service_name
         self.script_path = script_path
         self.args = args
-        self.run_as_root = run_as_root
-        self.user = user or (None if run_as_root else os.getenv('SUDO_USER', os.getenv('USER')))
 
     def generate_service_file(self):
         args_str = ' '.join(self.args) if self.args else ''
@@ -81,33 +77,13 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=botwave-{self.service_name.replace('bw-', '')}
-"""
-        if self.run_as_root:
-            service_content += "User=root\nGroup=root\n"
-        else:
-            service_content += f"User={self.user}\n"
-            try:
-                user_info = pwd.getpwnam(self.user)
-                group_info = grp.getgrgid(user_info.pw_gid)
-                service_content += f"Group={group_info.gr_name}\n"
-            except (KeyError, OSError):
-                pass
+User=root
+Group=root
 
-        service_content += """
 #environment
 Environment=PYTHONPATH=/opt/BotWave
 Environment=PATH=/opt/BotWave/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-# security (if not root)
-"""
-        if not self.run_as_root:
-            service_content += """NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/BotWave/uploads /opt/BotWave/handlers
-"""
 
-        service_content += """
 [Install]
 WantedBy=multi-user.target
 """
@@ -254,8 +230,6 @@ Service Management:
 
     create_directories()
 
-    current_user = os.getenv('SUDO_USER', os.getenv('USER', 'root'))
-
     if args.start or args.stop or args.restart or args.status or args.uninstall:
         if not args.mode:
             Log.error("Mode (client/server/local) required for service management")
@@ -263,11 +237,11 @@ Service Management:
 
         services = []
         if args.mode == 'client':
-            services.append(SystemdService('bw-client', CLIENT_SCRIPT, ['--skip-checks'], True))
+            services.append(SystemdService('bw-client', CLIENT_SCRIPT, ['--skip-checks']))
         if args.mode == 'server':
-            services.append(SystemdService('bw-server', SERVER_SCRIPT, ['--daemon', '--skip-checks'], False, current_user))
+            services.append(SystemdService('bw-server', SERVER_SCRIPT, ['--daemon', '--skip-checks']))
         if args.mode == 'local':
-            services.append(SystemdService('bw-local', LOCAL_SCRIPT, ['--daemon', '--skip-checks'], False, current_user))
+            services.append(SystemdService('bw-local', LOCAL_SCRIPT, ['--daemon', '--skip-checks']))
 
         for service in services:
             if args.start:
@@ -297,7 +271,7 @@ Service Management:
             client_args = args.args.copy()
             if '--skip-checks' not in client_args:
                 client_args.append('--skip-checks')
-            client_service = SystemdService('bw-client', CLIENT_SCRIPT, client_args, True)
+            client_service = SystemdService('bw-client', CLIENT_SCRIPT, client_args)
             if client_service.install():
                 client_service.start()
             else:
@@ -315,7 +289,7 @@ Service Management:
             if '--skip-checks' not in server_args:
                 server_args.append('--skip-checks')
 
-            server_service = SystemdService('bw-server', SERVER_SCRIPT, server_args, False, current_user)
+            server_service = SystemdService('bw-server', SERVER_SCRIPT, server_args)
             if server_service.install():
                 server_service.start()
             else:
@@ -333,25 +307,19 @@ Service Management:
             if '--skip-checks' not in local_args:
                 local_args.append('--skip-checks')
 
-            local_service = SystemdService('bw-local', LOCAL_SCRIPT, local_args, True, current_user)
+            local_service = SystemdService('bw-local', LOCAL_SCRIPT, local_args)
             if local_service.install():
                 local_service.start()
             else:
                 success = False
 
     if success:
-        Log.success(f"BotWave {args.mode} service(s) installed and started successfully!")
+        Log.success(f"BotWave {args.mode} service installed and started successfully!")
         Log.info("Service Management Commands:")
-        Log.info("  sudo systemctl status bw-client    # Check client status")
-        Log.info("  sudo systemctl status bw-server    # Check server status")
-        if args.mode != 'local':
-            Log.info("  sudo systemctl status bw-local     # Check local status")
-        Log.info("  sudo systemctl stop bw-client      # Stop client")
-        Log.info("  sudo systemctl start bw-client     # Start client")
-        Log.info("  sudo journalctl -u bw-client -f    # View client logs")
-        Log.info("  sudo journalctl -u bw-server -f    # View server logs")
-        if args.mode != 'local':
-            Log.info("  sudo journalctl -u bw-local -f     # View local logs")
+        Log.info(f"  sudo systemctl status bw-{args.mode}  # Check {args.mode} status")
+        Log.info(f"  sudo systemctl start bw-{args.mode}  # Start {args.mode}")
+        Log.info(f"  sudo systemctl stop bw-{args.mode}  # Stop {args.mode}")
+        Log.info(f"  sudo journalctl -u bw-{args.mode} -f  # View {args.mode} logs")
     else:
         Log.error(f"Failed to install BotWave {args.mode} service(s)")
         sys.exit(1)
