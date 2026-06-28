@@ -242,7 +242,7 @@ class BWHTTPFileServer:
                         await response.write(pcm_chunk)
                         await response.drain()
                     except (ConnectionResetError, BrokenPipeError):
-                        Log.server("Client disconnected from PCM stream (connection lost)")
+                        Log.server("Client disconnected from PCM stream")
                         break
                 
                 if request.transport is None or request.transport.is_closing():

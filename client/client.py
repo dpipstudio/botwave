@@ -69,6 +69,7 @@ class BotWaveClient:
         self.alsa = Alsa()
         self.stream_task = None
         self.stream_active = False
+        self.feed_task = None
 
         # states
         self.running = False
@@ -638,7 +639,14 @@ class BotWaveClient:
                     finally:
                         stream_queue.put(None)  # sentinel
 
-                asyncio.get_event_loop().create_task(_feed_queue())
+                if self.feed_task and not self.feed_task.done():
+                    self.feed_task.cancel()
+                    try:
+                        await self.feed_task
+                    except asyncio.CancelledError:
+                        pass
+
+                self.feed_task = asyncio.get_event_loop().create_task(_feed_queue())
 
                 def sync_generator_wrapper():
                     try:
@@ -762,6 +770,15 @@ class BotWaveClient:
                 self.stream_active = False
                 await asyncio.sleep(0.2)
 
+            if self.feed_task and not self.feed_task.done():
+                self.feed_task.cancel()
+                try:
+                    await self.feed_task
+                except Exception:
+                    pass
+                finally:
+                    self.feed_task = None
+
             if self.stream_task:
                 try:
                     self.stream_task = None
@@ -770,6 +787,7 @@ class BotWaveClient:
                     Log.error(f"Error closing stream: {e}")
                 finally:
                     self.stream_task = None
+
 
             if self.piwave:
                 try:

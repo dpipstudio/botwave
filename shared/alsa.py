@@ -63,7 +63,7 @@ class Alsa:
 
         try:
             if self._running:
-                self.stop()
+                return True
 
             self.capture = alsaaudio.PCM(
                 type=alsaaudio.PCM_CAPTURE,
