@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.10-mollia",
+      "commit": "e57d0ceed8c09fe42ee7da4a4e0c4ab4a9245c21"
+    },
+    {
       "codename": "v1.1.9-poitea-rev-2",
       "commit": "53ea20b28c39d49668090471aaab5061d99bf113"
     },
