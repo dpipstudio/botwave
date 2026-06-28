@@ -14,6 +14,14 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.10-mollia ---=
+### What Changed
+- **Local repo installs**: Running the install script from inside a BotWave checkout will now install directly from your local files instead of downloading from GitHub.
+- **`bw-autorun`**: Systemd services are now **installed as root** regardless of the component and no longer fail due to user permission mismatches.
+- **Bug fix (server)**: Audio streams could stall or conflict when the capture device was already in use. This no longer happens.
+- **Bug fix (client)**: Stopping a stream could leave a background task silently running causing it to stall in some edge cases. It is now properly cleaned up on stop.
+=--- END ---=
+
 =--- v1.1.9-poitea-rev-2 ---=
 ### What Changed
 - **Bug fix**: In daemon mode, the server wasn't properly tracking its own background process loop, which could cause commands and handlers to behave inconsistently or hang. This is now correctly set up on startup.
