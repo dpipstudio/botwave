@@ -11,7 +11,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.3.1"
+readonly SCRIPT_VERSION="1.3.2"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -351,11 +351,34 @@ prompt_alsa_setup() {
     set -e
 }
 
+detect_local_repo() {
+    LOCAL_REPO=false
+    LOCAL_REPO_ROOT=""
+
+    # Check current dir or parent for git repo + installation.json
+    for candidate in "." ".."; do
+        if [[ -d "$candidate/.git" ]] && [[ -f "$candidate/assets/installation.json" ]]; then
+            LOCAL_REPO=true
+            LOCAL_REPO_ROOT=$(realpath "$candidate")
+            log INFO "Local BotWave repo detected at $LOCAL_REPO_ROOT, installing from local files"
+            break
+        fi
+    done
+}
+
 # ============================================================================
 # VERSION MANAGEMENT
 # ============================================================================
 
 resolve_target_commit() {
+    # Local repo: just use the current HEAD, ignore --latest / --to
+    if [[ "$LOCAL_REPO" == true ]]; then
+        local commit=$(git -C "$LOCAL_REPO_ROOT" rev-parse HEAD)
+        log INFO "Local repo HEAD: ${commit:0:7}"
+        echo "$commit"
+        return 0
+    fi
+
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
         local latest_commit=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/commits?sha=${TARGET_BRANCH}" | \
@@ -499,6 +522,12 @@ EOF
 
 fetch_installation_config() {
     log INFO "Fetching installation configuration..."
+
+    if [[ "$LOCAL_REPO" == true ]]; then
+        cat "$LOCAL_REPO_ROOT/assets/installation.json"
+        return 0
+    fi
+
     local config=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
 
     if [[ -z "$config" ]]; then
@@ -544,7 +573,12 @@ download_files() {
 
         mkdir -p "$target_dir"
         log INFO "  - $file"
-        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${file}?t=$(date +%s)" -o "$target_path"
+
+        if [[ "$LOCAL_REPO" == true ]]; then
+            cp "$LOCAL_REPO_ROOT/$file" "$target_path"
+        else
+            silent curl -SL "${GITHUB_RAW_URL}/${commit}/${file}?t=$(date +%s)" -o "$target_path"
+        fi
     done <<< "$file_list"
 }
 
@@ -584,7 +618,13 @@ install_binaries() {
 
         mkdir -p "$(dirname "$target_path")"
         log INFO "  - $binary"
-        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${binary}?t=$(date +%s)" -o "$target_path"
+
+        if [[ "$LOCAL_REPO" == true ]]; then
+            cp "$LOCAL_REPO_ROOT/$binary" "$target_path"
+        else
+            silent curl -SL "${GITHUB_RAW_URL}/${commit}/${binary}?t=$(date +%s)" -o "$target_path"
+        fi
+
         chmod +x "$target_path"
         create_symlink "$bin_name"
     done <<< "$bin_list"
@@ -656,7 +696,9 @@ install_components() {
     local sections=()
 
     # Show version info
-    if [[ -n "$TARGET_VERSION" ]]; then
+    if [[ "$LOCAL_REPO" == true ]]; then
+        log INFO "Installing from local repo (${commit:0:7})"
+    elif [[ -n "$TARGET_VERSION" ]]; then
         log INFO "Target version: $TARGET_VERSION"
     elif [[ "$USE_LATEST" == true ]]; then
         log WARN "Using latest commit (unreleased)"
@@ -696,7 +738,9 @@ save_version_info() {
     echo "$commit" > "$INSTALL_DIR/last_commit"
 
     # Save release info if applicable
-    if [[ -n "$TARGET_VERSION" ]]; then
+    if [[ "$LOCAL_REPO" == true ]]; then
+        echo "local:$LOCAL_REPO_ROOT" > "$INSTALL_DIR/last_release"
+    elif [[ -n "$TARGET_VERSION" ]]; then
         echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
     elif [[ "$USE_LATEST" != true ]]; then
         local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
@@ -741,6 +785,8 @@ main() {
     check_root_privileges
 
     log INFO "Full log transcript will be written in $LOG_FILE"
+
+    detect_local_repo
 
     detect_package_manager
 
