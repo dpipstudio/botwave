@@ -967,7 +967,7 @@ class BotWaveCLI:
         Log.print("    rm broadcast.wav", "cyan")
         Log.print("")
 
-        Log.print("upload <targets> <file|folder>", "bright_green")
+        Log.print("upload <file|folder>", "bright_green")
         Log.print("  Upload a file or folder to the upload directory", "white")
         Log.print("  Examples:", "white")
         Log.print("    upload broadcast.wav", "cyan")
