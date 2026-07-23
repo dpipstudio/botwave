@@ -1910,7 +1910,7 @@ class BotWaveServer:
         Log.print("    list", "cyan")
         Log.print("")
 
-        Log.print("start <targets> <file> [loop] [freq] [ps] [rt] [pi]", "bright_green")
+        Log.print("start <targets> <file> [freq] [loop] [ps] [rt] [pi]", "bright_green")
         Log.print("  Start broadcasting on client(s)", "white")
         Log.print("  Example:", "white")
         Log.print("    start all broadcast.wav 100.5 MyRadio", "cyan")
