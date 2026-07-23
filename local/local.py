@@ -13,6 +13,8 @@
 import argparse
 import os
 from pathlib import Path
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.patch_stdout import patch_stdout
 import uuid
 import re
 import signal
@@ -34,8 +36,9 @@ from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.custom_cmds import CCMD
 from shared.env import Env
 from shared.handlers import HandlerExecutor
-from shared.logger import Log, toggle_input
+from shared.logger import Log
 from shared.morser import text_to_morse
+from shared.prompt import get_prompt
 from shared.protocol import PROTOCOL_VERSION
 from shared.pw_monitor import PWM
 from shared.queue import Queue
@@ -44,12 +47,6 @@ from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
 from shared.ws_cmd import WSCMDH
-
-try:
-    import readline
-    HAS_READLINE = True
-except:
-    HAS_READLINE = False
 
 try:
     from piwave import PiWave
@@ -1109,52 +1106,36 @@ def main():
     cli.onready_handlers(Env.get("HANDLERS_DIR"))
 
     if not Env.get_bool("DAEMON"):
-        if HAS_READLINE:
-            readline.parse_and_bind('tab: complete')
-            readline.parse_and_bind('set editing-mode emacs')
-            readline.set_history_length(1000)
-            try:
-                readline.read_history_file(Env.get("HISTORY_PATH"))
-            except:
-                pass
 
-        while cli.running:
-            try:
-                print()
-                toggle_input(True)
-                cmd_input = input(f"\033[1;32m{Env.get('PROMPT_TEXT')}\033[0m").strip()
-                toggle_input(False)
+        prompt = get_prompt(history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history"), is_server=False)
 
-                if not cmd_input:
-                    continue
+        with patch_stdout(raw=True):
+            Log._stream = sys.stdout
 
-                if HAS_READLINE:
-                    readline.add_history(cmd_input)
+            while cli.running:
+                try:
+                    print()
+                    cmd_input = prompt.prompt(ANSI(f"\033[1;32m{Env.get('PROMPT_TEXT')}\033[0m")).strip()
 
-                exit = cli._execute_command(cmd_input)
+                    if not cmd_input:
+                        continue
 
-                if not exit:
+                    exit = cli._execute_command(cmd_input)
+
+                    if not exit:
+                        break
+
+                except KeyboardInterrupt:
+                    Log.warning("Use 'exit' to exit")
+
+                except EOFError:
+                    Log.info("Exiting...")
+                    cli.stop()
                     break
 
-            except KeyboardInterrupt:
-                toggle_input(False)
-                Log.warning("Use 'exit' to exit")
+                except Exception as e:
+                    Log.error(f"Error: {e}")
 
-            except EOFError:
-                toggle_input(False)
-                Log.info("Exiting...")
-                cli.stop()
-                break
-
-            except Exception as e:
-                toggle_input(False)
-                Log.error(f"Error: {e}")
-
-        if HAS_READLINE:
-            try:
-                readline.write_history_file(Env.get("HISTORY_PATH"))
-            except:
-                pass
     else:
         Log.info("Running in daemon mode. Local client will continue to run in the background.")
         try:
