@@ -49,12 +49,6 @@ from shared.tls import gen_cert, save_cert
 from shared.version import check_for_updates, versions_compatible
 from shared.ws_cmd import WSCMDH
 
-try:
-    import readline
-    HAS_READLINE = True
-except:
-    HAS_READLINE = False
-
 class BotWaveClient:
     def __init__(self, client_id: str, websocket, machine_info: dict, protocol_version: str):
         self.client_id = client_id
