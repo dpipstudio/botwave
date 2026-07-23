@@ -5,8 +5,6 @@ import re
 
 from shared.env import Env
 
-INPUT_ACTIVE = False
-
 class Logger(DLogger):
     ICONS = {
         'success': 'OK',
@@ -126,14 +124,6 @@ class Logger(DLogger):
 
     def clear_remote_cmd(self):
         self.remote_cmd_socket.set(None)
-
-def toggle_input(is_active=None):
-    global INPUT_ACTIVE
-
-    if is_active is None:
-        INPUT_ACTIVE = not INPUT_ACTIVE
-    else:
-        INPUT_ACTIVE = bool(is_active)
 
 
 Log = Logger()
