@@ -2,17 +2,8 @@ from dlogger import DLogger
 import asyncio
 import contextvars
 import re
-import sys
 
 from shared.env import Env
-
-try:
-    import readline
-    HAS_READLINE = True
-except ImportError:
-    HAS_READLINE = False
-
-INPUT_ACTIVE = False
 
 class Logger(DLogger):
     ICONS = {
@@ -84,16 +75,6 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
-        has_tty = HAS_READLINE and sys.stdin.isatty()
-        #print(INPUT_ACTIVE)
-
-        if has_tty:
-            current_line = readline.get_line_buffer()
-
-            if INPUT_ACTIVE:
-                sys.stdout.write('\r' + ' ' * (len(current_line) + 20) + '\r')
-                sys.stdout.flush()
-
         tx_id = self.transaction_id.get()
         if tx_id:
             message = f"{message}transaction_id={tx_id}"
@@ -103,25 +84,16 @@ class Logger(DLogger):
 
         super().print(message=message, style=style, icon=icon, end=end)
 
-        if has_tty and INPUT_ACTIVE:
-            prompt = f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m'
-            sys.stdout.write(prompt + current_line)
-            sys.stdout.flush()
-
         ws_message = f"[{icon}] {message}" if icon else message
-
         origin_ws = self.remote_cmd_socket.get()
 
         if Env.get_bool("ISOLATE_REMOTE", True) and origin_ws:
-            # If we want to isolate remote outputs AND the log was triggered
-            # by a remote conn, send it only to the remote conn
             try:
                 if self.ws_loop:
                     asyncio.run_coroutine_threadsafe(origin_ws.send(ws_message), self.ws_loop)
             except Exception as e:
                 self.warn(f"Error sending to WebSocket client: {e}")
         else:
-            # if not, blast it to everyone
             for ws in list(self.ws_clients):
                 try:
                     if self.ws_loop:
@@ -152,14 +124,6 @@ class Logger(DLogger):
 
     def clear_remote_cmd(self):
         self.remote_cmd_socket.set(None)
-
-def toggle_input(is_active=None):
-    global INPUT_ACTIVE
-
-    if is_active is None:
-        INPUT_ACTIVE = not INPUT_ACTIVE
-    else:
-        INPUT_ACTIVE = bool(is_active)
 
 
 Log = Logger()

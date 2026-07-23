@@ -153,6 +153,7 @@
       "shared/http.py",
       "shared/logger.py",
       "shared/morser.py",
+      "shared/prompt.py",
       "shared/protocol.py",
       "shared/protomanager.py",
       "shared/queue.py",
@@ -171,7 +172,8 @@
       "aiohttp",
       "morse-talk==0.2",
       "pyalsaaudio==0.11.0",
-      "psutil==7.2.2"
+      "psutil==7.2.2",
+      "prompt_toolkit==3.0.52"
     ],
     "binaries": [
       "bin/bw-autorun",
