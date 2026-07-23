@@ -124,7 +124,7 @@ COMMANDS = {
         "status": Command(syntax="")
     },
     "always": {
-        "start": Command(syntax="<file> [loop] [freq] [ps] [rt] [pi]", targets=True),
+        "start": Command(syntax="<file> [freq] [loop] [ps] [rt] [pi]", targets=True),
         "stop": Command(syntax="", targets=True),
         "queue": Command(syntax="queue [+|-|*|!|?]"),
         "live": Command(syntax="[freq] [ps] [rt] [pi]", targets=True),
