@@ -1936,10 +1936,10 @@ class BotWaveServer:
         Log.print("    live all", "cyan")
         Log.print("")
 
-        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
+        Log.print("sstv <targets> <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", "white")
         Log.print("  Example:", "white")
-        Log.print("    sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", "cyan")
+        Log.print("    sstv all /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", "cyan")
         Log.print("")
 
         Log.print("morse <targets> <text|file> [wpm] [freq] [loop] [ps] [rt] [pi]", "bright_green")
