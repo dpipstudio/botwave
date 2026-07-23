@@ -19,7 +19,7 @@ class Command():
     
     def process_syntax(self):
         if self.__targets:
-            self.__syntax = f"<targets> {self.__syntax}"
+            self.__syntax = f"<targets> {self.__syntax}".strip()
 
 class SyntaxSuggester(AutoSuggest):
     def __init__(self, commands: dict):
@@ -147,7 +147,6 @@ COMMANDS = {
 def get_prompt(history_path: str, is_server: bool = True):
 
     commands = {}
-
     commands.update(COMMANDS["always"])
         
     if not is_server:
