@@ -13,6 +13,8 @@ import asyncio
 from datetime import datetime, timezone
 import json
 import os
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.patch_stdout import patch_stdout
 import re
 import shlex
 import sys
@@ -33,8 +35,9 @@ from shared.custom_cmds import CCMD
 from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.http import BWHTTPFileServer
-from shared.logger import Log, toggle_input
+from shared.logger import Log
 from shared.morser import text_to_morse
+from shared.prompt import get_prompt
 from shared.protocol import ProtocolParser, Commands, PROTOCOL_VERSION
 from shared.protomanager import ProtoManager
 from shared.queue import Queue
@@ -2166,53 +2169,36 @@ def main():
             Log.print("+------------------------------------------------------------+", style)
 
             sys.exit(1)
-
-        if HAS_READLINE:
-            readline.parse_and_bind('tab: complete')
-            readline.parse_and_bind('set editing-mode emacs')
-            readline.set_history_length(1000)
-            try:
-                readline.read_history_file(Env.get("HISTORY_PATH", "/opt/BotWave/.history"))
-            except:
-                pass
         
         Log.print("Type 'help' for commands", 'bright_yellow')
         
-        try:            
-            while server.running:
-                try:
-                    print()
-                    toggle_input(True)
-                    cmd_input = input(f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m').strip()
-                    toggle_input(False)
-                    
-                    if not cmd_input:
-                        continue
-                    
-                    if HAS_READLINE:
-                        readline.add_history(cmd_input)
+        prompt = get_prompt(history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history"), is_server=True)
 
-                    server._execute_command(cmd_input)
-                    
-                except KeyboardInterrupt:
-                    toggle_input(False)
-                    Log.warning("Use 'exit' to exit")
+        try:
+            with patch_stdout(raw=True):
+                Log._stream = sys.stdout # messy but there isn't really another option
 
-                except EOFError:
-                    toggle_input(False)
-                    Log.info("Exiting...")
-                    server.loop.create_task(server.stop())
+                while server.running:
+                    try:
+                        print()
+                        cmd_input = prompt.prompt(ANSI(f'\033[1;32m{Env.get("PROMPT_TEXT", "botwave › ")}\033[0m')).strip()
+                        
+                        if not cmd_input:
+                            continue
 
-                except Exception as e:
-                    toggle_input(False)
-                    Log.error(f"Error: {e}")
+                        server._execute_command(cmd_input)
+                        
+                    except KeyboardInterrupt:
+                        Log.warning("Use 'exit' to exit")
+
+                    except EOFError:
+                        Log.info("Exiting...")
+                        server.loop.create_task(server.stop())
+
+                    except Exception as e:
+                        Log.error(f"Error: {e}")
 
         finally:
-            if HAS_READLINE:
-                try:
-                    readline.write_history_file(Env.get("HISTORY_PATH", "/opt/BotWave/.history"))
-                except:
-                    pass
             server.running = False
 
 if __name__ == "__main__":
