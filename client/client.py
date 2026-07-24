@@ -41,7 +41,7 @@ from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_updates
+from shared.version import check_for_updates, get_release_version
 
 
 try:
@@ -211,13 +211,11 @@ class BotWaveClient:
 
                 if os.path.exists(update_flag):
                     try:
-                        release_file = "/opt/BotWave/last_release"
-                        if os.path.exists(release_file):
-                            with open(release_file, "r") as f:
-                                ver = f.read().strip()
+                        new_version = get_release_version()
 
-                            message = f"Updated to {ver}"
-
+                        if new_version:
+                            message = f"Updated to {new_version}"
+                            
                         else:
                             message = "Updated successfully"
 
@@ -975,15 +973,21 @@ def main():
 
     if not Env.get_bool("SKIP_CHECKS"):
         check_requirements()
-        Log.info("Checking for protocol updates...")
-
+        Log.info("Checking for software updates...")
+        
         try:
-            latest_version = check_for_updates()
-            if latest_version:
-                Log.update(f"Update available! Latest version: {latest_version}")
-                Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
+            latest_proto_ver, latest_ver = check_for_updates()
+
+            if latest_proto_ver:
+                Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")
+                Log.update("It is recommended updating to the latest version by running 'bw-update' in your shell")
+
+            elif latest_ver:
+                Log.update(f"A newer version of BotWave is available ({latest_ver})")
+                Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
+
             else:
-                Log.success("You are using the latest protocol version")
+                Log.success("You are using the latest version")
 
         except Exception as e:
             Log.warning("Unable to check for updates (continuing anyway)")

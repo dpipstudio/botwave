@@ -46,6 +46,7 @@ from shared.security import PathValidator, SecurityError
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
+from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
 
 try:
@@ -1056,6 +1057,22 @@ class BotWaveCLI:
 
         Log.client("Client stopped")
 
+def _check_updates():
+    Log.info("Checking for software updates...")
+
+    try:
+        _, latest_ver = check_for_updates()
+
+        if latest_ver:
+            Log.update(f"A newer version of BotWave is available ({latest_ver})")
+            Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
+
+        else:
+            Log.success("You are using the latest version")
+
+    except Exception as e:
+        Log.warning("Unable to check for updates (continuing anyway)")
+
 def main():
     Log.header("BotWave Local Client")
 
@@ -1093,7 +1110,9 @@ def main():
     set_prio("PASSKEY", args.pk, None, immutable=True)
     set_prio("REMOTE_CMD_PORT", args.rc, None, immutable=True)
 
-    check_requirements(Env.get_bool("SKIP_CHECKS"))
+    if not Env.get_bool("SKIP_CHECKS"):
+        check_requirements()
+        _check_updates()
 
     cli = BotWaveCLI()
     cli._setup_signal_handlers()
