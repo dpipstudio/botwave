@@ -5,41 +5,15 @@ from typing import Optional
 from shared.env import Env
 from shared.protocol import PROTOCOL_VERSION
 
-# if mismatch of 1st or 2nd part: error
-VERSION_CHECK_URL = "https://botwave.dpip.lol/api/latestpro/" # to retrieve the latest ver
+# if mismatch of 1st or 2nd part of ver: error
+LATEST_CHECK_URL = "https://botwave.dpip.lol/api/latest/" # line 1 = proto, line 2 = release
 RELEASE_FILE = "/opt/BotWave/last_release" # written by install.sh, might not exist on custom installs
-RELEASE_CHECK_URL = "https://botwave.dpip.lol/api/latestrel/"
 
 def parse_version(version_str: str) -> tuple:
     try:
         return tuple(map(int, version_str.split('.')))
     except (ValueError, AttributeError):
         return (0, 0, 0)
-
-def check_for_updates() -> Optional[str]:
-    #Check for protocol updates from remote URL
-    try:
-        req = urllib.request.Request(
-            VERSION_CHECK_URL,
-            headers={
-                "User-Agent": Env.get("VCHECK_UA", f"BotWaveVCheck/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
-            }
-        )
-
-        with urllib.request.urlopen(req, timeout=10) as response:
-            remote_version = response.read().decode('utf-8').strip()
-        
-        current_tuple = parse_version(PROTOCOL_VERSION)
-        remote_tuple = parse_version(remote_version)
-        
-        if remote_tuple > current_tuple:
-            return remote_version
-        
-        return None
-    
-    except (urllib.error.URLError, urllib.error.HTTPError, Exception):
-        # don't interrupt startup for client updates, we do not care
-        return None
 
 def versions_compatible(server_version: str, client_version: str) -> bool:
     server_tuple = parse_version(server_version)
@@ -63,29 +37,37 @@ def get_release_version() -> Optional[str]:
 
     return release
 
-def check_for_release_updates() -> Optional[str]:
-    # Check for a newer release
-    current_release = get_release_version()
-
-    if not current_release:
-        # nothing to check, skip
-        return None
-
+def check_for_updates() -> tuple[Optional[str], Optional[str]]:
+    # returns (new_proto_version, new_release_version), either can be None
     try:
         req = urllib.request.Request(
-            RELEASE_CHECK_URL,
+            LATEST_CHECK_URL,
             headers={
                 "User-Agent": Env.get("VCHECK_UA", f"BotWaveVCheck/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
             }
         )
 
         with urllib.request.urlopen(req, timeout=10) as response:
-            remote_release = response.read().decode('utf-8').strip()
+            lines = response.read().decode('utf-8').strip().splitlines()
 
-        if remote_release and remote_release != current_release:
-            return remote_release
-        
-        return None
-    
+        remote_proto = lines[0].strip() if len(lines) > 0 else None
+        remote_release = lines[1].strip() if len(lines) > 1 else None
+
+        new_proto = None
+        current_tuple = parse_version(PROTOCOL_VERSION)
+        remote_tuple = parse_version(remote_proto) if remote_proto else (0, 0, 0)
+
+        if remote_proto and remote_tuple > current_tuple:
+            new_proto = remote_proto
+
+        new_release = None
+        current_release = get_release_version()
+
+        if current_release and remote_release and remote_release != current_release:
+            new_release = remote_release
+
+        return (new_proto, new_release)
+
     except (urllib.error.URLError, urllib.error.HTTPError, Exception):
-        return None
+        # don't interrupt startup for client updates, we do not care
+        return (None, None)
