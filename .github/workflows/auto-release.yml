@@ -62,3 +62,16 @@ jobs:
           target_commitish: ${{ steps.commit_changes.outputs.new_sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify API of new release
+        if: steps.parse.outputs.new_release == 'true'
+        run: |
+          proto=$(head -n 1 assets/latest.ver.txt)
+          response=$(curl -s "https://botwave.dpip.lol/api/latest?pwd=${{ secrets.PASSKEY }}&proto=$proto&release=${{ steps.parse.outputs.version }}")
+
+          if [ "$response" != "updated" ]; then
+            echo "Error: unexpected response from API: $response"
+            exit 1
+          fi
+
+          echo "API notified successfully"
