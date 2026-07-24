@@ -46,7 +46,7 @@ from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
 from shared.tips import TipEngine
 from shared.tls import gen_cert, save_cert
-from shared.version import check_for_updates, versions_compatible
+from shared.version import check_for_updates, versions_compatible, check_for_release_updates
 from shared.ws_cmd import WSCMDH
 
 class BotWaveClient:
@@ -194,16 +194,23 @@ class BotWaveServer:
         Log.success("Server shutdown complete")
 
     def _check_updates(self):
-        Log.info("Checking for protocol updates...")
+        Log.info("Checking for software updates...")
 
         try:
-            latest_version = check_for_updates()
+            latest_proto_ver = check_for_updates()
+            latest_ver = check_for_release_updates()
 
-            if latest_version:
-                Log.update(f"Update available! Latest version: {latest_version}")
-                Log.update("Consider updating to the latest version by running 'bw-update' in your shell.")
+            if latest_proto_ver:
+                Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")
+                Log.update("It is recommended updating to the latest version by running 'bw-update' in your shell")
+
+            elif latest_ver:
+                Log.update(f"A newer version of BotWave is available ({latest_ver})")
+                Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
+
             else:
-                Log.success("You are using the latest protocol version")
+                Log.success("You are using the latest version")
+
         except Exception as e:
             Log.warning("Unable to check for updates (continuing anyway)")
 
