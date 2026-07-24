@@ -46,7 +46,7 @@ from shared.socket import BWWebSocketServer
 from shared.sstv import make_sstv_wav
 from shared.tips import TipEngine
 from shared.tls import gen_cert, save_cert
-from shared.version import check_for_updates, versions_compatible, check_for_release_updates
+from shared.version import check_for_updates, versions_compatible
 from shared.ws_cmd import WSCMDH
 
 class BotWaveClient:
@@ -197,8 +197,7 @@ class BotWaveServer:
         Log.info("Checking for software updates...")
 
         try:
-            latest_proto_ver = check_for_updates()
-            latest_ver = check_for_release_updates()
+            latest_proto_ver, latest_ver = check_for_updates()
 
             if latest_proto_ver:
                 Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")

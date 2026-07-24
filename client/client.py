@@ -41,7 +41,7 @@ from shared.security import PathValidator, SecurityError
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_updates, check_for_release_updates, get_release_version
+from shared.version import check_for_updates, get_release_version
 
 
 try:
@@ -976,8 +976,7 @@ def main():
         Log.info("Checking for software updates...")
         
         try:
-            latest_proto_ver = check_for_updates()
-            latest_ver = check_for_release_updates()
+            latest_proto_ver, latest_ver = check_for_updates()
 
             if latest_proto_ver:
                 Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")

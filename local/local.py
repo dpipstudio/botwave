@@ -46,7 +46,7 @@ from shared.security import PathValidator, SecurityError
 from shared.sstv import make_sstv_wav
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_release_updates
+from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
 
 try:
@@ -1061,7 +1061,7 @@ def _check_updates():
     Log.info("Checking for software updates...")
 
     try:
-        latest_ver = check_for_release_updates()
+        _, latest_ver = check_for_updates()
 
         if latest_ver:
             Log.update(f"A newer version of BotWave is available ({latest_ver})")
