@@ -39,7 +39,7 @@ class Logger(DLogger):
         'file': 'yellow',
         'handler': 'magenta',
         'version': 'bright_cyan',
-        'update': 'bright_yellow',
+        'update': 'bright_yellow bold',
         'sstv': 'bright_blue',
         'auth': 'blue',
         'tls': 'red',
