@@ -14,6 +14,14 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.11-clutia ---=
+### What Changed
+- **Smarter update checks**: `bw-server`, `bw-client`, and `bw-local` now check for both protocol updates and regular BotWave releases separately, and tell you exactly how to update each.
+- **Faster update API**: The update check no longer proxies through the GitHub API on every request. It now reads from a local cache, so it replies faster, and thus, BotWave starts faster.
+- **CLI syntax hints**: The interactive shell (server and local client) now shows inline hints for command syntax as you type, and validates required arguments before you press enter. This replaces the old `readline`-based prompt handling.
+- **Help text fixes**: Corrected a few copy-paste errors in the `help` command output (`upload`, `sstv`, and `start` argument order).
+=--- END ---=
+
 =--- v1.1.10-mollia ---=
 ### What Changed
 - **Local repo installs**: Running the install script from inside a BotWave checkout will now install directly from your local files instead of downloading from GitHub.
