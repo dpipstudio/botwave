@@ -1549,7 +1549,7 @@ class BotWaveServer:
         
         # calculate start_at timestamp if wait_start is enabled
         if self.wait_start and len(target_clients) > 1:
-            start_at = datetime.now(timezone.utc).timestamp() + 20 * (len(target_clients) - 1)
+            start_at = datetime.now(timezone.utc).timestamp() + 5 * (len(target_clients) - 1)
             Log.broadcast(f"Starting broadcast at {datetime.fromtimestamp(start_at)}")
         else:
             start_at = 0
