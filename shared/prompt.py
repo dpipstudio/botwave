@@ -128,7 +128,7 @@ COMMANDS = {
         "stop": Command(syntax="", targets=True),
         "queue": Command(syntax="queue [+|-|*|!|?]"),
         "live": Command(syntax="[freq] [ps] [rt] [pi]", targets=True),
-        "sstv": Command(syntax="<image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", targets=True),
+        "sstv": Command(syntax="<image_path> [mode] [frequency] [loop] [ps] [rt] [pi]", targets=True),
         "morse": Command(syntax="<text|file> [wpm] [freq] [loop] [ps] [rt] [pi]", targets=True),
         "upload": Command(syntax="<file|folder>", targets=True),
         "dl": Command(syntax="<url>", targets=True),

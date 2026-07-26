@@ -59,7 +59,7 @@ Once the client is running, you can use the following commands:
 | `stop` | `botwave> stop` | Stop the current broadcast. |
 | `live` | `botwave> live [frequency] [ps] [rt] [pi]` | Start a live broadcast. |
 | `queue` | `botwave> queue ?` | Manages the queue. |
-| `sstv` | `botwave> sstv <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
+| `sstv` | `botwave> sstv <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
 | `morse` | `botwave> morse <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
 | `lf` | `botwave> lf` | List files in the upload directory. |
 | `rm` | `botwave> rm <filename\|all>` | Remove a file from the upload directory. |

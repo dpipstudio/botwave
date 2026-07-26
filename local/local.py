@@ -11,6 +11,7 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import argparse
+import hashlib
 import os
 from pathlib import Path
 from prompt_toolkit.formatted_text import ANSI
@@ -201,29 +202,25 @@ class BotWaveCLI:
             
             elif cmd == 'sstv':
                 if len(cmd_parts) < 2:
-                    Log.error("Usage: sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]")
+                    Log.error("Usage: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]")
                     Log.end()
                     return True
 
                 img_path = cmd_parts[1]
                 mode = cmd_parts[2] if len(cmd_parts) > 2 else None
-                output_wav = cmd_parts[3] if len(cmd_parts) > 3 else os.path.join(self.upload_dir, os.path.splitext(os.path.basename(img_path))[0] + ".wav")
-                frequency = float(cmd_parts[4]) if len(cmd_parts) > 4 else Env.get_float("DEFAULT_FREQ", 90)
-                loop = cmd_parts[5].lower() == 'true' if len(cmd_parts) > 5 else False
-                ps = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PS", "BotWave")
-                rt = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_RT", output_wav)
-                pi = cmd_parts[8] if len(cmd_parts) > 8 else Env.get("DEFAULT_PI", "FFFF")
 
                 if not os.path.exists(img_path):
                     Log.error(f"Image file {img_path} not found")
                     Log.end()
                     return True
 
-                Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
-                success = make_sstv_wav(img_path, output_wav, mode)
-                if success:
-                    Log.sstv(f"Broadcasting {output_wav} on {frequency} MHz...")
-                    self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
+                frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_float("DEFAULT_FREQ", 90)
+                loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
+                ps = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PS", "BotWave")
+                rt = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_RT", os.path.basename(img_path))
+                pi = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_PI", "FFFF")
+
+                self.start_sstv(img_path, mode, frequency, loop, ps, rt, pi)
 
                 Log.end()
                 return True
@@ -793,7 +790,37 @@ class BotWaveCLI:
             self.current_file = None
             self.piwave = None
             return False
-        
+
+
+    def start_sstv(self, img_path: str, mode: str|None = None, frequency: float = 90.0, loop: bool = False, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF"):
+
+        output_wav = self._sstv_cache_path(img_path, mode)
+
+        if os.path.exists(output_wav):
+            Log.sstv(f"Using cached SSTV WAV for {img_path}...")
+            success = True
+
+        else:
+            Log.sstv(f"Generating SSTV WAV from {img_path} using mode {mode or 'auto'}...")
+            success = make_sstv_wav(img_path, output_wav, mode)
+
+        if success:
+            self.start_broadcast(output_wav, frequency, ps, rt, pi, loop)
+
+        else:
+            Log.error("Failed to generate SSTV")
+
+    def _sstv_cache_path(self, img_path, mode):
+        # cache key includes mtime so editing the image busts the cache automatically
+        abs_path = os.path.abspath(img_path)
+        mtime = os.path.getmtime(abs_path)
+        key = f"{abs_path}|{mode or 'auto'}|{mtime}"
+        digest = hashlib.sha256(key.encode()).hexdigest()[:16]
+
+        cache_dir = os.path.join(tempfile.gettempdir(), "bw_sstv")
+        os.makedirs(cache_dir, exist_ok=True)
+
+        return os.path.join(cache_dir, f"{digest}.wav")
 
     def stop_broadcast(self):
         if not self.broadcasting:
@@ -942,10 +969,11 @@ class BotWaveCLI:
         Log.print("  Use 'queue ?' for detailed help", "white")
         Log.print("")
 
-        Log.print("sstv <image_path> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
+        Log.print("sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
         Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", "white")
+        Log.print("  Generated WAVs are cached, so re-running with the same image/mode won't regenerate", "white")
         Log.print("  Example:", "white")
-        Log.print("    sstv /path/to/mycat.png Robot36 cat.wav 90 false PsPs Cutie FFFF", "cyan")
+        Log.print("    sstv /path/to/mycat.png Robot36 90 false PsPs Cutie FFFF", "cyan")
         Log.print("")
 
         Log.print("morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]", "bright_green")

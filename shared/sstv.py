@@ -5,7 +5,9 @@ from shared.env import Env
 from shared.logger import Log
 
 try:
-    from pysstv.color import MODES
+    from pysstv.color import MODES as COLOR_MODES
+    from pysstv.grayscale import MODES as GRAYSCALE_MODES
+    MODES = list(COLOR_MODES) + list(GRAYSCALE_MODES)
     MODE_MAP = {cls.__name__.lower(): cls for cls in MODES}
 except ImportError:
     MODE_MAP = None
@@ -63,9 +65,14 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
 
     if mode_name and mode_name.lower() in MODE_MAP:
         cls = MODE_MAP[mode_name.lower()]
+
     elif envmode and envmode.lower() in MODE_MAP:
         cls = MODE_MAP[envmode.lower()]
+
     else:
+        if mode_name is not None: # guard against default (none)
+            Log.warning(f"Unknown mode '{mode_name}', falling back to auto-detect")
+
         cls = get_best_sstv_mode(*img.size)
         if cls is None:
             return False
