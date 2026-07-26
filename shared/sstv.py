@@ -5,7 +5,9 @@ from shared.env import Env
 from shared.logger import Log
 
 try:
-    from pysstv.color import MODES
+    from pysstv.color import MODES as COLOR_MODES
+    from pysstv.grayscale import MODES as GRAYSCALE_MODES
+    MODES = list(COLOR_MODES) + list(GRAYSCALE_MODES)
     MODE_MAP = {cls.__name__.lower(): cls for cls in MODES}
 except ImportError:
     MODE_MAP = None
