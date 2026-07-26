@@ -60,7 +60,7 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 | `stop` | `botwave> stop <targets>` | Stops broadcasting on specified client(s). |
 | `live` | `botwave> live <targets> [frequency] [ps] [rt] [pi]` | Start a live broadcast to client(s). |
 | `queue` | `botwave> queue ?` | Manages the queue. |
-| `sstv` | `botwave> sstv <targets> <image path> [mode] [output wav name] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
+| `sstv` | `botwave> sstv <targets> <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
 | `morse` | `botwave> morse <targets> <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
 | `list` | `botwave> list` | Lists all connected clients. |
 | `upload` | `botwave> upload <targets> <path/of/file.wav\|path/of/folder/>` | Upload a file or a folder's files to specified client(s) (Experimental). |
