@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.1.12-osa",
+      "commit": "d58152193a150424a17b83cf16e8432f7ab4cb03"
+    },
+    {
       "codename": "v1.1.11-clutia",
       "commit": "2034b7fa360193af47689b55a6cb75721b794f1e"
     },
