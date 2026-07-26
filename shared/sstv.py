@@ -65,10 +65,14 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
 
     if mode_name and mode_name.lower() in MODE_MAP:
         cls = MODE_MAP[mode_name.lower()]
+
     elif envmode and envmode.lower() in MODE_MAP:
         cls = MODE_MAP[envmode.lower()]
+
     else:
-        Log.warning(f"Unknown mode '{mode_name}', falling back to auto-detect")
+        if mode_name is not None: # guard against default (none)
+            Log.warning(f"Unknown mode '{mode_name}', falling back to auto-detect")
+
         cls = get_best_sstv_mode(*img.size)
         if cls is None:
             return False
