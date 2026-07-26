@@ -14,6 +14,28 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.1.12-osa ---=
+### What Changed
+- **SSTV output caching**: The `sstv` command no longer takes an `output_wav` argument. The generated WAV path is now derived automatically and cached under `<tempdir>/bw_sstv/`, keyed off the image path, mode, and image modification time. Re-running the same image and mode reuses the cached file instead of regenerating it.
+- **Grayscale SSTV modes**: `shared/sstv.py` now also loads grayscale modes (`Robot8BW`, `Robot24BW`) alongside the existing color modes.
+- **Shorter wait time before broadcast start**: Multi-client broadcasts now start at a delay of `+5s/client` instead of the older `+20s/client` (unless `START_ASAP=true`).
+- **Bug fix**: Passing an unrecognized `mode` to `sstv` now logs a warning and falls back to auto-detect instead of failing silently.
+
+
+### Breaking Changes
+> [!CAUTION]
+> The `sstv` command no longer accepts an `output_wav` positional argument. Update any saved commands or scripts:
+> ```
+> sstv <image> [mode] [output_wav] [frequency] [loop] [ps] [rt] [pi]
+> ```
+> becomes
+> ```
+> sstv <image> [mode] [frequency] [loop] [ps] [rt] [pi]
+> ```
+>
+> Old invocations that still pass `output_wav` will have that value parsed as `frequency` and fail with `ValueError: could not convert string to float`.
+=--- END ---=
+
 =--- v1.1.11-clutia ---=
 ### What Changed
 - **Smarter update checks**: `bw-server`, `bw-client`, and `bw-local` now check for both protocol updates and regular BotWave releases separately, and tell you exactly how to update each.
