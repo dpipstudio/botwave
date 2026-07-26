@@ -1662,7 +1662,7 @@ class BotWaveServer:
         if success:
             Log.sstv(f"Uploading {output_wav} to {client_targets}...")
             await self.upload_file(client_targets, output_wav)
-            await asyncio.sleep(2)  # Wait for upload
+            await asyncio.sleep(5 * len(targets))  # Wait for upload
             
             return await self.start_broadcast(client_targets, os.path.basename(output_wav), frequency, ps, rt, pi, loop)
 
