@@ -19,5 +19,5 @@ if ($content !== false) {
     echo $content;
 } else {
     http_response_code(500);
-    echo "echo \"error while fetching update.sh, clone the repo and use it from there.\"";
+    echo "echo \"error while fetching scripts/update.sh, clone the repo and use it from there.\"";
 }
