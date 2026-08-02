@@ -1,5 +1,6 @@
 # piwave monitor: monitors whenever the playback starts or ends
 import asyncio
+import inspect
 import threading
 import time
 from typing import Callable, Optional
@@ -43,7 +44,7 @@ class PWM: #pwm hehehe
                 is_active = status.get("is_playing", False) or status.get("is_live_streaming", False)
                 if not is_active:
                     if self.on_finished_callback:
-                        if self.event_loop and asyncio.iscoroutinefunction(self.on_finished_callback):
+                        if self.event_loop and inspect.iscoroutinefunction(self.on_finished_callback):
                             asyncio.run_coroutine_threadsafe(
                                 self.on_finished_callback(),
                                 self.event_loop
