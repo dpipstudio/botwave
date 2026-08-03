@@ -63,8 +63,7 @@ class StartOp(CliOp):
                 if not loop:
                     async def finished():
                         Log.info("Playback finished, stopping broadcast...")
-                        await self.registry.dispatch("stop")
-                        await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": file_path})
+                        await self.registry.dispatch("stop", silent=True)
                         self.owner.queue.on_broadcast_ended()
 
                     self.owner.piwave_monitor.start(self.owner.piwave, finished)
