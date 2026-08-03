@@ -64,6 +64,13 @@ class LiveOp(CliOp):
                 Log.success(f"Live broadcast started on {frequency}MHz")
                 self.owner.broadcast_start_time = time.time()
 
+                async def finished():
+                    Log.info("Playback finished, stopping broadcast...")
+                    await self.registry.dispatch("stop", silent=True)
+                    self.owner.queue.on_broadcast_ended()
+
+                self.owner.piwave_monitor.start(self.owner.piwave, finished)
+
                 await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FREQ": str(frequency)})
 
                 card = Env.get("ALSA_CARD", 'BotWave')
