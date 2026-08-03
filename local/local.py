@@ -86,8 +86,10 @@ class BotWaveLocal:
             cmd = cmd_parts[0].lower()
             cmd_parts.pop(0)
 
-            await self.registry.dispatch(cmd, is_cmd=True, cmd_parts=cmd_parts)
+            found = await self.registry.dispatch(cmd, is_cmd=True, cmd_parts=cmd_parts)
 
+            if not found:
+                Log.error(f"Unknown command: {cmd}")
 
         except UpperException:
             raise
