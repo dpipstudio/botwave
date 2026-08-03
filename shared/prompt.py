@@ -4,23 +4,6 @@ from prompt_toolkit.history import FileHistory, InMemoryHistory
 from prompt_toolkit.validation import Validator, ValidationError
 import shlex
 
-
-# commands are split into "server", "local", and "always" categories.
-# server commands that need `<targets>` as a first arg need to have `targets=True`
-# and no string in their syntax 
-class Command():
-    def __init__(self, syntax: str, targets: bool = False):
-        self.__syntax = syntax
-        self.__targets = targets
-    
-    @property
-    def syntax(self):
-        return self.__syntax
-    
-    def process_syntax(self):
-        if self.__targets:
-            self.__syntax = f"<targets> {self.__syntax}".strip()
-
 class SyntaxSuggester(AutoSuggest):
     def __init__(self, commands: dict):
         self.commands = commands
@@ -65,7 +48,7 @@ class SyntaxSuggester(AutoSuggest):
         if cmd not in self.commands:
             return None
 
-        syntax_parts = self.commands[cmd].syntax.split(" ") if self.commands[cmd].syntax else []
+        syntax_parts = self.commands[cmd].split(" ") if self.commands[cmd] else []
         typed_args = parts[1:]
 
         remaining = syntax_parts[len(typed_args) if not in_open_quote else len(typed_args) + 1 :]
@@ -100,7 +83,7 @@ class CommandValidator(Validator):
         if cmd not in self.commands:
             return
 
-        syntax_parts = self.commands[cmd].syntax.split(" ") if self.commands[cmd].syntax else []
+        syntax_parts = self.commands[cmd].split(" ") if self.commands[cmd] else []
         typed_args = parts[1:]
 
         required = [p for p in syntax_parts if not p.startswith("[")]
@@ -112,51 +95,8 @@ class CommandValidator(Validator):
                 cursor_position=len(text)
             )
 
-COMMANDS = {
-    "server": {
-        "list": Command(syntax=""),
-        "sync": Command(syntax="<targets|folder/> <source_target|folder/>"),
-        "kick": Command(syntax="[reason]", targets=True),
-        "update": Command(syntax="[latest|<version>]", targets=True),
-        "status": Command(syntax="[targets]") # targets are optional, so it needs to be taken apart
-    },
-    "local": {
-        "status": Command(syntax="")
-    },
-    "always": {
-        "start": Command(syntax="<file> [freq] [loop] [ps] [rt] [pi]", targets=True),
-        "stop": Command(syntax="", targets=True),
-        "queue": Command(syntax="queue [+|-|*|!|?]"),
-        "live": Command(syntax="[freq] [ps] [rt] [pi]", targets=True),
-        "sstv": Command(syntax="<image_path> [mode] [frequency] [loop] [ps] [rt] [pi]", targets=True),
-        "morse": Command(syntax="<text|file> [wpm] [freq] [loop] [ps] [rt] [pi]", targets=True),
-        "upload": Command(syntax="<file|folder>", targets=True),
-        "dl": Command(syntax="<url>", targets=True),
-        "lf": Command(syntax="", targets=True),
-        "rm": Command(syntax="<filename|all>", targets=True),
-        "handlers": Command(syntax="[filename]"),
-        "<": Command(syntax="<command>"),
-        "|": Command(syntax="<command>"),
-        "get": Command(syntax="<keys|*>"),
-        "set": Command(syntax="<key> <value> [immutable]"),
-        "exit": Command(syntax=""),
-        "help": Command(syntax="")
-    }
-}
 
-def get_prompt(history_path: str, is_server: bool = True):
-
-    commands = {}
-    commands.update(COMMANDS["always"])
-        
-    if not is_server:
-        commands.update(COMMANDS["local"])
-
-    else:
-        commands.update(COMMANDS["server"])
-
-        for name, cmd in commands.items():
-            cmd.process_syntax()
+def get_prompt(commands: dict, history_path: str, is_server: bool = True):
 
     try:
         history = FileHistory(history_path)
