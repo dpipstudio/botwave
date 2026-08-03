@@ -15,16 +15,35 @@ class RmOp(CliOp):
             if not target:
                 return
 
-        upl_dir = Path(Env.get("UPLOAD_DIR"))
+        upl_dir = Path(Env.get("UPLOAD_DIR")).resolve()
+
+        # reject anything that tries to escape the dir outright
+        if target.startswith("/") or ".." in Path(target).parts:
+            Log.error(f"Invalid pattern '{target}'")
+            return
+
         matches = sorted(upl_dir.glob(target))
 
-        if not matches:
+        # drop anything that resolved outside upl_dir
+        # (e.g. via a symlink inside the upload dir)
+        safe_matches = []
+
+        for f in matches:
+            try:
+                resolved = f.resolve()
+                resolved.relative_to(upl_dir)
+                safe_matches.append(f)
+
+            except ValueError:
+                Log.error(f"Skipped '{f.name}': resolves outside upload dir")
+
+        if not safe_matches:
             Log.error(f"No files matching '{target}'")
             return
 
         count = 0
 
-        for f in matches:
+        for f in safe_matches:
             if f.is_file():
                 f.unlink()
                 count += 1
