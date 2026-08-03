@@ -47,6 +47,7 @@ class BotWaveLocal:
         self.last_argv = []
         self.tips = TipEngine(is_server=False)
         self.ws_handler = None
+        self.rc_clients = 0
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
         try:
@@ -89,7 +90,17 @@ class BotWaveLocal:
             found = await self.registry.dispatch(cmd, is_cmd=True, cmd_parts=cmd_parts)
 
             if not found:
-                Log.error(f"Unknown command: {cmd}")
+                            
+                if self.custom_commands.exists(cmd):
+                    
+                    await self.handlers_executor.execute_handler(
+                        Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
+                        next(inst for inst in self.registry.get_instances() if type(inst).__name__ == "HandlersEventsOp").build_context(), # This has to be the worst line of code I ever wrote
+                        silent=True
+                        )
+
+                else:                
+                    Log.error(f"Unknown command: {cmd}")
 
         except UpperException:
             raise

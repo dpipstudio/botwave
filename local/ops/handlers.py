@@ -79,6 +79,7 @@ class HandlersEventsOp(GeneralOp):
             context = self.build_context()
 
         await self.owner.handlers_executor.run_handlers("l_onwsjoin", dir_path, context)
+        self.owner.rc_clients += 1
 
 
     async def onwsleave(self, dir_path: str = None, context: dict = None):
@@ -89,6 +90,7 @@ class HandlersEventsOp(GeneralOp):
             context = self.build_context()
 
         await self.owner.handlers_executor.run_handlers("l_onwsleave", dir_path, context)
+        self.owner.rc_clients -= 1
 
     def build_context(self) -> dict:
         ctx = {}

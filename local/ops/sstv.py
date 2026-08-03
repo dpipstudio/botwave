@@ -40,7 +40,8 @@ class SSTVOp(CliOp):
                 ps=ps,
                 rt=rt,
                 pi=pi,
-                loop=loop
+                loop=loop,
+                is_cmd=True
                 )
 
         else:
@@ -50,7 +51,7 @@ class SSTVOp(CliOp):
     def parse(self, cmd_parts):
         if len(cmd_parts) < 1:
             Log.error("Usage: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]")
-            return (None, None, None, None, None, None)
+            return (None, None, None, None, None, None, None)
         
         img_path = cmd_parts[0]
         mode = cmd_parts[1] if len(cmd_parts) > 1 else None

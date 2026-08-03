@@ -128,7 +128,5 @@ class HelpOp(CliOp):
                 for line in command["help"]:
                     Log.print(line, style="yellow")
 
-                Log.print("")
-
 def setup(reg):
     reg.register(HelpOp)

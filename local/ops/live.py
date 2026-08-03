@@ -34,7 +34,7 @@ class LiveOp(CliOp):
         try:
             backend_classes[backend_name] = BWCustom
 
-            self.piwave = PiWave(
+            self.owner.piwave = PiWave(
                 frequency=frequency,
                 ps=ps,
                 rt=rt,

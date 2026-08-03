@@ -8,7 +8,7 @@ class ExitOp(CliOp):
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
         self.owner.running = False
         if self.owner.broadcasting:
-            await self.register.dispatch("stop")
+            await self.registry.dispatch("stop")
 
         #TODO: check if those signals are really useful
         """

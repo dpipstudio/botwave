@@ -17,21 +17,19 @@ class MorseOp(CliOp):
             if not text_src:
                 return
 
-            text_path = Path(text_src)
+        if Path(text_src).is_file():
+            try:
+                with open(text_src, "r", encoding="utf-8") as f:
+                    text = f.read()
 
-            if Path(text_src).is_file():
-                try:
-                    with open(text_src, "r", encoding="utf-8") as f:
-                        text = f.read()
+                Log.morse(f"Loaded Morse text from file: {text_src}")
 
-                    Log.morse(f"Loaded Morse text from file: {text_src}")
-
-                except Exception as e:
-                    Log.error(f"Failed to read text file: {e}")
-                    return 
-                
-            else:
-                text = text_src
+            except Exception as e:
+                Log.error(f"Failed to read text file: {e}")
+                return 
+            
+        else:
+            text = text_src
 
         output_wav = str(Path(Env.get("UPLOAD_DIR")) / f"morse_{uuid.uuid4().hex[:8]}.wav")
         morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
@@ -52,7 +50,8 @@ class MorseOp(CliOp):
             ps=ps,
             rt=rt,
             pi=pi,
-            loop=loop
+            loop=loop,
+            is_cmd=True
             )
 
 
