@@ -35,3 +35,6 @@ class StopOp(CliOp):
         Log.broadcast("Broadcast stopped")
 
         return True
+
+def setup(reg):
+    reg.register(StopOp)

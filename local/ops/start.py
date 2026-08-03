@@ -99,3 +99,6 @@ class StartOp(CliOp):
         pi = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PI", "FFFF")
 
         return (file_path, frequency, ps, rt, pi, loop)
+
+def setup(reg):
+    reg.register(StartOp)

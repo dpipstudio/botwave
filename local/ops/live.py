@@ -93,3 +93,6 @@ class LiveOp(CliOp):
         pi = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")  # Fixed index
 
         return (frequency, ps, rt, pi)
+
+def setup(reg):
+    reg.register(LiveOp)
