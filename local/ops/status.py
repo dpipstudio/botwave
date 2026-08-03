@@ -5,7 +5,7 @@ from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
 
-class RmOp(CliOp):
+class StatusOp(CliOp):
     name = "status"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: str = None):
@@ -29,4 +29,4 @@ class RmOp(CliOp):
 
 
 def setup(reg):
-    reg.register(RmOp)
+    reg.register(StatusOp)
