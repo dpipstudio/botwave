@@ -29,25 +29,28 @@ from shared.ws_cmd import WSCMDH
 
 class BotWaveLocal:
     def __init__(self):
-        self.running = False
-
         # broadcast state
-        self.piwave = None
-        self.running = False
-        self.current_file = None
-        self.broadcasting = False
         self.broadcast_start_time = None
-        self.piwave_monitor = PWM()  # TODO: check for the event loop not blocking it while prompting
+        self.broadcasting = False
+        self.current_file = None
+        self.piwave = None
+        self.piwave_monitor = PWM()
 
-        self.handlers_executor = HandlerExecutor(self.cmd_exec)
+        # core systems
         self.alsa = Alsa()
-        self.queue = Queue(client_instance=self, is_local=True)
         self.custom_commands = CCMD(is_server=False)
+        self.handlers_executor = HandlerExecutor(self.cmd_exec)
+        self.queue = Queue(client_instance=self, is_local=True)
         self.registry = Registry(self)
-        self.last_argv = []
         self.tips = TipEngine(is_server=False)
-        self.ws_handler = None
+
+        # remote control
         self.rc_clients = 0
+        self.ws_handler = None
+
+        # runtime / misc
+        self.last_argv = []
+        self.running = False
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
         try:
