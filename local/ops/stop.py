@@ -4,11 +4,11 @@ from shared.ops import CliOp
 class StopOp(CliOp):
     name = "stop"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: str = None):
         if is_cmd:
             self.owner.queue.manual_pause()
 
-        if not self.owner.broadcasting:
+        if not self.owner.broadcasting and not silent:
             Log.warning("No broadcast is currently running")
             return
         
@@ -19,7 +19,8 @@ class StopOp(CliOp):
                 self.owner.piwave.cleanup()
 
             except Exception as e:
-                Log.error(f"Error stopping broadcast: {e}")
+                if not silent:
+                    Log.error(f"Error stopping broadcast: {e}")
 
             finally:
                 self.owner.piwave = None
@@ -32,7 +33,8 @@ class StopOp(CliOp):
         self.owner.broadcast_start_time = None
         self.owner.current_file = None
 
-        Log.broadcast("Broadcast stopped")
+        if not silent:
+            Log.broadcast("Broadcast stopped")
 
         return True
 
