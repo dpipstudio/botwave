@@ -9,7 +9,7 @@ class Registry:
         self.operations = {}
 
     def register(self, op_cls):
-        op = op_cls(self.owner)
+        op = op_cls(self.owner, self)
 
         for key, method_name in op.commands.items():
             self.operations[key] = getattr(op, method_name)
