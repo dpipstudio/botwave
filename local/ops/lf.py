@@ -11,7 +11,7 @@ class ListFilesOp(CliOp):
         target_dir = Path(Env.get("UPLOAD_DIR"))
 
         try:
-            files = [p for p in target_dir.iterdir() if p.is_file()]
+            files = [p.name for p in target_dir.iterdir() if p.is_file()]
 
             if not files:
                 Log.info(f"No files found in the directory {target_dir}")
