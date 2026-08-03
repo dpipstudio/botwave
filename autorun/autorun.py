@@ -79,6 +79,7 @@ StandardError=journal
 SyslogIdentifier=botwave-{self.service_name.replace('bw-', '')}
 User=root
 Group=root
+KillSignal=SIGINT
 
 #environment
 Environment=PYTHONPATH=/opt/BotWave
