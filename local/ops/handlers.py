@@ -39,8 +39,6 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        print(context)
-
         await self.owner.handlers_executor.run_handlers("l_onready", dir_path, context)
 
     async def onexit(self, dir_path: str = None, context: dict = None):
