@@ -23,9 +23,9 @@ class StatusOp(CliOp):
             Log.print("Idle", "orange")
 
         if Env.get("REMOTE_CMD_PORT"):
-            Log.print(f"RC Port    : {Env.get("REMOTE_CMD_PORT")}", "white")
+            Log.print(f"RC Port    : {Env.get('REMOTE_CMD_PORT')}", "white")
             Log.print(f"RC Clients : {self.owner.rc_clients}", "white")
-            Log.print(f"Passkey    : {'yes' if Env.get("PASSKEY") else 'no'}", "white")
+            Log.print(f"Passkey    : {'yes' if Env.get('PASSKEY') else 'no'}", "white")
 
 
 def setup(reg):
