@@ -30,8 +30,7 @@ class StopOp(CliOp):
         self.owner.broadcast_start_time = None
         self.owner.current_file = None
 
-        #TODO: self.onstop_handlers(context={**self._build_context(), "BW_BROADCAST_FILE": self.current_file or ""})
-        await self.registry.dispatch("handlers_stop", context={"BW_BROADCAST_FILE": self.owner.current_file or ""})
+        await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": self.owner.current_file or ""})
         Log.broadcast("Broadcast stopped")
 
         return True

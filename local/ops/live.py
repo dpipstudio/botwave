@@ -64,7 +64,6 @@ class LiveOp(CliOp):
                 Log.success(f"Live broadcast started on {frequency}MHz")
                 self.owner.broadcast_start_time = time.time()
 
-                #TODO: self.registry.dispatch("handlers_onstart", context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
                 await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FREQ": str(frequency)})
 
                 card = Env.get("ALSA_CARD", 'BotWave')

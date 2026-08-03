@@ -58,15 +58,13 @@ class StartOp(CliOp):
                 Log.success(f"Started broadcasting {file_path} on {frequency}MHz")
                 self.owner.broadcast_start_time = time.time()
 
-                #TODO: self.registry.dispatch("handlers_onstart", context={**self._build_context(), "BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
                 await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
 
                 if not loop:
                     async def finished():
                         Log.info("Playback finished, stopping broadcast...")
                         await self.registry.dispatch("stop")
-                        #TODO: self.registry.dispatch("handlers_stop", context={**self._build_context(), "BW_BROADCAST_FILE": file_path})
-                        await self.registry.dispatch("handlers_stop", context={"BW_BROADCAST_FILE": file_path})
+                        await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": file_path})
                         self.owner.queue.on_broadcast_ended()
 
                     self.owner.piwave_monitor.start(self.owner.piwave, finished)
