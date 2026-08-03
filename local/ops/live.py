@@ -26,7 +26,7 @@ class LiveOp(CliOp):
             self.owner.queue.manual_pause()
         
         if self.owner.broadcasting:
-            await self.owner.registry.dispatch("stop")
+            await self.registry.dispatch("stop")
 
         backend_name = Path(Env.get("BACKEND_PATH", "bw_custom")).name
         silent = not Env.get_bool("TALK")
@@ -64,8 +64,8 @@ class LiveOp(CliOp):
                 Log.success(f"Live broadcast started on {frequency}MHz")
                 self.owner.broadcast_start_time = time.time()
 
-                #TODO: self.owner.registry.dispatch("handlers_onstart", context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
-                await self.owner.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FREQ": str(frequency)})
+                #TODO: self.registry.dispatch("handlers_onstart", context={**self._build_context(), "BW_BROADCAST_FREQ": str(frequency)})
+                await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FREQ": str(frequency)})
 
                 card = Env.get("ALSA_CARD", 'BotWave')
                 Log.alsa(f"To play live, please set your output sound card (ALSA) to '{card}'.")
