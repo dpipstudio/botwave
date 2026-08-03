@@ -1,3 +1,6 @@
+import importlib.util
+from pathlib import Path
+
 from shared.logger import Log
 
 class Registry:
@@ -12,6 +15,26 @@ class Registry:
             self.operations[key] = getattr(op, method_name)
 
         return op  
+
+    def from_dir(self, dir):
+        path = Path(dir)
+
+        if not path.is_dir():
+            Log.error(f"{path} is not a directory")
+            return
+
+        for path in Path(dir).glob("*.py"):
+
+            spec = importlib.util.spec_from_file_location(path.stem, path)
+            op = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(op)
+
+            if hasattr(op, "setup"):
+                op.setup(self)
+
+            else:
+                Log.error(f"Op '{path.name}' has no setup() function")
+
 
     async def dispatch(self, key: str, *args, **kwargs):
         op = self.operations.get(key)
