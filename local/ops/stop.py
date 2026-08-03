@@ -22,15 +22,16 @@ class StopOp(CliOp):
                 Log.error(f"Error stopping broadcast: {e}")
 
             finally:
-                self.piwave = None
+                self.owner.piwave = None
 
         self.owner.alsa.stop()
+
+        await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": self.owner.current_file or ""})
 
         self.owner.broadcasting = False
         self.owner.broadcast_start_time = None
         self.owner.current_file = None
 
-        await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": self.owner.current_file or ""})
         Log.broadcast("Broadcast stopped")
 
         return True

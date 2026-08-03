@@ -10,7 +10,7 @@ class MorseOp(CliOp):
     name = "morse"
     syntax = "<text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
 
-    async def handle(self, text_src: str = None, wpm: int = 700, frequency: float = 90.0, loop: bool = False, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, text_src: str = None, wpm: int = 20, frequency: float = 90.0, loop: bool = False, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", is_cmd: bool = False, cmd_parts: list = []):
         if is_cmd:
             text_src, wpm, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
 
