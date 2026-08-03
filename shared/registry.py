@@ -4,6 +4,10 @@ import traceback
 
 from shared.logger import Log
 
+# exception explicitly raised to pass a message to the dispatcher
+class UpperException(Exception):
+    pass
+
 class Registry:
     def __init__(self, owner):
         self.owner = owner  # the main BotWave class
@@ -45,6 +49,9 @@ class Registry:
 
         try:
             await op(*args, **kwargs)
+
+        except UpperException:
+            raise
 
         except Exception as e:  # Shouldn't happen, try/catch in ops
             Log.error(f"Unexpected error in '{key}': {e}\n{traceback.format_exc()}")
