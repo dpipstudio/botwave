@@ -69,7 +69,7 @@ class PipeOp(CliOp):
             for line in process.stdout:
                 line = line.strip()
                 if line:
-                    self.owner.exec(line)
+                    await self.owner.cmd_exec(line)
 
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
