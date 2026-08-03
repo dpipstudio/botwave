@@ -184,6 +184,8 @@ async def main():
         
         local.ws_handler.start()
 
+    local.tips.start()
+
     await local.registry.dispatch("handlers_onready")
 
     if Env.get_bool("DAEMON"):
