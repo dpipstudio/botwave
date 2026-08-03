@@ -33,6 +33,9 @@ class SSTVOp(CliOp):
             success = make_sstv_wav(img_path, output_wav, mode)
 
         if success:
+            if is_cmd:
+                self.owner.queue.manual_pause()
+
             await self.registry.dispatch(
                 "start",
                 file_path=output_wav,
@@ -40,8 +43,7 @@ class SSTVOp(CliOp):
                 ps=ps,
                 rt=rt,
                 pi=pi,
-                loop=loop,
-                is_cmd=True
+                loop=loop
                 )
 
         else:

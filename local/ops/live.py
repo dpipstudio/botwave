@@ -53,7 +53,7 @@ class LiveOp(CliOp):
             self.owner.current_file = "live_playback"
             self.owner.broadcasting = True
 
-            success = self.piwave.play(
+            success = self.owner.piwave.play(
                 self.owner.alsa.audio_generator(audio_queue),
                 sample_rate=self.owner.alsa.rate,
                 channels=self.owner.alsa.channels,
@@ -86,10 +86,10 @@ class LiveOp(CliOp):
             return
 
     def parse(self, cmd_parts):
-        frequency = float(cmd_parts[0]) if len(cmd_parts) > 1 else Env.get_float("DEFAULT_FREQ", 90)
-        ps = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_PS", "BotWave")
-        rt = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_RT", "Live")  # Fixed index and fallback
-        pi = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")  # Fixed index
+        frequency = float(cmd_parts[0]) if len(cmd_parts) > 0 else Env.get_float("DEFAULT_FREQ", 90)
+        ps = cmd_parts[1] if len(cmd_parts) > 1 else Env.get("DEFAULT_PS", "BotWave")
+        rt = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_RT", "Live")  # Fixed index and fallback
+        pi = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_PI", "FFFF")  # Fixed index
 
         return (frequency, ps, rt, pi)
 

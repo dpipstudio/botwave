@@ -42,6 +42,9 @@ class MorseOp(CliOp):
             Log.error("Failed to generate Morse WAV")
             return
 
+        if is_cmd:
+            self.owner.queue.manual_pause()
+
         Log.morse(f"Broadcasting {output_wav}...")
         await self.registry.dispatch(
             "start",
@@ -50,8 +53,7 @@ class MorseOp(CliOp):
             ps=ps,
             rt=rt,
             pi=pi,
-            loop=loop,
-            is_cmd=True
+            loop=loop
             )
 
 
