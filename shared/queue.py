@@ -527,15 +527,15 @@ class Queue:
         Log.queue(f"Playing [{self.current_index + 1}/{len(self.queue)}]: {filename}")
         
         # Use stored broadcast settings
-        self.client.start_broadcast(
-            file_path,
+        asyncio.create_task(self.client.registry.dispatch(
+            "start",
+            file_path=file_path,
             frequency=self.broadcast_settings['frequency'],
             ps=self.broadcast_settings['ps'],
             rt=self.broadcast_settings['rt'],
             pi=self.broadcast_settings['pi'],
             loop=False,
-            trigger_manual=False
-        )
+        ))
     
     async def _play_all_clients(self, target_clients: List[str]):
         """Start playback for all target clients at their individual positions."""
