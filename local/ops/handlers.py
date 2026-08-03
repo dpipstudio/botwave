@@ -41,7 +41,7 @@ class HandlersEventsOp(GeneralOp):
 
         print(context)
 
-        self.owner.handlers_executor.run_handlers("l_onready", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onready", dir_path, context)
 
     async def onexit(self, dir_path: str = None, context: dict = None):
         if context:
@@ -50,7 +50,7 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        self.owner.handlers_executor.run_handlers("l_onexit", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onexit", dir_path, context)
 
 
     async def onstart(self, dir_path: str = None, context: dict = None):
@@ -60,7 +60,7 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        self.owner.handlers_executor.run_handlers("l_onstart", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onstart", dir_path, context)
 
 
     async def onstop(self, dir_path: str = None, context: dict = None):
@@ -70,7 +70,7 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        self.owner.handlers_executor.run_handlers("l_onstop", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onstop", dir_path, context)
 
 
     async def onwsjoin(self, dir_path: str = None, context: dict = None):
@@ -80,7 +80,7 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        self.owner.handlers_executor.run_handlers("l_onwsjoin", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onwsjoin", dir_path, context)
 
 
     async def onwsleave(self, dir_path: str = None, context: dict = None):
@@ -90,7 +90,7 @@ class HandlersEventsOp(GeneralOp):
         else:
             context = self.build_context()
 
-        self.owner.handlers_executor.run_handlers("l_onwsleave", dir_path, context)
+        await self.owner.handlers_executor.run_handlers("l_onwsleave", dir_path, context)
 
     def build_context(self) -> dict:
         ctx = {}
