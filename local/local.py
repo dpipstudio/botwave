@@ -211,7 +211,11 @@ async def main():
                 Log.warning("Use 'exit' to exit")
 
             except EOFError:
-                await local.registry.dispatch("exit")
+                try:
+                    await local.registry.dispatch("exit")
+
+                except UpperException:  # omfg i need  to put this everywhere
+                    return
 
             except UpperException:
                 return
