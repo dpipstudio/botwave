@@ -49,10 +49,11 @@ class HelpOp(CliOp):
         Log.print("  List files in the upload directory", "white")
         Log.print("")
 
-        Log.print("rm <filename|all>", "bright_green")
+        Log.print("rm <filename|glob>", "bright_green")
         Log.print("  Remove a file", "white")
         Log.print("  Example:", "white")
         Log.print("    rm broadcast.wav", "cyan")
+        Log.print("    rm *.wav", "cyan")
         Log.print("")
 
         Log.print("upload <file|folder>", "bright_green")
