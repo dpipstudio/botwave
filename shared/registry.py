@@ -19,6 +19,7 @@ class Registry:
 
         for key, method_name in op.commands.items():
             self.operations[key] = getattr(op, method_name)
+            Log.debug(f"{key} in {op} registered")
 
         self.instances.append(op)
 
@@ -32,6 +33,7 @@ class Registry:
             return
 
         for path in Path(dir).glob("*.py"):
+            Log.debug(f"Processing op {path.name}")
 
             spec = importlib.util.spec_from_file_location(path.stem, path)
             op = importlib.util.module_from_spec(spec)
@@ -48,12 +50,14 @@ class Registry:
         op = self.operations.get(key)
 
         if not op:
+            Log.debug(f"No such op: {op}")
             return False
 
         try:
             await op(*args, **kwargs)
 
-        except UpperException:
+        except UpperException as ue:
+            Log.debug(f"Got an UpperException ({ue}), raising...")
             raise
 
         except Exception as e:  # Shouldn't happen, try/catch in ops
