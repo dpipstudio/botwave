@@ -25,6 +25,11 @@ class RmOp(CliOp):
             Log.error(f"Invalid pattern '{target}'")
             return
 
+        if target == "all":
+            Log.warning("'rm all' is deprecated, use 'rm *' instead. This will be removed in a future release.")
+            target = "*.wav" # old behavior only deleted .wav files
+
+
         matches = sorted(upl_dir.glob(target))
 
         # drop anything that resolved outside upl_dir
