@@ -1,3 +1,12 @@
+#!/opt/BotWave/venv/bin/python3
+# This path won't be correct if you didn't use the https://botwave.dpip.lol/install installer or similar.
+
+# BotWave Client
+# https://github.com/dpipstudio/botwave
+# https://botwave.dpip.lol
+# A DPIP Studio project. https://dpip.lol
+# Licensed under GPL-v3.0 (see LICENSE)
+
 import argparse
 import asyncio
 import os
@@ -20,25 +29,28 @@ from shared.version import check_for_updates
 
 class BotWaveClient:
     def __init__(self):
-        self.ws_client = None
+        # connection state
+        self.client_id = None
         self.http_client = None
         self.proto = None
-
-        self.running = False
         self.registered = False
-        self.client_id = None
-        self.piwave = None
-        self.piwave_monitor = PWM()
-        self.broadcasting = False
-        self.broadcast_start_time = None
-        self.current_file = None
-        self.stream_task = None
-        self.stream_active = False
-        self.feed_task = None
+        self.running = False
+        self.ws_client = None
 
+        # broadcast state
+        self.broadcast_start_time = None
+        self.broadcasting = False
+        self.current_file = None
+        self.feed_task = None
+        self.piwave = None
+        self.stream_active = False
+        self.stream_task = None
+
+        # helpers
+        self.alsa = Alsa()
+        self.piwave_monitor = PWM()
         self.registry = Registry(self)
         self.tips = TipEngine(is_server=False)
-        self.alsa = Alsa()
 
     async def handle_message(self, message: str):
         Log.debug(message)
@@ -75,9 +87,13 @@ def check_updates():
     Log.info("Checking for software updates...")
 
     try:
-        _, latest_ver = check_for_updates()
+        latest_proto_ver, latest_ver = check_for_updates()
 
-        if latest_ver:
+        if latest_proto_ver:
+            Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")
+            Log.update("It is recommended updating to the latest version by running 'bw-update' in your shell")
+
+        elif latest_ver:
             Log.update(f"A newer version of BotWave is available ({latest_ver})")
             Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
 
@@ -90,6 +106,8 @@ def check_updates():
 # entry point
 async def main():
     Log.header("BotWave Client")
+
+    check()
 
     parser = argparse.ArgumentParser(prog="bw-client", description='BotWave Client')
     parser.add_argument('server_host', nargs='?', help='Server hostname/IP')
