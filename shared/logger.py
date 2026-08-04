@@ -46,6 +46,7 @@ class Logger(DLogger):
         'morse': 'purple',
         'alsa': 'pink',
         'queue': 'orange',
+        'debug': 'orange',
         'converter': 'rgb(50,215,165)',
         'environ': 'rgb(224,107,61)'
     }
