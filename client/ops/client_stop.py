@@ -9,7 +9,7 @@ class ClientStopOp(GeneralOp):
         self.owner.running = False
 
         if self.owner.broadcasting:
-            await self.registry.dispatch(Commands.STOP)
+            await self.registry.dispatch("stop_broadcast", silent=True)
 
         if self.owner.piwave:
             self.owner.piwave.cleanup()
