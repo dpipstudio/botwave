@@ -17,7 +17,9 @@ from shared.version import get_release_version
 class ConnectOp(GeneralOp):
     commands = {
         "client_connect": "connect",
-        Commands.REGISTER_OK: "register_ok"
+        Commands.REGISTER_OK: "register_ok",
+        Commands.AUTH_FAILED: "auth_failed",
+        Commands.VERSION_MISMATCH: "ver_mismatch"
     }
 
     async def connect(self):
@@ -69,6 +71,13 @@ class ConnectOp(GeneralOp):
         Log.error("Registration timeout")
         raise UpperException("reg_timeout")
 
+    def create_ssl_context(self):
+        # Creates SSL context accepting self-signed certificates
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        return ssl_context
+
     async def register_ok(self, parsed):
         kwargs = parsed['kwargs']
 
@@ -91,12 +100,23 @@ class ConnectOp(GeneralOp):
             await self.owner.proto.fire(Commands.OK, message=message)
             update_flag.unlink()
 
-    def create_ssl_context(self):
-        # Creates SSL context accepting self-signed certificates
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        return ssl_context
+    async def auth_failed(self, parsed):
+        kwargs = parsed['kwargs']
+
+        self.owner.registered = True # to exit the wait-for-register loop
+        reason = kwargs.get('message', 'Invalid passkey')
+        Log.error(f"Authentication failed: {reason}")
+
+        raise UpperException("auth_failed")
+
+    async def ver_mismatch(self, parsed):
+        kwargs = parsed['kwargs']
+
+        self.owner.registered = True
+        server_ver = kwargs.get('server_version', 'unknown')
+        Log.error(f"Protocol version mismatch! Server: {server_ver}, Client: {PROTOCOL_VERSION}")
+
+        raise UpperException("version_mismatch")
 
 def setup(reg):
     reg.register(ConnectOp)
