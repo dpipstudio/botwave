@@ -11,7 +11,10 @@ from shared.protocol import Commands, PROTOCOL_VERSION
 from shared.security import PathValidator, SecurityError
 
 class DownloadUrlOp(GeneralOp):
-    commands = {Commands.DOWNLOAD_URL: "download_url"}
+    commands = {
+        Commands.DOWNLOAD_URL: "download_url",
+        Commands.DOWNLOAD_TOKEN: "download_token"
+    }
 
     async def download_url(self, parsed):
         kwargs = parsed["kwargs"]
@@ -116,6 +119,66 @@ class DownloadUrlOp(GeneralOp):
         with urllib.request.urlopen(request) as response, open(dest_path, "wb") as out_file:
             out_file.write(response.read())
 
+    async def download_token(self, parsed):
+        kwargs = parsed["kwargs"]
+
+        token = kwargs.get('token')
+        filename = kwargs.get('filename')
+
+        if not token or not filename:
+            await self.owner.proto.reply(
+                parsed,
+                Commands.ERROR,
+                message="Missing token or filename"
+            )
+            return
+
+        Log.file(f"Received download token for: {filename}")
+
+        try:
+            filename = PathValidator.sanitize_filename(filename)
+            save_path = PathValidator.safe_join(Env.get("UPLOAD_DIR"), filename)
+
+        except SecurityError as e:
+            Log.error(f"Invalid filename from server: {e}")
+
+            await self.owner.proto.reply(
+                parsed,
+                Commands.ERROR,
+                message="Provided filename raised a security violation"
+            )
+            return
+
+        def progress(bytes_received, total):
+            if total > 1024 * 1024:
+                Log.progress_bar(bytes_received, total, prefix=f'Downloading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
+
+            if bytes_received == total:
+                Log.progress_bar(bytes_received, total, prefix=f'Downloaded {filename} !', suffix='Complete', style='yellow', icon='FILE', auto_clear=True)
+
+        success = await self.owner.http_client.download_file(
+            server_host=Env.get("FHOST"),
+            server_port=Env.get_int("FPORT"),
+            token=token,
+            save_path=save_path,
+            progress_callback=progress
+        )
+
+        if success:
+            Log.success(f"Download completed: {filename}")
+            await self.owner.proto.reply(
+                parsed,
+                Commands.OK,
+                message=f"Downloaded {filename}"
+            )
+
+        else:
+            Log.error(f"Download failed: {filename}")
+            await self.owner.proto.reply(
+                parsed,
+                Commands.ERROR,
+                message="Download failed"
+            )
 
 def setup(reg):
     reg.register(DownloadUrlOp)
