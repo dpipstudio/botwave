@@ -24,6 +24,7 @@ class Logger(DLogger):
         'morse': 'MORSE',
         'alsa': 'ALSA',
         'queue': 'QUEUE',
+        'debug': 'DBG',
         'converter': 'CVRT',
         'environ': 'ENV'
     }
