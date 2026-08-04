@@ -160,7 +160,7 @@ async def main():
     parser.add_argument('--skip-checks', action=argparse.BooleanOptionalAction, help='Skip system requirements checks')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in daemon mode (non-interactive)')
     parser.add_argument('--rc', type=int, default=None, help='Remote CLI port for remote management')
-    parser.add_argument('--pk', help='Optional passkey for WebSocket authentication')
+    parser.add_argument('--pk', help='Optional passkey for remote management authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show output logs')
     parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     args = parser.parse_args()
