@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import traceback
 
+from shared.env import Env
 from shared.logger import Log
 
 # exception explicitly raised to pass a message to the dispatcher
@@ -61,7 +62,10 @@ class Registry:
             raise
 
         except Exception as e:  # Shouldn't happen, try/catch in ops
-            Log.error(f"Unexpected error in '{key}': {e}\n{traceback.format_exc()}")
+            Log.error(f"Unexpected error in '{key}': {e}")
+
+            if Env.get_bool("TALK"):
+                traceback.print_exc()
 
         return True
 
