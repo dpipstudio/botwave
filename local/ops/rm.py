@@ -3,6 +3,7 @@ from pathlib import Path
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
+from shared.security import PathValidator, SecurityError
 
 class RmOp(CliOp):
     name = "rm"
@@ -17,8 +18,13 @@ class RmOp(CliOp):
 
         upl_dir = Path(Env.get("UPLOAD_DIR")).resolve()
 
-        # reject anything that tries to escape the dir outright
-        if target.startswith("/") or ".." in Path(target).parts:
+        try:
+            target = PathValidator.sanitize_filename(target)
+
+            if target.startswith("/"):
+                raise SecurityError()
+
+        except SecurityError:
             Log.error(f"Invalid pattern '{target}'")
             return
 
