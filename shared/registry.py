@@ -20,7 +20,7 @@ class Registry:
 
         for key, method_name in op.commands.items():
             self.operations[key] = getattr(op, method_name)
-            Log.debug(f"{key} in {op} registered")
+            Log.debug(f"registered {key} in {op}")
 
         self.instances.append(op)
 
