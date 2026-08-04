@@ -1,6 +1,5 @@
 from shared.logger import Log
 from shared.ops import GeneralOp
-from shared.protocol import Commands
 
 class ClientStopOp(GeneralOp):
     commands = {"client_stop": "stop"}
