@@ -21,9 +21,6 @@ class RmOp(CliOp):
         try:
             target = PathValidator.sanitize_filename(target)
 
-            if target.startswith("/"):
-                raise SecurityError()
-
         except SecurityError:
             Log.error(f"Invalid pattern '{target}'")
             return
