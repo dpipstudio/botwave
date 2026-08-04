@@ -221,6 +221,8 @@ async def main():
         is_server=False
         )
 
+    Log.print("Type 'help' for commands", 'bright_yellow')
+
     with patch_stdout(raw=True):
         Log._stream = sys.stdout
 
