@@ -3,7 +3,7 @@ import shlex
 import time
 from typing import Dict, Tuple
 
-PROTOCOL_VERSION = "2.1.2"
+PROTOCOL_VERSION = "2.1.3"
 
 
 class Commands:
@@ -12,10 +12,6 @@ class Commands:
     AUTH = 'AUTH'
     VER = 'VER'
     REGISTER = 'REGISTER'
-    
-    # ping pong
-    PING = 'PING'
-    PONG = 'PONG'
     
     # broadcast
     START = 'START'
