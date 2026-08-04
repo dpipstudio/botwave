@@ -77,7 +77,7 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
-        if icon == "debug" and not Env.get_bool("TALK"):
+        if icon.lower() == "dbg" and not Env.get_bool("TALK"):
             return
 
         tx_id = self.transaction_id.get()
