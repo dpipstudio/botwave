@@ -1,3 +1,12 @@
+#!/opt/BotWave/venv/bin/python3
+# This path won't be correct if you didn't use the https://botwave.dpip.lol/install installer or similar.
+
+# BotWave Local Client
+# https://github.com/dpipstudio/botwave
+# https://botwave.dpip.lol
+# A DPIP Studio project. https://dpip.lol
+# Licensed under GPL-v3.0 (see LICENSE)
+
 import argparse
 import asyncio
 import os
