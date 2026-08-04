@@ -11,7 +11,7 @@ class StatusOp(GeneralOp):
         if self.owner.broadcasting and self.owner.current_file:
             status = "onair"
             file = Path(self.owner.current_file).name
-            freq = self.piwave.get_status()["frequency"]
+            freq = self.owner.piwave.get_status()["frequency"]
             uptime = "??:??:??"
             
             if self.owner.broadcast_start_time:
