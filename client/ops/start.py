@@ -161,7 +161,7 @@ class StartOp(GeneralOp):
         except Exception as e:
             Log.error(f"Broadcast error: {e}")
             self.owner.broadcasting = False
-            self.owner.owner.tips.is_broadcasting = False
+            self.owner.tips.is_broadcasting = False
             self.owner.broadcast_start_time = None
             return e
 

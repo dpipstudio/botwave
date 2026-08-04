@@ -10,7 +10,7 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands, PROTOCOL_VERSION
 from shared.security import PathValidator, SecurityError
 
-class DownloadUrlOp(GeneralOp):
+class DownloadOp(GeneralOp):
     commands = {
         Commands.DOWNLOAD_URL: "download_url",
         Commands.DOWNLOAD_TOKEN: "download_token"
@@ -72,15 +72,17 @@ class DownloadUrlOp(GeneralOp):
             else:
                 raise ValueError(f"Unsupported file type from URL: .{ext}")
 
-            if Path(filepath).is_file():
-                file_size = Path(filepath).stat().st_size
+            final_path = Path(filepath)
+
+            if final_path.is_file():
+                file_size = final_path.stat().st_size
         
-                Log.success(f"Downloaded: {filename} ({file_size if file_size > 0 else '?'} bytes{', converted' if converted else ''})")
+                Log.success(f"Downloaded: {final_path.name} ({file_size if file_size > 0 else '?'} bytes{', converted' if converted else ''})")
 
                 await self.owner.proto.reply(
                     parsed,
                     Commands.OK,
-                    message=f"Downloaded {filename}{' (converted)' if converted else ''}"
+                    message=f"Downloaded {final_path.name}{' (converted)' if converted else ''}"
                 )
 
             else:
@@ -181,4 +183,4 @@ class DownloadUrlOp(GeneralOp):
             )
 
 def setup(reg):
-    reg.register(DownloadUrlOp)
+    reg.register(DownloadOp)
