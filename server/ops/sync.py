@@ -93,7 +93,7 @@ class SyncOp(CliOp):
 
             try:
                 temp_suffix = uuid.uuid4().hex[:8]
-                temp_filename = f".sync_temp_{source[0]}_{temp_suffix}_{filename}"
+                temp_filename = f".sync_temp_{source}_{temp_suffix}_{filename}"
                 
                 try:
                     temp_path = PathValidator.safe_join(target, temp_filename)
