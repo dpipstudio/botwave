@@ -26,10 +26,10 @@ class ClientMsgOp(GeneralOp):
         msg = kwargs.get('message')
 
         if msg:
-            Log.error(f"{self.owner.clients["client_id"].get_display_name()}: {msg}")
+            Log.error(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
 
         else:
-            Log.broadcast(f"{self.owner.clients["client_id"].get_display_name()}: Finished broadcasting {filename}")
+            Log.broadcast(f"{self.owner.clients[client_id].get_display_name()}: Finished broadcasting {filename}")
 
         self.owner.queue.on_broadcast_ended(client_id)
         return
