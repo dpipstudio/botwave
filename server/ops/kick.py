@@ -50,7 +50,7 @@ class KickOp(CliOp):
             results["kicked"].append(client_id)
             Log.success(f"  {client.get_display_name()}: Kicked - {reason}")
 
-        
+        Log.print("")
         Log.info(f"Success: {len(results['kicked'])}, Failure: {len(results['failed'])}")
 
 
