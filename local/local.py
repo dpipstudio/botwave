@@ -216,8 +216,7 @@ async def main():
 
     prompt = get_prompt(
         commands={op.name: op.syntax for op in local.registry.get_instances() if isinstance(op, CliOp)},
-        history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history"),
-        is_server=False
+        history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history")
         )
 
     Log.print("Type 'help' for commands", 'bright_yellow')
