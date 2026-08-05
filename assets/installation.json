@@ -168,7 +168,30 @@
   "server": {
     "files": [
       "server/server.py",
-      "shared/tls.py"
+      "shared/tls.py",
+      "server/ops/client_message.py",
+      "server/ops/exit.py",
+      "server/ops/kick.py",
+      "server/ops/live.py",
+      "server/ops/queue.py",
+      "server/ops/sh_cmd.py",
+      "server/ops/startup.py",
+      "server/ops/sync.py",
+      "server/ops/dl.py",
+      "server/ops/handlers.py",
+      "server/ops/lf.py",
+      "server/ops/morse.py",
+      "server/ops/register.py",
+      "server/ops/sstv.py",
+      "server/ops/status.py",
+      "server/ops/update.py",
+      "server/ops/env.py",
+      "server/ops/help.py",
+      "server/ops/list.py",
+      "server/ops/rm.py",
+      "server/ops/start.py",
+      "server/ops/stop.py",
+      "server/ops/upload.py"
     ],
     "requirements": [
       "cryptography==36.0.2"
