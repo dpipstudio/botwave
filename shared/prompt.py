@@ -96,7 +96,7 @@ class CommandValidator(Validator):
             )
 
 
-def get_prompt(commands: dict, history_path: str, is_server: bool = True):
+def get_prompt(commands: dict, history_path: str):
 
     try:
         history = FileHistory(history_path)
