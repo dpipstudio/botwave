@@ -7,7 +7,7 @@ from shared.protocol import Commands
 
 class StartOp(CliOp):
     name = "start"
-    syntax = "<targets> <file> [freq] [loop] [ps] [rt] [pi]"
+    syntax = "<targets> <file> [frequency] [loop] [ps] [rt] [pi]"
 
     async def handle(
         self,
