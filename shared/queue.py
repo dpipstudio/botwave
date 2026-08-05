@@ -209,12 +209,18 @@ class Queue:
         
         for client_id in client_ids:
             try:
-                files = await self.server._request_file_list(client_id, timeout=10)
+                if client_id not in self.owner.clients:
+                    continue
+                
+                lf_hdl = next(inst for inst in self.server.registry.get_instances() if type(inst).__name__ == "SyncOp")
+
+                files = await lf_hdl.request_files(self.owner.clients[client_id], timeout=10)
                 if files:
                     client_files[client_id] = set(f['name'] for f in files)
                 else:
                     Log.warning(f"No files from {client_id}")
                     client_files[client_id] = set()
+
             except Exception as e:
                 Log.error(f"Error getting files from {client_id}: {e}")
                 client_files[client_id] = set()
@@ -492,7 +498,7 @@ class Queue:
         
         if not self.paused:
             # Initialize client indices for targets
-            target_clients = self.server._parse_client_targets(args['targets'])
+            target_clients = self.server.parse_targets(args['targets'])
             for client_id in target_clients:
                 if client_id not in self.client_indices:
                     self.client_indices[client_id] = 0
@@ -500,7 +506,7 @@ class Queue:
             await self._play_all_clients(target_clients)
         else:
             # Stop broadcast on targets
-            await self.server.stop_broadcast(args['targets'])
+            await self.server.registry.dispatch("stop", targets=self.server.parse_targets(args['targets']))
     
     # PLAYBACK CONTROL
     
@@ -552,15 +558,15 @@ class Queue:
             Log.queue(f"{client_name}: Playing [{index + 1}/{len(self.queue)}] {filename}")
             
             # Use stored broadcast settings
-            await self.server.start_broadcast(
-                client_id,
-                filename,
-                frequency=self.broadcast_settings['frequency'],
+            await self.server.registry.dispatch(
+                "start",
+                [client_id],
+                file=filename,
+                freq=self.broadcast_settings['frequency'],
                 ps=self.broadcast_settings['ps'],
                 rt=self.broadcast_settings['rt'],
                 pi=self.broadcast_settings['pi'],
-                loop=False,
-                trigger_manual=False
+                loop=False
             )
     
     # AUTO-ADVANCE (NEXT TRACK)
@@ -620,13 +626,13 @@ class Queue:
         Log.queue(f"{client_name}: Next [{client_index + 1}/{len(self.queue)}] {filename}")
         
         # Use stored broadcast settings
-        await self.server.start_broadcast(
-            client_id,
-            filename,
-            frequency=self.broadcast_settings['frequency'],
+        await self.server.registry.dispatch(
+            "start",
+            targets=[client_id],
+            file=filename,
+            freq=self.broadcast_settings['frequency'],
             ps=self.broadcast_settings['ps'],
             rt=self.broadcast_settings['rt'],
             pi=self.broadcast_settings['pi'],
-            loop=False,
-            trigger_manual=False
+            loop=False
         )

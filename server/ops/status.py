@@ -21,6 +21,9 @@ class StatusOp(CliOp):
             if targets:
                 targets_resolved = self.owner.parse_targets(targets)
 
+        else:
+            targets_resolved = True
+
 
         if targets and not targets_resolved:
             Log.warning("No client(s) found matching the query")
@@ -67,7 +70,7 @@ class StatusOp(CliOp):
             Log.print("")
 
         Log.print(f"Connected clients : {len(self.owner.clients)}", "white")
-        Log.print(f"Port              : {Env.get("PORT")}", "white")
+        Log.print(f"Port              : {Env.get('PORT')}", "white")
         Log.print(f"File Port         : {Env.get('FPORT')}", "white")
 
         rmt = Env.get("REMOTE_CMD_PORT")

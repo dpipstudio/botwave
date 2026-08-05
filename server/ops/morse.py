@@ -85,7 +85,6 @@ class MorseOp(CliOp):
         )
 
 
-
     def parse(self, cmd_parts):
         if len(cmd_parts) < 2:
             Log.error("Usage: morse <targets> <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]")
@@ -93,7 +92,7 @@ class MorseOp(CliOp):
 
         targets = cmd_parts[0]
         text_src = cmd_parts[1]
-        wpm = cmd_parts[2] if len(cmd_parts) > 2 else Env.get_int("DEFAULT_MORSE_WPM", 20)
+        wpm = int(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_int("DEFAULT_MORSE_WPM", 20)
         morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
         frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
