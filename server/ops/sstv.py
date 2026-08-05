@@ -57,8 +57,10 @@ class SSTVOp(CliOp):
 
             await self.registry.dispatch("upload", targets=targets, file=output_wav)
             await asyncio.sleep(5 * len(targets))  # Wait for upload
-            
-            self.owner.queue.manual_pause()
+
+            if is_cmd:
+                self.owner.queue.manual_pause()
+
             await self.registry.dispatch(
                 "start",
                 targets=targets,
