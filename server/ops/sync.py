@@ -185,7 +185,7 @@ class SyncOp(CliOp):
         Log.info(f"Targets: {', '.join(targets)}")
 
         Log.info("Clearing existing files on targets...")
-        await self.registry.dispatch("rm", target="*.wav")
+        await self.registry.dispatch("rm", targets=targets, file="*.wav")
         await asyncio.sleep(1)
 
         await self.registry.dispatch(
