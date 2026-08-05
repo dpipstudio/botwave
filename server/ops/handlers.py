@@ -117,7 +117,7 @@ class HandlersEventsOp(GeneralOp):
         try:
             argv_env = {f"BW_ARGV{i}": str(v) for i, v in enumerate(self.owner.last_argv)}
 
-            ws_port = Env.get("REMOTE_CMD_PORT")
+            ws_port = Env.get("PORT")
 
             ctx = {
                 **argv_env,
