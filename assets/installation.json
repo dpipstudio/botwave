@@ -124,6 +124,19 @@
   "client": {
     "files": [
       "client/client.py",
+      "client/ops/client_stop.py",
+      "client/ops/connect.py",
+      "client/ops/dl.py",
+      "client/ops/kick.py",
+      "client/ops/list_files.py",
+      "client/ops/rm.py",
+      "client/ops/start.py",
+      "client/ops/status.py",
+      "client/ops/stream.py",
+      "client/ops/stop.py",
+      "client/ops/update.py",
+      "client/ops/upload.py",
+
       "local/local.py",
       "local/ops/dl.py",
       "local/ops/env.py",
@@ -140,6 +153,7 @@
       "local/ops/start.py",
       "local/ops/stop.py",
       "local/ops/upload.py",
+      
       "shared/bw_custom.py",
       "shared/pw_monitor.py"
     ],
