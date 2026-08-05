@@ -75,7 +75,7 @@ class StartOp(CliOp):
 
             except TimeoutError:
                 Log.error(f"  {client.get_display_name()}: Response timeout")
-                results['failed'].append((client_id, 'timeout'))
+                results['failed'].append(client_id)
 
             except RuntimeError as e:
                 err = str(e)
