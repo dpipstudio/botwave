@@ -1,6 +1,5 @@
 import asyncio
 import os
-import subprocess
 
 from shared.env import Env
 from shared.logger import Log
@@ -21,23 +20,42 @@ class ShellOp(CliOp):
         if shell:
             command = f"{shell} \"{command}\""
 
-        # run in separate thread to avoid blocking the main loop
-        await asyncio.to_thread(self.run, command, env)
+        await self.run(command, env)
 
-    def run(self, command, env):
+    async def run(self, command, env):
         try:
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
-            for line in process.stdout:
-                Log.print(line, end='')
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env
+            )
 
-            return_code = process.wait()
+            try:
+                async def read_stream(stream, is_stderr=False):
+                    while True:
+                        line = await stream.readline()
+                        if not line:
+                            break
 
-            if return_code != 0:
-                Log.info(f"STDERR (err {return_code}):")
-                for line in process.stderr:
-                    Log.print(line, end='')
+                        if is_stderr:
+                            Log.print(line.decode('utf-8'), style="red", end='')
 
-                Log.error(f"Command failed with return code {return_code}")
+                        else:
+                            Log.print(line.decode('utf-8'), end='')
+
+                await asyncio.wait_for(
+                    asyncio.gather(
+                        read_stream(process.stdout),
+                        read_stream(process.stderr, is_stderr=True)
+                    ),
+                    timeout=30.0
+                )
+
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                Log.error("Command execution timeout")
 
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
@@ -64,41 +82,37 @@ class PipeOp(CliOp):
         if shell:
             command = f"{shell} \"{command}\""
 
-        loop = asyncio.get_running_loop()
-        queue = asyncio.Queue()
+        await self.run(command, env)
 
-        def produce():
-            try:
-                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True, env=env)
-                for line in process.stdout:
-                    line = line.strip()
+    async def run(self, command, env):
+        try:
+            process = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env
+            )
 
-                    if line:
-                        # back to the event loop
-                        loop.call_soon_threadsafe(queue.put_nowait, line)
+            tasks = []
 
-            except Exception as e:
-                loop.call_soon_threadsafe(queue.put_nowait, e)
+            async for line in process.stdout:
+                line = line.decode('utf-8').strip()
+                if line:
+                    tasks.append(
+                        asyncio.create_task(
+                            self.owner.cmd_exec(line)
+                        )
+                    )
 
-            finally:
-                loop.call_soon_threadsafe(queue.put_nowait, None)
+            # wait for the subprocess itself to finish too
+            await process.wait()
 
-        thread = asyncio.to_thread(produce)
-        task = asyncio.ensure_future(thread)
+            # wait for every scheduled command to actually complete before returning
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
 
-        while True:
-            item = await queue.get()
-            if item is None:
-                break
-
-            if isinstance(item, Exception):
-                Log.error(f"Error executing shell command: {item}")
-                break
-
-            await self.owner.cmd_exec(item)
-
-        await task
-
+        except Exception as e:
+            Log.error(f"Error executing pipe command: {e}")
 
     def parse(self, cmd_parts):
         if len(cmd_parts) < 1:
