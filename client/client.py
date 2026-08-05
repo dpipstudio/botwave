@@ -156,7 +156,7 @@ async def main():
         await client.registry.dispatch("client_connect")
 
     except UpperException:
-        pass  # It'll stop anyways on the next finally block
+        await client.ws_client.disconnect() # if we get a reg to
 
     client.running = True
     client.tips.start()
