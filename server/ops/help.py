@@ -90,12 +90,11 @@ class HelpOp(CliOp):
         Log.print("    kick pi1 Maintenance", "cyan")
         Log.print("")
 
-        Log.print("update <targets> [latest|<version>]", "bright_green")
+        Log.print("update <targets> [version]", "bright_green")
         Log.print("  Request client(s) to update and restart", "white")
         Log.print("  Omit version to update to the latest release", "white")
         Log.print("  Examples:", "white")
         Log.print("    update all", "cyan")
-        Log.print("    update pi1 latest", "cyan")
         Log.print("    update all v1.0.0-oak", "cyan")
         Log.print("")
 
