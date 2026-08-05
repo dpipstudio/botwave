@@ -65,7 +65,7 @@ class HelpOp(CliOp):
         Log.print("    sync /backup/ pi1", "cyan")
         Log.print("")
 
-        Log.print("dl <targets> <url>", "bright_green")
+        Log.print("dl <targets> <url> [destination]", "bright_green")
         Log.print("  Request client(s) to download a file from a URL", "white")
         Log.print("  Example:", "white")
         Log.print("    dl all http://example.com/file.wav", "cyan")
