@@ -7,6 +7,7 @@ from prompt_toolkit.patch_stdout import patch_stdout
 import re
 import shlex
 import sys
+import traceback
 from typing import Dict, List, Optional
 
 # using this to access to the shared dir files
@@ -20,7 +21,7 @@ from shared.handlers import HandlerExecutor
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.prompt import get_prompt
-from shared.protocol import Commands, ProtocolParser
+from shared.protocol import Commands, ProtocolParser, PROTOCOL_VERSION
 from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.tips import TipEngine
@@ -217,6 +218,24 @@ def check_updates():
     except Exception as e:
         Log.warning("Unable to check for updates (continuing anyway)")
 
+def fail_banner():
+    style = "bold rgb(200,0,0)"
+
+    Log.print("+------------------------------------------------------------+", style)
+    Log.print("|                                                            |", style)
+    Log.print("|  Server failed to start.                                   |", style)
+    Log.print("|                                                            |", style)
+    Log.print("|  If there is a stack trace above, please provide it        |", style)
+    Log.print("|  when opening an issue.                                    |", style)
+    Log.print("|                                                            |", style)
+    Log.print("|  If you do not know what is happening, please open an      |", style)
+    Log.print("|  issue on GitHub:                                          |", style)
+    Log.print("|                                                            |", style)
+    Log.print("|  https://github.com/dpipstudio/botwave/issues/new/         |", style)
+    Log.print("|                                                            |", style)
+    Log.print("+------------------------------------------------------------+", style)
+
+
 async def main():
     Log.header("BotWave Server")
 
@@ -256,26 +275,43 @@ async def main():
     elif not Env.get("WAIT_START", False):
         Env.set("WAIT_START", str(True))  
 
-    if not Env.get_bool("SKIP_CHECKS"):
-        check_updates()
-
     server = BotWaveServer()
     server.registry.from_dir(Path(__file__).resolve().parent / "ops")
 
-    await server.registry.dispatch("server_startup")
+    try:
+        # server startup
+        server.tips.start()
 
-    if Env.get("REMOTE_CMD_PORT"):
-        server.ws_handler = WSCMDH(
-            command_executor=server.cmd_exec,
-            registry=server.registry
-        )
-        
-        server.ws_handler.start()
+        await server.registry.dispatch("server_startup")
+        server.running = True
 
-    server.tips.start()
-    server.running = True
+        if not Env.get_bool("SKIP_CHECKS"):
+            check_updates()
 
-    await server.registry.dispatch("handlers_onready")
+        Log.server("BotWave Server started")
+        Log.version(f"Protocol Version: {PROTOCOL_VERSION}")
+
+        if Env.get("PASSKEY"):
+            Log.auth("Server is using authentication with a passkey")
+
+        if Env.get("REMOTE_CMD_PORT"):
+            server.ws_handler = WSCMDH(
+                command_executor=server.cmd_exec,
+                registry=server.registry
+            )
+            
+            server.ws_handler.start()
+
+        await server.registry.dispatch("handlers_onready")
+
+    except Exception as e:
+        Log.error(f"Startup error: {e}")
+
+        if Env.get_bool("TALK"):
+            traceback.print_exc()
+
+        fail_banner()
+        return
 
     if Env.get_bool("DAEMON"):
         Log.info("Running in daemon mode. The server will continue to run in the background.")
