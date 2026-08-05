@@ -187,8 +187,8 @@ class BotWaveServer:
             client = self.clients[client_id]
             Log.warning(f"Client disconnected: {client.get_display_name()}")
 
+            await self.registry.dispatch("handlers_ondisconnect", client_id=client_id)
             del self.clients[client_id]
-            await self.registry.dispatch("handlers_ondisconnect")
 
 # startup helpers
 def set_prio(key, cli_value, default, immutable=False):
