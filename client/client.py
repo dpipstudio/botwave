@@ -9,12 +9,11 @@
 
 import argparse
 import asyncio
-import os
 from pathlib import Path
 import sys
 
 # using this to access to the shared dir files
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from shared.alsa import Alsa
 from shared.cat import check
