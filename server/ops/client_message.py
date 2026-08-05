@@ -23,9 +23,14 @@ class ClientMsgOp(GeneralOp):
         kwargs = parsed['kwargs']
 
         filename = kwargs.get('filename', 'unknown')
-        msg = kwargs.get('message', f"Finished broadcasting {filename}")
+        msg = kwargs.get('message')
 
-        Log.broadcast(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
+        if msg:
+            Log.error(f"{self.owner.clients["client_id"].get_display_name()}: {msg}")
+
+        else:
+            Log.broadcast(f"{self.owner.clients["client_id"].get_display_name()}: Finished broadcasting {filename}")
+
         self.owner.queue.on_broadcast_ended(client_id)
         return
 
