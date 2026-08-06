@@ -1,3 +1,4 @@
+import fnmatch
 import os
 
 from shared.env import Env
@@ -6,7 +7,7 @@ from shared.ops import CliOp
 
 class GetOp(CliOp):
     name = "get"
-    syntax = "<keys|*>"
+    syntax = "<keys|glob>"
 
     async def handle(self, keys: list = None, is_cmd: bool = False, cmd_parts: list = []):
         if is_cmd:
@@ -15,8 +16,21 @@ class GetOp(CliOp):
             if not keys:
                 return
 
-        if "*" in keys:
-            keys = list(os.environ.copy().keys())
+        env_keys = list(os.environ.keys())
+        expanded_keys = []
+
+        for pattern in keys:
+            pattern = pattern.upper()
+            matches = fnmatch.filter(env_keys, pattern)
+
+            if matches:
+                expanded_keys.extend(matches)
+
+            else:
+                expanded_keys.append(pattern)
+
+        # remove duplicates
+        keys = list(dict.fromkeys(expanded_keys))
 
         for key in keys:
             key = key.upper()
@@ -30,10 +44,9 @@ class GetOp(CliOp):
             Log.print(f"({key})", style="bright_blue", end=" ")
             Log.print(value, style="orange" if immutable else "white")
 
-
     def parse(self, cmd_parts):
         if len(cmd_parts) < 1: 
-            Log.error("Usage: get <keys|*>")
+            Log.error("Usage: get <keys|glob>")
             return None
 
         return cmd_parts
