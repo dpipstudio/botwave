@@ -1,6 +1,10 @@
 from shared.ops import CliOp
 
 class QueueOp(CliOp):
+    """
+    The 'queue' command OP. Just a Queue.parse() redirect.
+    """
+    
     name = "queue"
     syntax = "[+|-|*|!|?]"
 

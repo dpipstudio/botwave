@@ -2,6 +2,11 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class StopOp(CliOp):
+    """
+    The 'stop' command OP. Stops the current broadcast
+    if any. Also stops the ALSA listening.
+    """
+
     name = "stop"
 
     async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: str = None):

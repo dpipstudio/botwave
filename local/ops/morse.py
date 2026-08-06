@@ -7,6 +7,13 @@ from shared.morser import text_to_morse
 from shared.ops import CliOp
 
 class MorseOp(CliOp):
+    """
+    The 'morse' command OP. Creates a morse .wav file and then
+    starts it using the "start" command.
+
+    No caching (such as SSTV caching) is implemented yet.
+    """
+
     name = "morse"
     syntax = "<text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
 

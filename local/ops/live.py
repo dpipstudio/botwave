@@ -10,8 +10,16 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class LiveOp(CliOp):
+    """
+    The 'live' command OP. Continuously records audio from the 'BotWave'
+    ALSA card (unless configured otherwise) using the Alsa() shared module.
+    
+    Then spawns up a PiWave() instance, and starts a broadcast using the 
+    alsa pcm generator.
+    """
+
     name = "live"
-    syntax = "[freq] [ps] [rt] [pi]"
+    syntax = "[frequency] [ps] [rt] [pi]"
 
     async def handle(self, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", is_cmd: bool = False, cmd_parts: list = []):
         if is_cmd:

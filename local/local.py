@@ -36,6 +36,11 @@ from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
 
 class BotWaveLocal:
+    """
+    The BotWave Local client. Holds the core shared
+    states and components needed for the app runtime.
+    """
+
     def __init__(self):
         # broadcast state
         self.broadcast_start_time = None

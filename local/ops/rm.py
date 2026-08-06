@@ -6,6 +6,11 @@ from shared.ops import CliOp
 from shared.security import PathValidator, SecurityError
 
 class RmOp(CliOp):
+    """
+    The 'rm' command OP. Removes requested files from 
+    the upload folder. Also supports globbing ('*.wav', 'morse*', etc).
+    """
+
     name = "rm"
     syntax = "<filename|glob>"
 

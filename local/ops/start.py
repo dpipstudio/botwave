@@ -10,6 +10,18 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class StartOp(CliOp):
+    """
+    The 'start' command OP. Starts a broadcast by spawning
+    a PiWave() instance and starting it.
+
+    Also starts the piwave_monitor if we aren't looping.
+
+    Note regarding the backends: PiWave has a backend cache,
+    so updating the backend binary for a new one in 
+    BACKEND_PATH might not work correctly the first time if
+    BACKEND_BYPASS_CACHE isnt set to true.
+    """
+
     name = "start"
     syntax = "<file> [freq] [loop] [ps] [rt] [pi]"
 

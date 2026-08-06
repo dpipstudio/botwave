@@ -10,6 +10,17 @@ from shared.protocol import PROTOCOL_VERSION
 from shared.security import PathValidator, SecurityError
 
 class DownloadOp(CliOp):
+    """
+    The 'dl' command OP. Downloads the file in the provided URL
+    in the uploads folder. If no destination name is provided,
+    it is deducted from the URL using urllib.parse.
+
+    Some stupid file sharing service might display a website or
+    directly share the file depending on the user-agent. To avoid
+    getting a webpage, it is possible to set the DOWNLOAD_UA
+    to something like 'wget/1.0' or 'cURL/1.0'.
+    """
+
     name = "dl"
     syntax  = "<url> [destination]"
 

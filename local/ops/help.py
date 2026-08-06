@@ -5,6 +5,15 @@ class HelpOp(CliOp):
     name = "help"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
+        """
+        The 'help' command OP.
+        Lists every command and its syntax (currently hardcoded, 
+        would be nice to have a dynamic system in the future).
+
+        Also displays custom commands and their eventual help
+        if any
+        """
+
         Log.header("BotWave Local Client - Help")
         Log.section("Available Commands")
 

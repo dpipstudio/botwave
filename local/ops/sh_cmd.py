@@ -7,6 +7,11 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class ShellOp(CliOp):
+    """
+    The '<' command OP. Executes a shell command locally and streams
+    stdout/stderr back to the console.
+    """
+
     name = "<"
     syntax = "<command>"
 
@@ -50,6 +55,11 @@ class ShellOp(CliOp):
         return ' '.join(cmd_parts)
 
 class PipeOp(CliOp):
+    """
+    The '|' command OP. Executes a shell command locally and dispatches
+    each line of its output as a separate command.
+    """
+
     name = "|"
     syntax = "<command>"
 

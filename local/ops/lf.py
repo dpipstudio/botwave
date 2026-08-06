@@ -5,6 +5,11 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class ListFilesOp(CliOp):
+    """
+    The 'lf' command OP. Prints the files that the local
+    client has in its upload folder. 
+    """
+
     name = "lf"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: str = None):

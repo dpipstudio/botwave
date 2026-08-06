@@ -6,6 +6,16 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class GetOp(CliOp):
+    """
+    The 'get' command OP. Prints the given environment vars values.
+
+    Immutable (variables wrapped in immutable()) vars are printed in orange
+    while non-immutable ones are printed in white.
+
+    Supports multiple keys, separated by spaces (get PORT FPORT)
+    and globbing ('get *PORT' -> 'get PORT FPORT') 
+    """
+
     name = "get"
     syntax = "<keys|glob>"
 
@@ -52,6 +62,17 @@ class GetOp(CliOp):
         return cmd_parts
 
 class SetOp(CliOp):
+    """
+    The 'set' command OP. Helper to set a variable to a specific value.
+
+    Can only set a single variable at a time, and will fail
+    if we try to set an immutable variable. However, this can
+    be bypassed by setting the 'immutable' argument to true:
+
+    set PORT 8888 -> fail
+    set PORT 8888 true -> succeeds
+    """
+
     name = "set"
     syntax = "<key> <value> [immutable]"
 

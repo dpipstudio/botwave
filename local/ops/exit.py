@@ -3,6 +3,11 @@ from shared.ops import CliOp
 from shared.registry import UpperException
 
 class ExitOp(CliOp):
+    """
+    The 'exit' command OP. Completely stops the local client by
+    raising an UpperException that gets caught in main() after cleaning up
+    """
+
     name = "exit"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):

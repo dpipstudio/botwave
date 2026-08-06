@@ -6,6 +6,11 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class StatusOp(CliOp):
+    """
+    The 'status' command OP. Shows the state of the
+    local client.
+    """
+
     name = "status"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: str = None):

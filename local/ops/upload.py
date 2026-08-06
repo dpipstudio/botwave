@@ -7,6 +7,12 @@ from shared.ops import CliOp
 from shared.security import PathValidator, SecurityError
 
 class UploadOp(CliOp):
+    """
+    The 'upload' command OP. Moves a file or the content 
+    of a directory to the upload dir. Also converts the files
+    to .wav if they're supported.
+    """
+
     name = "upload"
     syntax = "<file|dir>"
 
