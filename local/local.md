@@ -62,7 +62,7 @@ Once the client is running, you can use the following commands:
 | `sstv` | `botwave> sstv <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
 | `morse` | `botwave> morse <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
 | `lf` | `botwave> lf` | List files in the upload directory. |
-| `rm` | `botwave> rm <filename\|all>` | Remove a file from the upload directory. |
+| `rm` | `botwave> rm <filename\|glob>` | Remove one or more files from the upload directory. |
 | `upload` | `botwave> upload <file\|folder>` | Upload a file to the upload directory. |
 | `dl` | `botwave> dl <url> [destination]` | Download a file from an external URL. |
 | `handlers` | `botwave> handlers [filename]` | List all handlers or commands in a specific handler file. |

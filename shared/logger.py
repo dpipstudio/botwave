@@ -24,6 +24,7 @@ class Logger(DLogger):
         'morse': 'MORSE',
         'alsa': 'ALSA',
         'queue': 'QUEUE',
+        'debug': 'DBG',
         'converter': 'CVRT',
         'environ': 'ENV'
     }
@@ -46,6 +47,7 @@ class Logger(DLogger):
         'morse': 'purple',
         'alsa': 'pink',
         'queue': 'orange',
+        'debug': 'orange',
         'converter': 'rgb(50,215,165)',
         'environ': 'rgb(224,107,61)'
     }
@@ -75,6 +77,9 @@ class Logger(DLogger):
         )
 
     def print(self, message: str, style: str = '', icon: str = '', end: str = '\n') -> None:
+        if icon.lower() == "dbg" and not Env.get_bool("TALK"):
+            return
+
         tx_id = self.transaction_id.get()
         if tx_id:
             message = f"{message}transaction_id={tx_id}"

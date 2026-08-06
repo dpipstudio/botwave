@@ -10,14 +10,10 @@ from shared.logger import Log
 
 class WSCMDH: # WebSocket Command Handler
     
-    def __init__(self, command_executor: Callable,
-                 onwsjoin_callback: Optional[Callable] = None,
-                 onwsleave_callback: Optional[Callable] = None):
+    def __init__(self, command_executor: Callable, registry):
         
-        #onwsjoin and leave are for the handlers
         self.command_executor = command_executor
-        self.onwsjoin_callback = onwsjoin_callback
-        self.onwsleave_callback = onwsleave_callback
+        self.registry = registry
         self.ws_clients: Set = set()
         self.ws_loop: Optional[asyncio.AbstractEventLoop] = None
         self.command_history = []
@@ -66,10 +62,10 @@ class WSCMDH: # WebSocket Command Handler
             await asyncio.Future()  # run forever
     
     async def _handle_client(self, websocket):
+        ip = websocket.remote_address[0] or "unknown"
+
         try:
             # auth
-            ip = websocket.remote_address[0] or "unknown"
-
             Log.client(f"Remote CLI connection attempt from {ip}")
 
             if self.passkey:
@@ -90,12 +86,11 @@ class WSCMDH: # WebSocket Command Handler
             self.ws_clients.add(websocket)
             Log.ws_clients = self.ws_clients
             
-            if self.onwsjoin_callback:
-                self.onwsjoin_callback()
+            await self.registry.dispatch("handlers_onwsjoin", context={"REMOTE_CLIENT_IP": ip})
             
             try:
                 async for message in websocket:
-                    self._inject_command(message, websocket, ip)
+                    await self._inject_command(message, websocket, ip)
 
             except websockets.exceptions.ConnectionClosed:
                 pass  # exit
@@ -103,47 +98,40 @@ class WSCMDH: # WebSocket Command Handler
         except asyncio.TimeoutError:
             await websocket.send("Authentication timeout.")
             await websocket.close()
+
         finally:
+            Log.client(f"Remote CLI disconnected: {ip}")
             self.ws_clients.discard(websocket)
             Log.ws_clients = self.ws_clients
             
-            if self.onwsleave_callback:
-                self.onwsleave_callback()
+            await self.registry.dispatch("handlers_onwsleave", context={"REMOTE_CLIENT_IP": ip})
 
     async def _close_client(self, websocket):
         await websocket.close()
         await websocket.wait_closed()
     
-    def _inject_command(self, message: str, websocket, ip: str):
-        def execute():
-            cmd = re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()
-            Log.print(cmd, 'bright_green', icon=ip)
+    async def _inject_command(self, message: str, websocket, ip: str):
+        cmd = re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()
+        Log.print(cmd, 'bright_green', icon=ip)
 
-            self.command_history.append(message)
-            self.history_index = len(self.command_history)
-            
-            cmd_parts = message.strip().split()
-            if cmd_parts:
-                command = cmd_parts[0].lower()
+        self.command_history.append(message)
+        self.history_index = len(self.command_history)
+        
+        cmd_parts = message.strip().split()
+        if cmd_parts:
+            command = cmd_parts[0].lower()
 
-                if command == '#':
-                    return
+            if command == '#':
+                return
 
-                if command == 'exit':
-                    asyncio.run_coroutine_threadsafe(
-                        self._close_client(websocket),
-                        self.ws_loop
-                    ).result()  # block until actually closed
-                    return
+            if command == 'exit':
+                await self._close_client(websocket)
+                return
 
-                if command in self.blocked_commands and not self.allow_commands:
-                    Log.warning(f"Hmmm, you can't do that. ;)")
-                    return
+            if command in self.blocked_commands and not self.allow_commands:
+                Log.warning(f"Hmmm, you can't do that. ;)")
+                return
 
-            Log.set_remote_cmd(websocket) # Output of the exec cmd will eventually be isolated
-            self.command_executor(message, interpolate=Env.get_bool("INTERPOLATE_REMOTE"))
-            Log.clear_remote_cmd()
-
-        self.ws_loop.call_soon_threadsafe(
-            lambda: self.ws_loop.run_in_executor(None, execute)
-        )
+        Log.set_remote_cmd(websocket) # Output of the exec cmd will eventually be isolated
+        await self.command_executor(message, interpolate=Env.get_bool("INTERPOLATE_REMOTE"))
+        Log.clear_remote_cmd()

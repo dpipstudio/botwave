@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# BotWave - Update Script
-# A program by Douxx (douxx.tech | github.com/dpipstudio)
+# BotWave Updater
 # https://github.com/dpipstudio/botwave
-# Licensed under GPL-v3.0
+# https://botwave.dpip.lol
+# A DPIP Studio project. https://dpip.lol
+# Licensed under GPL-v3.0 (see LICENSE)
 
 set -e
 
