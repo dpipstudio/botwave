@@ -74,47 +74,51 @@ class BotWaveServer:
         return valid_targets
 
     async def handle_message(self, client_id: Optional[str], message: str, websocket):
-        Log.debug(f"{client_id}: {message}")
+        try:
+            Log.debug(f"{client_id}: {message}")
 
-        parsed = ProtocolParser.parse_command(message)
-        cmd = parsed['command']
+            parsed = ProtocolParser.parse_command(message)
+            cmd = parsed['command']
 
-        if cmd not in vars(Commands).values():
-            return
-
-        if client_id is None and cmd not in [Commands.REGISTER, Commands.AUTH, Commands.VER]:
-            Log.warning(f"Got an unexpected command during registration: {cmd}")
-
-            error = ProtocolParser.build_response(
-                Commands.ERROR,
-                f"Expected {Commands.REGISTER}, {Commands.AUTH}, or {Commands.VER}, got {cmd}"
-            )
-            await websocket.send(error)
-            await websocket.close()
-            return
-
-        if client_id in self.clients:
-            self.clients[client_id].last_seen = datetime.now()
-
-            if self.clients[client_id].proto.dispatch(parsed):
+            if cmd not in vars(Commands).values():
                 return
 
-        found = await self.registry.dispatch(
-            cmd,
-            client_id=client_id,
-            parsed=parsed,
-            websocket=websocket
-        )
+            if client_id is None and cmd not in [Commands.REGISTER, Commands.AUTH, Commands.VER]:
+                Log.warning(f"Got an unexpected command during registration: {cmd}")
 
-        if not found:
-            Log.warning(f"Unexpected command from {client_id}: {cmd}")
-            self.clients[client_id].proto.reply(
-                parsed,
-                Commands.ERROR,
-                message=f"Unknown command: {cmd}. Perhaps a protocol mismatch?"
+                error = ProtocolParser.build_response(
+                    Commands.ERROR,
+                    f"Expected {Commands.REGISTER}, {Commands.AUTH}, or {Commands.VER}, got {cmd}"
+                )
+                await websocket.send(error)
+                await websocket.close()
+                return
+
+            if client_id in self.clients:
+                self.clients[client_id].last_seen = datetime.now()
+
+                if self.clients[client_id].proto.dispatch(parsed):
+                    return
+
+            found = await self.registry.dispatch(
+                cmd,
+                client_id=client_id,
+                parsed=parsed,
+                websocket=websocket
             )
 
-        return
+            if not found:
+                Log.warning(f"Unexpected command from {client_id}: {cmd}")
+
+                if client_id in self.clients:
+                    self.clients[client_id].proto.reply(
+                        parsed,
+                        Commands.ERROR,
+                        message=f"Unknown command: {cmd}. Perhaps a protocol mismatch?"
+                    )
+
+        except Exception as e:
+            Log.error(f"Error handling message from {client_id}: {e}")
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
         try:
