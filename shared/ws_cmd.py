@@ -123,10 +123,7 @@ class WSCMDH: # WebSocket Command Handler
                 return
 
             if command == 'exit':
-                asyncio.run_coroutine_threadsafe(
-                    self._close_client(websocket),
-                    self.ws_loop
-                ).result()  # block until actually closed
+                await self._close_client()
                 return
 
             if command in self.blocked_commands and not self.allow_commands:
