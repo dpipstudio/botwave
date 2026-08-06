@@ -11,12 +11,13 @@ class ExitOp(CliOp):
             return
 
         Log.server("Shutting down server...")
-        
-        await self.registry.dispatch(
-            "kick",
-            targets=self.owner.parse_targets("all"),
-            reason="Server is shutting down"
-        )
+
+        if self.owner.clients:
+            await self.registry.dispatch(
+                "kick",
+                targets=self.owner.parse_targets("all"),
+                reason="Server is shutting down"
+            )
         
         if self.owner.ws_server:
             await self.owner.ws_server.stop()
