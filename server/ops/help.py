@@ -57,12 +57,12 @@ class HelpOp(CliOp):
         Log.print("    upload pi1,pi2 /home/bw/lib", "cyan")
         Log.print("")
 
-        Log.print("sync <targets|folder/> <source_target|folder/>", "bright_green")
+        Log.print("sync <targets|folder> <source_target|folder>", "bright_green")
         Log.print("  Synchronize files across clients or to/from local folders", "white")
         Log.print("  Examples:", "white")
         Log.print("    sync all pi1", "cyan")
-        Log.print("    sync pi2,pi3 /music/", "cyan")
-        Log.print("    sync /backup/ pi1", "cyan")
+        Log.print("    sync pi2,pi3 music", "cyan")
+        Log.print("    sync backup/ pi1", "cyan")
         Log.print("")
 
         Log.print("dl <targets> <url> [destination]", "bright_green")
