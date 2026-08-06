@@ -195,16 +195,23 @@ class SyncOp(CliOp):
         )
 
     async def client_to_client(self, target, source):
+        target_p = self.owner.parse_targets(target)
         source_p = self.owner.parse_targets(source)
 
         if len(source_p) != 1:
             Log.error(f"Source '{source}' must resolve to exactly one client")
             return
 
+        if source_p in target_p and len(target_p) == 1:
+            Log.error("Source and target is the same client")
+            return
+
         tmp_dir = tempfile.mkdtemp(prefix="bw_sync")
 
         await self.client_to_local(tmp_dir, source)
         await self.local_to_client(target, tmp_dir)
+
+        #TODO: check how to delete the tempdir when we're sure that all the clients downloaded all the files :/
 
     async def request_files(self, client, timeout: int = 30):        
         try:
