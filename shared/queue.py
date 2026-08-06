@@ -209,12 +209,12 @@ class Queue:
         
         for client_id in client_ids:
             try:
-                if client_id not in self.owner.clients:
+                if client_id not in self.server.clients:
                     continue
                 
                 lf_hdl = next(inst for inst in self.server.registry.get_instances() if type(inst).__name__ == "SyncOp")
 
-                files = await lf_hdl.request_files(self.owner.clients[client_id], timeout=10)
+                files = await lf_hdl.request_files(self.server.clients[client_id], timeout=10)
                 if files:
                     client_files[client_id] = set(f['name'] for f in files)
                 else:
