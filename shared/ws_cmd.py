@@ -62,10 +62,10 @@ class WSCMDH: # WebSocket Command Handler
             await asyncio.Future()  # run forever
     
     async def _handle_client(self, websocket):
+        ip = websocket.remote_address[0] or "unknown"
+
         try:
             # auth
-            ip = websocket.remote_address[0] or "unknown"
-
             Log.client(f"Remote CLI connection attempt from {ip}")
 
             if self.passkey:
@@ -86,7 +86,7 @@ class WSCMDH: # WebSocket Command Handler
             self.ws_clients.add(websocket)
             Log.ws_clients = self.ws_clients
             
-            await self.registry.dispatch("handlers_onwsjoin")
+            await self.registry.dispatch("handlers_onwsjoin", context={"REMOTE_CLIENT_IP": ip})
             
             try:
                 async for message in websocket:
@@ -98,11 +98,13 @@ class WSCMDH: # WebSocket Command Handler
         except asyncio.TimeoutError:
             await websocket.send("Authentication timeout.")
             await websocket.close()
+
         finally:
+            Log.client(f"Remote CLI disconnected: {ip}")
             self.ws_clients.discard(websocket)
             Log.ws_clients = self.ws_clients
             
-            await self.registry.dispatch("handlers_onwsleave")
+            await self.registry.dispatch("handlers_onwsleave", context={"REMOTE_CLIENT_IP": ip})
 
     async def _close_client(self, websocket):
         await websocket.close()
