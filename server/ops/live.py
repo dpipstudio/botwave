@@ -4,6 +4,15 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class LiveOp(CliOp):
+    """
+    The 'live' command OP. Continuously records audio from the 'BotWave'
+    ALSA card (unless configured otherwise) using the Alsa() shared module.
+    
+    Sends data using the BWHTTPFileServer over a pcm octet/stream.
+    Provides stream token & information to the client via a
+    Commands.STREAM_TOKEN request.
+    """
+
     name = "live"
     syntax = "<targets> [frequency] [ps] [rt] [pi]"
 

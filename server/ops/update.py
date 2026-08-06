@@ -5,6 +5,15 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class UpdateOp(CliOp):
+    """
+    The 'update' commands OP. Update the clients software by
+    making them use 'bw-update' with eventual provided args
+    and then stopping themselves.
+    
+    If they're running as a service (that bw-autorun can setup),
+    they will reconnect with the new version.
+    """
+
     name = "update"
     syntax = "<targets> [version]"
 

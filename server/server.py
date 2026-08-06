@@ -1,3 +1,12 @@
+#!/opt/BotWave/venv/bin/python3
+# This path won't be correct if you didn't use the https://botwave.dpip.lol/install installer or similar.
+
+# BotWave Server
+# https://github.com/dpipstudio/botwave
+# https://botwave.dpip.lol
+# A DPIP Studio project. https://dpip.lol
+# Licensed under GPL-v3.0 (see LICENSE)
+
 import argparse
 import asyncio
 from datetime import datetime
@@ -29,20 +38,30 @@ from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
 
 class BotWaveServer:
+    """
+    The BotWave Server. Holds the core shared states and
+    components needed for the app runtime.
+    """
+
     def __init__(self):
-        self.registry = Registry(self)
-        self.clients: Dict[str, object] = {}
-        self.ws_server = None
-        self.http_server = None
-        self.alsa = Alsa()
-        self.running = False
-        self.queue = Queue(self)
-        self.tips = TipEngine()
+        # servers & handlers
         self.handlers_executor = HandlerExecutor(self.cmd_exec)
+        self.http_server = None
+        self.registry = Registry(self)
+        self.ws_handler = None
+        self.ws_server = None
+
+        # core components & state
+        self.alsa = Alsa()
         self.custom_commands = CCMD(is_server=True)
+        self.queue = Queue(self)
+        self.running = False
+        self.tips = TipEngine()
+
+        # clients & stuff
+        self.clients: Dict[str, object] = {}
         self.last_argv = []
         self.rc_clients = 0
-        self.ws_handler = None
 
     def parse_targets(self, targets: str) -> List[str]:
         if not targets:

@@ -2,6 +2,15 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class HelpOp(CliOp):
+    """
+    The 'help' command OP.
+    Lists every command and its syntax (currently hardcoded, 
+    would be nice to have a dynamic system in the future).
+    
+    Also displays custom commands and their eventual help
+    if any
+    """
+
     name = "help"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):

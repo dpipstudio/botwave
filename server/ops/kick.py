@@ -3,6 +3,13 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class KickOp(CliOp):
+    """
+    The 'kick' command OP. Kicks the target client by
+    sending Commands.KICK and then closing the websocket.
+
+    A client can still join back after being kicked.
+    """
+
     name = "kick"
     syntax = "<targets> [reason]"
 

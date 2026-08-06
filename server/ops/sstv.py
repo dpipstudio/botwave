@@ -9,6 +9,16 @@ from shared.ops import CliOp
 from shared.sstv import make_sstv_wav
 
 class SSTVOp(CliOp):
+    """
+    The 'sstv' command OP.  Creates a SSTV .wav file into the
+    server's tmp directory, uploads it to the targets, and starts it.
+
+    Currently assumes the clients take 5 seconds to download the file,
+    as our current systems don't allow efficient download tracking.
+
+    The generated SSTV files are cached under <tmp_dir>/bw_sstv/<hash>.wav.
+    """
+
     name = "sstv"
     syntax = "<targets> <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]"
 

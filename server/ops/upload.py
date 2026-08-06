@@ -10,6 +10,16 @@ from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
 
 class UploadOp(CliOp):
+    """
+    The 'upload' command OP. Uploads a file to the target client
+    by generating a download token with the BWHTTPFileServer and
+    sending it with Commands.DOWNLOAD_TOKEN. No success tracking
+    is currently implemented.
+
+    As for folder uploads, it repeats the file upload step for X
+    compatible files in the target folder.
+    """
+
     name = "upload"
     syntax = "<targets> <file|folder>"
 

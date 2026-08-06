@@ -5,6 +5,11 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class ListFilesOp(CliOp):
+    """
+    The 'lf' command OP. Prints the files that the target
+    has in its upload folder. Currently prints the file's name and size.
+    """
+
     name = "lf"
     syntax = "<targets>"
 

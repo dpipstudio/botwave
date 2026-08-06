@@ -3,6 +3,13 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands
 
 class ClientMsgOp(GeneralOp):
+    """
+    Handles every supported client message that
+    wasn't dispatched by ProtoManager.dispatch()
+
+    Currently supports Commands.OK, Commands.ERROR and Commands.END
+    """    
+
     commands = {
         Commands.OK: "success",
         Commands.ERROR: "error",
@@ -10,16 +17,29 @@ class ClientMsgOp(GeneralOp):
     }
 
     async def success(self, client_id, parsed, websocket):
+        """
+        Commands.OK: shows a success message
+        """
+
         msg = parsed['kwargs'].get('message', 'OK')
         Log.success(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
 
 
     async def error(self, client_id, parsed, websocket):
+        """
+        Commands.ERROR: shows an error message
+        """
+
         msg = parsed['kwargs'].get('message', 'Error')
         Log.error(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
 
 
     async def end(self, client_id, parsed, websocket):
+        """
+        Commands.END: show a broadcast end message
+        or error if 'message' is provided
+        """
+
         kwargs = parsed['kwargs']
 
         filename = kwargs.get('filename', 'unknown')

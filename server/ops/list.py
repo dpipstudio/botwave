@@ -2,6 +2,11 @@ from shared.logger import Log
 from shared.ops import CliOp
 
 class ListOp(CliOp):
+    """
+    The 'list' command OP. Prints information about 
+    every connected client.
+    """
+
     name = "list"
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):

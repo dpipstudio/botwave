@@ -9,6 +9,16 @@ from shared.ops import CliOp
 from shared.morser import text_to_morse
 
 class MorseOp(CliOp):
+    """
+    The 'morse' command OP. Creates a morse .wav file into the
+    server's tmp directory, uploads it to the targets, and starts it.
+
+    Currently assumes the clients take 5 seconds to download the file,
+    as our current systems don't allow efficient download tracking.
+
+    No caching (such as SSTV caching) is implemented yet.
+    """
+
     name = "morse"
     syntax = "<targets> <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
 

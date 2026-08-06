@@ -4,6 +4,11 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class StatusOp(CliOp):
+    """
+    The 'status' command OP. Displays status information
+    about the eventual target clients and the server itself.
+    """
+
     name = "status"
     syntax = "[targets]"
 

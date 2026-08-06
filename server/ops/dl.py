@@ -6,6 +6,14 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class DownloadOp(CliOp):
+    """
+    The 'dl' command OP. Requires a target client and an url
+    Destination is deducted from the url with urllib.parse if not provided
+
+    This command does not wait for clients response since
+    it would be significantly slower
+    """
+
     name = "dl"
     syntax = "<targets> <url> [destination]"
 
@@ -52,7 +60,7 @@ class DownloadOp(CliOp):
 
     def parse(self, cmd_parts):
         if len(cmd_parts) < 2:
-            Log.error("Usage: dl <targets> <url>")
+            Log.error("Usage: dl <targets> <url> [destination]")
             return (None, None, None)
 
         targets = cmd_parts[0]

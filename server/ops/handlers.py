@@ -6,6 +6,12 @@ from shared.ops import CliOp, GeneralOp
 from shared.protocol import PROTOCOL_VERSION
 
 class HandlersCliOp(CliOp):
+    """
+    The 'handlers' command OP. Lists current handlers if no
+    argument provided, or displays the content of an handler file
+    if the file exists. Overall just a HanderExecutor wrapper.
+    """
+
     name = "handlers"
     syntax = "[filename]"
 
@@ -23,6 +29,21 @@ class HandlersCliOp(CliOp):
         return cmd_parts[0] if len(cmd_parts) > 0 else None
 
 class HandlersEventsOp(GeneralOp):
+    """
+    The handler events system. Runs commands in specific handlers files
+    depending on events dispatched by the server.
+
+    Currently supports:
+      - s_onready:      Triggers on server startup
+      - s_onexit:       Triggers on server exit (exit command)
+      - s_onstart:      Triggers on broadcast startup
+      - s_onstop:       Triggers on broadcast stop
+      - s_onconnect:    Triggers on client connect
+      - s_ondisconnect: Triggers on client disconnect
+      - s_onwsjoin:     Triggers on remote CLI connect
+      - s_onwsleave:    Triggers on remote CLI disconnect
+    """
+
     commands = {
         "handlers_onready": "onready",
         "handlers_onexit": "onexit",

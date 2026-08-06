@@ -12,6 +12,20 @@ from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
 
 class SyncOp(CliOp):
+    """
+    The 'sync' command OP. Allows files syncing across multiple sources / targets.
+
+    Local to client syncing: replaces all target clients files by
+    the ones present inside the source directory.
+
+    Client to local syncing: downloads all source client files into
+    the target directory.
+
+    Client to client syncing: creates a temp directory, does client
+    to local, and then local to client. However, the temp directory
+    is never deleted due to the lack of client downloads tracking.
+    """
+
     name = "sync"
     syntax = "<targets|folder> <source_target|source_folder>"
 

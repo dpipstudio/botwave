@@ -6,6 +6,11 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class StopOp(CliOp):
+    """
+    The 'stop' command OP. Stops eventual broadcasts on clients.
+    Also stops the ALSA recorder.
+    """
+
     name = "stop"
     syntax = "<targets>"
 

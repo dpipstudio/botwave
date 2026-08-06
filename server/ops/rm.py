@@ -3,6 +3,11 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class RemoveOp(CliOp):
+    """
+    The 'rm' command OP. Removes requested files from 
+    the target client. Also supports globbing ('*.wav', 'morse*', etc).
+    """
+
     name = "rm"
     syntax = "<targets> <filename|glob>"
 

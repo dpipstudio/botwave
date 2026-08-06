@@ -6,6 +6,14 @@ from shared.ops import CliOp
 from shared.protocol import Commands
 
 class StartOp(CliOp):
+    """
+    The 'start' command OP. Starts a broadcast on the target client.
+
+    If WAIT_START is set to true, it schedules a broadcast based on
+    now() + 5s per (clients - 1). This was intended to let clients
+    sync their broadcasts, but isn't really working.
+    """
+
     name = "start"
     syntax = "<targets> <file> [frequency] [loop] [ps] [rt] [pi]"
 
@@ -90,7 +98,7 @@ class StartOp(CliOp):
 
     def parse(self, cmd_parts):
         if len(cmd_parts) < 2:
-            Log.error("Usage: start <targets> <file> [freq] [loop] [ps] [rt] [pi]")
+            Log.error("Usage: start <targets> <file> [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None, None)
 
         targets = cmd_parts[0]

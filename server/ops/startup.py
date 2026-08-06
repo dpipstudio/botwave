@@ -10,6 +10,15 @@ from shared.socket import BWWebSocketServer
 from shared.tls import gen_cert, save_cert
 
 class StartupOp(GeneralOp):
+    """
+    The server internal startup sequence.
+    
+    Creates the TLS certificates and keys (self-signed)
+    and setups a SSL context with them.
+
+    Then starts the websocket and http server.
+    """
+
     commands = {"server_startup": "startup"}
 
     async def startup(self):

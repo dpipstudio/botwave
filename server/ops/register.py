@@ -8,6 +8,11 @@ from shared.ops import GeneralOp
 from shared.version import versions_compatible
 
 class BotWaveClient:
+    """
+    A small class representing a client.
+    Has it own ProtoManager instance, alongside other useful information.
+    """
+
     def __init__(self, client_id: str, websocket, machine_info: dict, protocol_version: str):
         self.client_id = client_id
         self.websocket = websocket
@@ -22,6 +27,20 @@ class BotWaveClient:
         return f"{hostname} ({self.client_id})"
 
 class RegisterOp(GeneralOp):
+    """
+    The full registration sequence.
+
+    Basically:
+      1. Client sends: REGISTER hostname=X machine=Y system=Z release=W
+      2. Client sends: AUTH <passkey> (if has passkey)
+      3. Client sends: VER <version>
+      4. Server sends: REGISTER_OK client_id=X server_version=Y
+        
+      OR server sends error and closes connection.
+
+    This OP handles Commands.REGISTER, Commands.AUTH and Commands.VER.
+    """
+
     commands = {
         Commands.REGISTER: "register",
         Commands.AUTH: "auth",
