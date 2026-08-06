@@ -535,7 +535,7 @@ class Queue:
         # Use stored broadcast settings
         asyncio.create_task(self.client.registry.dispatch(
             "start",
-            file_path=file_path,
+            file=file_path,
             frequency=self.broadcast_settings['frequency'],
             ps=self.broadcast_settings['ps'],
             rt=self.broadcast_settings['rt'],
