@@ -99,6 +99,10 @@ class CommandValidator(Validator):
 def get_prompt(commands: dict, history_path: str):
 
     try:
+        # test if the file is  readable and writable
+        with open(history_path, "a+b"):
+            pass
+
         history = FileHistory(history_path)
         list(history.load_history_strings()) # dont load (and crash) later on
 
