@@ -151,6 +151,7 @@
       "local/ops/sh_cmd.py",
       "local/ops/sstv.py",
       "local/ops/start.py",
+      "local/ops/status.py",
       "local/ops/stop.py",
       "local/ops/upload.py",
       
