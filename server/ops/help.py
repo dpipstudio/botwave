@@ -116,7 +116,7 @@ class HelpOp(CliOp):
         Log.print("    | cat commands.txt", "cyan")
         Log.print("")
 
-        Log.print("get <keys|*>", "bright_green")
+        Log.print("get <keys|glob>", "bright_green")
         Log.print("  Get one or more environment variable(s)", "white")
         Log.print("  Use '*' to list all environment variables", "white")
         Log.print("  Examples:", "white")
