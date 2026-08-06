@@ -9,7 +9,6 @@ class ExitOp(CliOp):
     """
 
     name = "exit"
-    syntax = ""
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
         if not self.owner.running:
