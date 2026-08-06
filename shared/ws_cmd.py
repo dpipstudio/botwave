@@ -123,7 +123,7 @@ class WSCMDH: # WebSocket Command Handler
                 return
 
             if command == 'exit':
-                await self._close_client()
+                await self._close_client(websocket)
                 return
 
             if command in self.blocked_commands and not self.allow_commands:
