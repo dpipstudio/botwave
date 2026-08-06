@@ -28,7 +28,7 @@ class StatusOp(CliOp):
         if targets and not targets_resolved:
             Log.warning("No client(s) found matching the query")
 
-        else:
+        elif targets and targets_resolved:
             results = {'success': [], 'failed': []}
 
             for client_id in targets_resolved:
