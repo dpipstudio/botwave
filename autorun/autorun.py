@@ -1,8 +1,7 @@
 #!/opt/BotWave/venv/bin/python3
-# this path won't be correct if you didnt use the botwave.dpip.lol/install installer or similar.
+# This path won't be correct if you didn't use the https://botwave.dpip.lol/install installer or similar.
 
-# BotWave - AutoRunner
-# A program by Douxx (douxx.tech | github.com/dpipstudio)
+# BotWave Auto-runner
 # https://github.com/dpipstudio/botwave
 # https://botwave.dpip.lol
 # A DPIP Studio project. https://dpip.lol
@@ -13,7 +12,6 @@ import sys
 import subprocess
 import argparse
 import platform
-from pathlib import Path
 from typing import List
 from dlogger import DLogger
 
