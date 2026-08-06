@@ -5,6 +5,11 @@ from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
 
 class UploadOp(GeneralOp):
+    """
+    The OP handling Commands.UPLOAD_TOKEN. uploads a file 
+    from the upload dir to the file server (https://FHOST:FPORT).
+    """
+
     commands = {Commands.UPLOAD_TOKEN: "upload"}   
 
     async def upload(self, parsed):

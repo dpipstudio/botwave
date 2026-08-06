@@ -11,6 +11,16 @@ from shared.protocol import Commands, PROTOCOL_VERSION
 from shared.security import PathValidator, SecurityError
 
 class DownloadOp(GeneralOp):
+    """
+    The Commands.DOWNLOAD_URL and Commands.DOWNLOAD_TOKEN OP.
+
+    DOWNLOAD_URL is used to download a resource from a specific
+    remote host, then convert the file if needed.
+
+    DOWNLOAD_TOKEN downloads a file directly via the http server
+    (https://FHOST:FPORT)
+    """
+
     commands = {
         Commands.DOWNLOAD_URL: "download_url",
         Commands.DOWNLOAD_TOKEN: "download_token"

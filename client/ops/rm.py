@@ -7,6 +7,12 @@ from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
 
 class RemoveOp(GeneralOp):
+    """
+    The OP handling Commands.REMOVE_FIlE. Removes the
+    requested file(s) from the upload dir. Also supports
+    globbing (so *.wav, morse_*, etc work)
+    """
+
     commands = {Commands.REMOVE_FILE: "rm"}
 
     async def rm(self, parsed):

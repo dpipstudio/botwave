@@ -4,6 +4,11 @@ from shared.protocol import Commands
 from shared.registry import UpperException
 
 class KickOp(GeneralOp):
+    """
+    The OP handling Commands.KICK. Basically raises
+    an UpperException() so the client stops.
+    """
+
     commands = {Commands.KICK: "kick"}
 
     async def kick(self, parsed):

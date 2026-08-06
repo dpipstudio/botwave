@@ -27,6 +27,11 @@ from shared.tips import TipEngine
 from shared.version import check_for_updates
 
 class BotWaveClient:
+    """
+    The BotWave Client. Holds the core shared
+    states and components needed for the app runtime.
+    """
+
     def __init__(self):
         # connection state
         self.client_id = None

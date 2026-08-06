@@ -2,6 +2,11 @@ from shared.logger import Log
 from shared.ops import GeneralOp
 
 class ClientStopOp(GeneralOp):
+    """
+    An internal OP to stop the client. Stops the broadcast
+    if any and disconnects from the server.
+    """
+
     commands = {"client_stop": "stop"}
 
     async def stop(self):

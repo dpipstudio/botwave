@@ -5,6 +5,14 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands
 
 class StopOp(GeneralOp):
+    """
+    The OP handling Commands.STOP. Stops a file or
+    live broadcast and cleans up everything.
+
+    Also provides a "stop_broadest" attribute for internal
+    handling. 
+    """
+
     commands = {
         Commands.STOP: "stop",
         "stop_broadcast": "stop_broadcast"

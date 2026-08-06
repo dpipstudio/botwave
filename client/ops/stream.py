@@ -12,6 +12,12 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands
 
 class StreamOp(GeneralOp):
+    """
+    The OP handling Commands.STREAM_TOKEN. Starts a live
+    broadcast by pulling PCM audio from the server via an
+    HTTP stream and feeding it into a new PiWave() instance.
+    """
+
     commands = {Commands.STREAM_TOKEN: "stream"}
 
     async def stream(self, parsed):

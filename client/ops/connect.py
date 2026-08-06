@@ -15,6 +15,27 @@ from shared.socket import BWWebSocketClient
 from shared.version import get_release_version
 
 class ConnectOp(GeneralOp):
+    """
+    An internal OP used to connect to the server 
+    (wss:/SERVER_HOST:SERVER_PORT). It handles the 
+    custom SSL context, creates the ws_client and
+    http_client and connects to the server.
+
+    It then handles the expected registration flow:
+      1. Send Commands.REGISTER with machine info
+      2. Send Commands.AUTH if we got a passkey
+      3. Send Commands.VER with our current proto ver
+
+    Then it handles different server responses such as:
+      - Commands.REGISTER_OK: we're successfully connected
+        and registered
+      - Commands.AUTH_FAILED: missing or wrong passkey
+      - Commands.VERSION_MISMATCH: our protocol version
+        is too different from the server's one
+
+    Raises an UpperException() on fails
+    """
+
     commands = {
         "client_connect": "connect",
         Commands.REGISTER_OK: "register_ok",

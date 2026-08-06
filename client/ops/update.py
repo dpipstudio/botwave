@@ -8,6 +8,16 @@ from shared.protocol import Commands
 from shared.registry import UpperException
 
 class UpdateOp(GeneralOp):
+    """
+    The OP handling Commands.UPDATE. Runs bw-update as a
+    subprocess and raises an UpperException() to stop
+    the client once it's done.
+
+    If the client is managed by a service such as the one
+    that bw-autorun setups, it should automatically restart
+    and reconnect with the new version.
+    """
+
     commands = {Commands.UPDATE: "update"}
 
     async def update(self, parsed):

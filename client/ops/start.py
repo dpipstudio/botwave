@@ -13,6 +13,19 @@ from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
 
 class StartOp(GeneralOp):
+    """
+    The OP handling Commands.START. Starts a broadcast by
+    spawning a PiWave() instance and starting it with the
+    provided settings.
+
+    Also starts the piwave_monitor if not in loop mode.
+
+    Note regarding the backends: PiWave has a backend cache,
+    so updating the backend binary for a new one in 
+    BACKEND_PATH might not work correctly the first time if
+    BACKEND_BYPASS_CACHE isn't set to true.
+    """
+
     commands = {Commands.START: "start"}
 
     async def start(self, parsed: dict):

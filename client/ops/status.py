@@ -5,6 +5,12 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands
 
 class StatusOp(GeneralOp):
+    """
+    The OP handling Commands.STATUS. Returns the
+    current client status with information such as 
+    the broadcast status, uptime, frequency, and file
+    """
+
     commands = {Commands.STATUS: "status"}
 
     async def status(self, parsed):

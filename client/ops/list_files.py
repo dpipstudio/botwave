@@ -8,6 +8,19 @@ from shared.ops import GeneralOp
 from shared.protocol import Commands
 
 class ListFilesOp(GeneralOp):
+    """
+    The OP that handles Commands.LIST_FILES. Replies with a JSON
+    containing information about every file inside of the upload dir.
+
+    [
+      {
+        "name": "filename",
+        "size": size_bytes,
+        "modified": timestamp
+      }
+    ]
+    """
+
     commands = {Commands.LIST_FILES: "list"}
 
     async def list(self, parsed):
