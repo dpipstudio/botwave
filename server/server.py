@@ -142,7 +142,6 @@ class BotWaveServer:
                 )
 
             if not command:
-                Log.end()
                 return
 
             try:
@@ -150,7 +149,6 @@ class BotWaveServer:
 
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
-                Log.end()
                 return
 
             self.last_argv = cmd_parts
