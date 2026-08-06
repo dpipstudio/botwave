@@ -60,6 +60,7 @@ class LiveOp(CliOp):
 
             self.owner.current_file = "live_playback"
             self.owner.broadcasting = True
+            self.owner.tips.is_broadcasting = True
 
             success = self.owner.piwave.play(
                 self.owner.alsa.audio_generator(audio_queue),
@@ -95,6 +96,7 @@ class LiveOp(CliOp):
             Log.error(f"Error starting broadcast: {e}")
             self.owner.alsa.stop()
             self.owner.broadcasting = False
+            self.owner.tips.is_broadcasting = False
             self.owner.broadcast_start_time = None
             self.owner.current_file = None
             self.owner.piwave = None

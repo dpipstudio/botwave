@@ -63,6 +63,7 @@ class StartOp(CliOp):
 
             self.owner.current_file = file_path
             self.owner.broadcasting = True
+            self.owner.tips.is_broadcasting = True
             success = self.owner.piwave.play(file_path)
 
             
@@ -90,6 +91,7 @@ class StartOp(CliOp):
         except Exception as e:
             Log.error(f"Error starting broadcast: {e}")
             self.owner.broadcasting = False
+            self.owner.tips.is_broadcasting = False
             self.owner.broadcast_start_time = None
             self.owner.current_file = None
             self.owner.piwave = None

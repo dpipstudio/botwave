@@ -35,6 +35,7 @@ class StopOp(CliOp):
         await self.registry.dispatch("handlers_onstop", context={"BW_BROADCAST_FILE": self.owner.current_file or ""})
 
         self.owner.broadcasting = False
+        self.owner.tips.is_broadcasting = False
         self.owner.broadcast_start_time = None
         self.owner.current_file = None
 
