@@ -10,5 +10,5 @@
       }
     }
   },
-  "postAttachCommand": "code misc_doc/codespaces.md; clear; echo 'Welcome to your BotWave Server for Codespaces! Please follow the tutorial to get started.'"
+  "postAttachCommand": "code misc/codespaces.md; clear; echo 'Welcome to your BotWave Server for Codespaces! Please follow the tutorial to get started.'"
 }

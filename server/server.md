@@ -38,7 +38,7 @@ bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers
 - `--handlers-dir`: The directory to retrieve `s_` handlers from (default: `/opt/BotWave/handlers/`).
 - `--start-asap`: Start broadcasting as soon as possible. Can cause desync between clients.
 - `--skip-checks`: Skip checking for protocol updates.
-- `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+- `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/).
 - `--config`: Path to a config file to load into environment.
 - `--daemon`: Run in daemon mode (non-interactive).
 
@@ -93,4 +93,4 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 - `s_onwsleave`: When a remote CLI client disconnects.
 - `s_onexit`: When the server exits.
 
-Check [misc_doc/handlers.md](/misc_doc/handlers.md) for a better documentation.
+Check [`Advanced/Automate your setup`](/wiki/Automate-your-setup) for a better documentation.

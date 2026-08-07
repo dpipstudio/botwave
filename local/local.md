@@ -38,7 +38,7 @@ sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--sk
 - `--handlers-dir`: The directory to retrieve `l_` handlers from (default: `/opt/BotWave/handlers/`).
 - `--skip-checks`: Skip system requirements checks.
 - `--daemon`: Run in daemon mode (non-interactive).
-- `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). For an API documentation, check [misc_doc/websocket.md](/misc_doc/websocket.md).
+- `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). 
 - `--pk`: Optional passkey for websocket authentication.
 - `--talk`: Show the debug logs.
 - `--config`: Path to a config file to load into environment.
@@ -85,4 +85,4 @@ Once the client is running, you can use the following commands:
 - `l_onwsleave`: When a remote CLI client disconnects.
 - `l_onexit`: When the client exits.
 
-Check [misc_doc/handlers.md](/misc_doc/handlers.md) for a better documentation.
+Check [`Advanced/Automate your setup`](/wiki/Automate-your-setup) for a better documentation.

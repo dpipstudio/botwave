@@ -13,8 +13,8 @@
 !/client/**
 !/local/
 !/local/**
-!/misc_doc/
-!/misc_doc/**
+!/misc/
+!/misc/**
 !/scripts/
 !/scripts/**
 !/server/
