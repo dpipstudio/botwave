@@ -21,7 +21,7 @@ This tutorial is a recap. For more advanced information, check out these resourc
 To install BotWave on your Google Shell, make sure you are in the `botwave` directory, then run the following command:
 
 ```sh
-bash misc_doc/cloud-install.sh
+bash misc/cloud-install.sh
 ```
 
 This will automatically install all required components.
