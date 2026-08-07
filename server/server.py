@@ -342,7 +342,11 @@ async def main():
                 
         except (KeyboardInterrupt, asyncio.CancelledError):
             Log.warning("^C received, shutting down...")
-            await server.registry.dispatch("exit")
+            try:
+                await server.registry.dispatch("exit")
+
+            except UpperException:
+                pass
 
         except UpperException:
             return
