@@ -22,7 +22,7 @@ standalone device (`local`) or as a server managing multiple Pi clients (`server
 | `bin/` | Thin bash launchers that exec the Python entrypoints from `/opt/BotWave/venv`. This is what an installed system actually calls. |
 | `scripts/` | `install.sh`, `update.sh`, `uninstall.sh`: the installer, not typically what you're editing for a feature change. |
 | `.github/scripts/` | Release automation. |
-| `docs/` | A wiki mirror. Useful for searching documentation about specific features. |
+| `wiki/` | A wiki mirror. Useful for searching documentation about specific features. |
 | `misc/` | Miscellaneous stuff. |
 
 Full per-component docs (all CLI flags, all commands, all handler hooks) live in:
@@ -62,4 +62,4 @@ Follow `CONTRIBUTING.md`: no vague commit messages, mention the affected compone
 
 ## Safety context
 
-BotWave transmits real FM radio signals. This is subject to local broadcasting regulations in most jurisdictions. Keep this in mind if asked to change default frequencies, power-related behavior, or remove the warnings present in the docs/installer. Don't strip those without being asked to.
+BotWave transmits real FM radio signals. This is subject to local broadcasting regulations in most jurisdictions. Keep this in mind if asked to change default frequencies, power-related behavior, or remove the warnings present in the wiki/installer. Don't strip those without being asked to.
