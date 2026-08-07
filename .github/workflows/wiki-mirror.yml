@@ -1,0 +1,43 @@
+name: Sync wiki to /wiki
+
+on:
+  gollum: {} # fires on wiki page create/edit
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Checkout wiki repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+
+      - name: Sync wiki markdown into /wiki/
+        run: |
+          mkdir -p main/wiki
+          rsync -av --delete --exclude '.git' --exclude 'README.md' wiki/ main/wiki/
+
+      - name: Commit and push if changed
+        working-directory: main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add wiki
+
+          if ! git diff --cached --quiet; then
+            git commit -m "wiki: sync GitHub wiki into /wiki"
+            git push
+
+          else
+            echo "No changes to sync"
+          fi
