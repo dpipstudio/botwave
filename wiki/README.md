@@ -1,6 +1,6 @@
 # Wiki mirror
 
-This folder is a mirror of the [GitHub Wiki](/wiki) for this repo, synced automatically so the docs are readable directly from the repository (useful for anyone, or any tool, that only reads the repo and doesn't browse the wiki separately).
+This folder is a mirror of the [GitHub Wiki](https://github.com/dpipstudio/botwave/wiki) for this repo, synced automatically so the docs are readable directly from the repository (useful for anyone, or any tool, that only reads the repo and doesn't browse the wiki separately).
 
 Start at [`Home.md`](Home.md). It is the wiki's entrypoint.
 
