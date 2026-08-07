@@ -87,7 +87,7 @@ class MorseOp(CliOp):
             "start",
             targets=targets,
             file=Path(output_wav).name,
-            freq=frequency,
+            frequency=frequency,
             loop=loop,
             ps=ps,
             rt=rt,

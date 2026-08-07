@@ -21,7 +21,7 @@ class StartOp(CliOp):
         self,
         targets: list = [],
         file: str = None,
-        freq: float = 90,
+        frequency: float = 90,
         loop: bool = False,
         ps: str = "BotWave",
         rt: str = "Broadcasting",
@@ -30,7 +30,7 @@ class StartOp(CliOp):
         cmd_parts: list = []
     ):
         if is_cmd:
-            targets, file, freq, loop, ps, rt, pi = self.parse(cmd_parts)
+            targets, file, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
 
             if not targets:
                 return
@@ -70,7 +70,7 @@ class StartOp(CliOp):
                 response = await client.proto.send(
                     Commands.START,
                     filename=file,
-                    freq=freq,
+                    frequency=frequency,
                     ps=ps,
                     rt=rt,
                     pi=pi,
@@ -94,7 +94,7 @@ class StartOp(CliOp):
         Log.print("")        
         Log.info(f"Success: {len(results['started'])}, Failure: {len(results['failed'])}")
 
-        await self.registry.dispatch("handlers_onstart",  context={"BW_BROADCAST_FILE": file, "BW_BROADCAST_FREQ": str(freq)})
+        await self.registry.dispatch("handlers_onstart",  context={"BW_BROADCAST_FILE": file, "BW_BROADCAST_FREQ": str(frequency)})
 
     def parse(self, cmd_parts):
         if len(cmd_parts) < 2:
@@ -103,13 +103,13 @@ class StartOp(CliOp):
 
         targets = cmd_parts[0]
         file = cmd_parts[1]
-        frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_float("DEFAULT_FREQ", 90)
+        frequencyuency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
         ps = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_RT",  cmd_parts[1]) # file name
         pi = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
 
-        return (targets, file, frequency, loop, ps, rt, pi)
+        return (targets, file, frequencyuency, loop, ps, rt, pi)
 
 def setup(reg):
     reg.register(StartOp)

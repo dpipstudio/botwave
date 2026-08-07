@@ -75,7 +75,7 @@ class SSTVOp(CliOp):
                 "start",
                 targets=targets,
                 file=Path(output_wav).name,
-                freq=frequency,
+                frequency=frequency,
                 ps=ps,
                 rt=rt,
                 pi=pi,

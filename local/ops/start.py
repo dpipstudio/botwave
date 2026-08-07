@@ -25,15 +25,15 @@ class StartOp(CliOp):
     name = "start"
     syntax = "<file> [freq] [loop] [ps] [rt] [pi]"
 
-    async def handle(self, file_path: str = None, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, file: str = None, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, is_cmd: bool = False, cmd_parts: list = []):
         if is_cmd:
-            file_path, frequency, ps, rt, pi, loop = self.parse(cmd_parts)
+            file, frequency, ps, rt, pi, loop = self.parse(cmd_parts)
 
-            if not file_path:
+            if not file:
                 return
 
-        if not os.path.exists(file_path):
-            Log.error(f"File {file_path} not found")
+        if not os.path.exists(file):
+            Log.error(f"File {file} not found")
             return
         
         if is_cmd:
@@ -61,17 +61,17 @@ class StartOp(CliOp):
                 unsafe=Env.get_bool("SKIP_CHECKS")
             )
 
-            self.owner.current_file = file_path
+            self.owner.current_file = file
             self.owner.broadcasting = True
             self.owner.tips.is_broadcasting = True
-            success = self.owner.piwave.play(file_path)
+            success = self.owner.piwave.play(file)
 
             
             if success:
-                Log.success(f"Started broadcasting {file_path} on {frequency}MHz")
+                Log.success(f"Started broadcasting {file} on {frequency}MHz")
                 self.owner.broadcast_start_time = time.time()
 
-                await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FILE": file_path, "BW_BROADCAST_FREQ": str(frequency)})
+                await self.registry.dispatch("handlers_onstart", context={"BW_BROADCAST_FILE": file, "BW_BROADCAST_FREQ": str(frequency)})
 
                 if not loop:
                     async def finished():
@@ -102,14 +102,14 @@ class StartOp(CliOp):
             Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None)
         
-        file_path = os.path.join(Env.get("UPLOAD_DIR"), cmd_parts[0])
+        file = os.path.join(Env.get("UPLOAD_DIR"), cmd_parts[0])
         frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[2].lower() == 'true' if len(cmd_parts) > 2 else False
         ps = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_RT", cmd_parts[0])
         pi = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PI", "FFFF")
 
-        return (file_path, frequency, ps, rt, pi, loop)
+        return (file, frequency, ps, rt, pi, loop)
 
 def setup(reg):
     reg.register(StartOp)

@@ -55,7 +55,7 @@ class MorseOp(CliOp):
         Log.morse(f"Broadcasting {output_wav}...")
         await self.registry.dispatch(
             "start",
-            file_path=output_wav,
+            file=output_wav,
             frequency=frequency,
             ps=ps,
             rt=rt,

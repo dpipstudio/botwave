@@ -61,7 +61,7 @@ class StartOp(GeneralOp):
             )
             return
 
-        frequency = float(kwargs.get('freq', Env.get_float("DEFAULT_FREQ", 90.0)))
+        frequency = float(kwargs.get('frequency', Env.get_float("DEFAULT_FREQ", 90.0)))
         ps = kwargs.get('ps', Env.get("DEFAULT_PS", 'BotWave'))
         rt = kwargs.get('rt', Env.get("DEFAULT_RT", 'Broadcasting'))
         pi = kwargs.get('pi', Env.get("DEFAULT_PI", 'FFFF'))
