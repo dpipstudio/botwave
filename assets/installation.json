@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.0-mora",
+      "commit": "db4fc97e9a8b535d202e5327171f549acdc32a8d"
+    },
+    {
       "codename": "v1.1.12-osa",
       "commit": "d58152193a150424a17b83cf16e8432f7ab4cb03"
     },
@@ -136,7 +140,6 @@
       "client/ops/stop.py",
       "client/ops/update.py",
       "client/ops/upload.py",
-
       "local/local.py",
       "local/ops/dl.py",
       "local/ops/env.py",
@@ -154,7 +157,6 @@
       "local/ops/status.py",
       "local/ops/stop.py",
       "local/ops/upload.py",
-      
       "shared/bw_custom.py",
       "shared/pw_monitor.py"
     ],
