@@ -433,6 +433,7 @@ botwave> help
 
 ## Advanced Usage
 For more detailed documentation, check the following resources:
+- **Full wiki (mirrored, for offline/agent use)**: [`/wiki`](/wiki)
 - **Server help**: [`/server/server.md`](/server/server.md)
 - **Client help**: [`/client/client.md`](/client/client.md)
 - **Local client help**: [`/local/local.md`](/local/local.md)
