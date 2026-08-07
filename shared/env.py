@@ -10,6 +10,9 @@ class EnvManager:
         filepath = self.get("DOTENV_PATH", ".env")
         self.load(filepath)
 
+        # Always try to load /opt/BotWave/.env
+        self.load("/opt/BotWave/.env")
+
     def load(self, filepath: str = ".env") -> None:
         """Load environment variables from a .env file into os.environ."""
         if not os.path.exists(filepath):
