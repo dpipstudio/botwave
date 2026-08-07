@@ -21,6 +21,8 @@
 !/server/**
 !/shared/
 !/shared/**
+!/wiki/
+!/wiki/*.md
 !/LICENSE
 !/*.md
 !/.gitignore
