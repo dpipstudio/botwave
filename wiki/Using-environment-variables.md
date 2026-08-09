@@ -119,13 +119,13 @@ upload_dir="immutable(/home/server/bw_upl/)"
 prompt_text="immutable(BwServer $ )"
 ```
 
-BotWave will, by default, use the `.env` file in the current directory to load variables.
-A custom path can be used by setting `DOTENV_PATH` in the shell session or by using the `--config` flag:
+BotWave will always try to load an eventual `/opt/BotWave/.env` file. Additionally, it will also look for a `.env` file in the current directory to load variables.
+If you wish to use a custom path instead of `./.env`, it can be done by setting `DOTENV_PATH` in the shell session or by using the `--config` flag:
 
 ```bash
-DOTENV_PATH="/opt/BotWave/.env" sudo -E bw-server
+DOTENV_PATH="/home/pi/bw.env" sudo -E bw-server
 # or
-sudo bw-server --config /opt/BotWave/.env
+sudo bw-server --config /home/pi/bw.env
 ```
 
 > [!WARNING]
