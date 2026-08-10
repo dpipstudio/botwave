@@ -11,6 +11,11 @@ class SyntaxSuggester(AutoSuggest):
 
     def get_suggestion(self, buffer, document):
         text = document.text
+
+        if "#" in text:
+            # ignore commented stuff
+            text = text.split("#", 1)[0]
+
         if not text:
             return None
         
