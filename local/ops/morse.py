@@ -44,7 +44,7 @@ class MorseOp(CliOp):
         output_wav = self.cache(text, morse_freq, morse_sr)
 
         if Path(output_wav).exists():
-            Log.sstv(f"Using cached Morse WAV...")
+            Log.morse(f"Using cached Morse WAV...")
             success = True
 
         else:
