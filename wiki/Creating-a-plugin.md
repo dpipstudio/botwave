@@ -161,4 +161,4 @@ Handlers on the same prefix run in alphabetical order.
 ## Real-world examples
 
 - [`bw_wtt`](https://github.com/douxxtech/bw_wtt) — WebSocket to TCP bridge. Good example of a plugin that combines handlers and scripts to integrate an external service.
-- [`cloud-install`](https://github.com/dpipstudio/botwave/blob/main/misc_doc/cloud-install.sh) — Our own integrated plugin to automatically start a port forwarding on cloud instances of BotWave server.
+- [`cloud-install`](https://github.com/dpipstudio/botwave/blob/main/misc/cloud-install.sh) — Our own integrated plugin to automatically start a port forwarding on cloud instances of BotWave server.
