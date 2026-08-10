@@ -14,6 +14,24 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.1-bikinia ---=
+A small release with minor improvements, and a slight repo restructure.
+
+### What Changed
+- **Faster `morse` generation**: Generation of morse waves is not up to 50x faster, by using `numpy` for encoding. However, this means that `numpy` now has to be installed manually before being able to use the `morse` command.
+- **`morse` output caching**: Similarly to SSTV cache, morse waves are now cached under `<tmp_dir>/bw_morse/<hash>.wav` for faster rebroadcasts.
+- **Prompt suggestions now ignore comments**: Previously, prompt syntax suggestion would count comments as valid arguments. This has been fixed.
+- **Repo structure changes**: renamed `misc_doc/` into `misc/`, added `AGENTS.md`.
+- **Wiki mirror**: The repo now has a `wiki/` dir that is automatically synced with its [GitHub wiki](https://github.com/dpipstudio/botwave/wiki). This allows people and tools that don't have access to the GitHub wiki to still be able to fetch wiki pages.
+
+### Breaking Changes
+> [!CAUTION]
+> The `morse` command now requires `numpy` to be installed.
+> ```bash
+> sudo /opt/BotWave/venv/bin/pip install numpy
+> ```
+=--- END ---=
+
 =--- v1.2.0-mora ---=
 This is probably one of the releases with the biggest changelog.  
 
