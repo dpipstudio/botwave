@@ -12,7 +12,7 @@ class MorseOp(CliOp):
     The 'morse' command OP. Creates a morse .wav file and then
     starts it using the "start" command.
 
-    No caching (such as SSTV caching) is implemented yet.
+    The generated Morse files are cached under <tmp_dir>/bw_morse/morse_<hash>.wav.
     """
 
     name = "morse"

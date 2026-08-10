@@ -16,7 +16,7 @@ class MorseOp(CliOp):
     Currently assumes the clients take 5 seconds to download the file,
     as our current systems don't allow efficient download tracking.
 
-    No caching (such as SSTV caching) is implemented yet.
+    The generated Morse files are cached under <tmp_dir>/bw_morse/morse_<hash>.wav.
     """
 
     name = "morse"
