@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.1-bikinia",
+      "commit": "e19fb0f600c0fd8df4e19e33896a27513f0ba858"
+    },
+    {
       "codename": "v1.2.0-mora",
       "commit": "db4fc97e9a8b535d202e5327171f549acdc32a8d"
     },
