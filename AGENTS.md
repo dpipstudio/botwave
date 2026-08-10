@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Last reviewed: 07/07/2026
+Last reviewed: 10/07/2026
 
 Instructions for AI coding agents (Claude Code, Cursor, Copilot, Codex, etc.) working in this repo.
 
@@ -28,7 +28,7 @@ standalone device (`local`) or as a server managing multiple Pi clients (`server
 Full per-component docs (all CLI flags, all commands, all handler hooks) live in:
 `server/server.md`, `client/client.md`, `local/local.md`, `autorun/autorun.md`. Read the relevant one before changing that component's CLI surface, this file intentionally stays high-level.
 
-Deeper guides (setup walkthrough, FAQ, automating handlers, remote management) live on the [GitHub Wiki](https://github.com/dpipstudio/botwave/wiki), mirrored into `/docs` in this repo so they're readable without a browser.
+Deeper guides (setup walkthrough, FAQ, automating handlers, remote management) live on the [GitHub Wiki](https://github.com/dpipstudio/botwave/wiki), mirrored into `/wiki` in this repo so they're readable without a browser.
 
 ## Architecture notes
 
