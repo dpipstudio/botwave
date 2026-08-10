@@ -1,5 +1,6 @@
+import hashlib
 from pathlib import Path
-import uuid
+import tempfile
 
 from shared.env import Env
 from shared.logger import Log
@@ -38,12 +39,17 @@ class MorseOp(CliOp):
         else:
             text = text_src
 
-        output_wav = str(Path(Env.get("UPLOAD_DIR")) / f"morse_{uuid.uuid4().hex[:8]}.wav")
         morse_freq = Env.get_int("MORSE_FREQUENCY", 700)
         morse_sr = Env.get_int("MORSE_SAMPLE_RATE", 48000)
+        output_wav = self.cache(text, morse_freq, morse_sr)
 
-        Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
-        success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=morse_freq, sample_rate=morse_sr)
+        if Path(output_wav).exists():
+            Log.sstv(f"Using cached Morse WAV...")
+            success = True
+
+        else:
+            Log.morse(f"Generating Morse WAV ({wpm} WPM @ {morse_freq}Hz)...")
+            success = text_to_morse(text=text, filename=output_wav, wpm=wpm, frequency=morse_freq, sample_rate=morse_sr)
 
         if not success or not Path(output_wav).exists():
             Log.error("Failed to generate Morse WAV")
@@ -63,6 +69,14 @@ class MorseOp(CliOp):
             loop=loop
             )
 
+    def cache(self, text, freq, rate):
+        key = f"{text}|{freq}|{rate}"
+        digest = hashlib.sha256(key.encode()).hexdigest()[:16]
+
+        cache_dir = Path(tempfile.gettempdir()) / "bw_morse"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        return str(cache_dir / f"{digest}.wav")
 
 
     def parse(self, cmd_parts):
