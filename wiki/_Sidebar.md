@@ -8,6 +8,7 @@
 * **[Basic usage](https://github.com/dpipstudio/botwave/wiki/Basic-usage)**
 * **[Live broadcasting](https://github.com/dpipstudio/botwave/wiki/Live-broadcasting)**
 * **[Queue system](https://github.com/dpipstudio/botwave/wiki/Queue-system)**
+* **[Broadcasting images](https://github.com/dpipstudio/botwave/wiki/Broadcasting-images)**
 * **[Automate your setup](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup)**
 * **[Connecting remotely](https://github.com/dpipstudio/botwave/wiki/Connecting-remotely)**
 
