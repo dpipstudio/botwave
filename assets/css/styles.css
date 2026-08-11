@@ -1,7 +1,7 @@
 :root {
     --bg: #0B0F14;
-    --surface: #12171E;     /* Elevated dark background for containers */
-    --border: #202936;      /* Subtle outline for code blocks */
+    --surface: #12171E;
+    --border: #202936;
     --text: #E6EDF3;
     --muted: #9AA4B2;
     --accent: #34D388;
