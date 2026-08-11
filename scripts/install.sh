@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.3.2"
+readonly SCRIPT_VERSION="1.4.0"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -28,7 +28,7 @@ readonly RED='\033[0;31m'
 readonly GRN='\033[0;32m'
 readonly YEL='\033[1;33m'
 readonly NC='\033[0m'
-readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
+readonly GITHUB_REPO_URL="https://github.com/dpipstudio/botwave"
 readonly INSTALL_DIR="/opt/BotWave"
 readonly BIN_DIR="$INSTALL_DIR/bin"
 readonly BACKENDS_DIR="$INSTALL_DIR/backends"
@@ -39,9 +39,10 @@ readonly VALID_MODES=("client" "server" "both")
 readonly ALSA_MODULES_CONF="/etc/modules-load.d/aloop.conf"
 readonly ALSA_MODPROBE_CONF="/etc/modprobe.d/aloop.conf"
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
+# filled by fetch_source_tarball() once the tarball has been extracted
+SRC_DIR=""
+
+# utility
 
 log() {
     local level="$1"
@@ -62,9 +63,7 @@ silent() {
     "$@" >> "$LOG_FILE" 2>&1
 }
 
-# ============================================================================
-# ARGUMENT PARSING
-# ============================================================================
+# parsing
 
 parse_arguments() {
     TARGET_VERSION=""
@@ -92,6 +91,7 @@ parse_arguments() {
                     log ERROR "Option --branch requires a branch name"
                     exit 1
                 fi
+                USE_LATEST=true
                 TARGET_BRANCH="$2"
                 shift 2
                 ;;
@@ -120,7 +120,7 @@ parse_arguments() {
                 log INFO "  -l, --latest        Install from latest commit (unreleased)"
                 log INFO "  -t, --to <version>  Install specific release version"
                 log INFO "  -b, --branch <name> Install from a specific branch (default: main)"
-                log INFO "  --[no-]alsa          Setup ALSA loopback card"
+                log INFO "  --[no-]alsa         Setup ALSA loopback card"
                 log INFO "  -h, --help          Show help message"
                 exit 1
                 ;;
@@ -154,9 +154,7 @@ Examples:
 EOF
 }
 
-# ============================================================================
-# INTERACTIVE MENU SYSTEM
-# ============================================================================
+# interactive select
 
 select_option() {
     # Credit: https://unix.stackexchange.com/questions/146570/arrow-key-enter-menu
@@ -251,9 +249,7 @@ _arrow_key_menu() {
     return $selected
 }
 
-# ============================================================================
-# VALIDATION FUNCTIONS
-# ============================================================================
+# validations
 
 check_root_privileges() {
     if [[ "$EUID" -ne 0 ]]; then
@@ -282,10 +278,13 @@ check_root_privileges() {
 detect_package_manager() {
     if command -v apt-get &>/dev/null; then
         PKG_MANAGER="apt"
+
     elif command -v dnf &>/dev/null; then
         PKG_MANAGER="dnf"
+    
     elif command -v pacman &>/dev/null; then
         PKG_MANAGER="pacman"
+    
     else
         log WARN "Could not detect a supported package manager (apt/dnf/pacman)."
         log WARN "Continue anyway? You may need to install dependencies manually."
@@ -367,15 +366,17 @@ detect_local_repo() {
     done
 }
 
-# ============================================================================
-# VERSION MANAGEMENT
-# ============================================================================
+# version managment
 
-resolve_target_commit() {
+# Resolves what to install and how to fetch it. Prints two lines:
+#  - "commit" or "release"
+#  - the commit SHA or the release tag
+resolve_target() {
     # Local repo: just use the current HEAD, ignore --latest / --to
     if [[ "$LOCAL_REPO" == true ]]; then
         local commit=$(git -C "$LOCAL_REPO_ROOT" rev-parse HEAD)
         log INFO "Local repo HEAD: ${commit:0:7}"
+        echo "commit"
         echo "$commit"
         return 0
     fi
@@ -393,48 +394,83 @@ resolve_target_commit() {
         fi
 
         log INFO "Latest commit: ${latest_commit:0:7}"
+        echo "commit"
         echo "$latest_commit"
         return 0
     fi
 
     if [[ -n "$TARGET_VERSION" ]]; then
-        log INFO "Looking up release: $TARGET_VERSION"
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-        local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
+        log INFO "Checking release: $TARGET_VERSION"
+        local http_status=$(curl -sSL -o /dev/null -w "%{http_code}" \
+            "https://api.github.com/repos/dpipstudio/botwave/releases/tags/${TARGET_VERSION}")
 
-        if [[ -z "$commit" ]]; then
+        if [[ "$http_status" != "200" ]]; then
             log ERROR "Release '$TARGET_VERSION' not found"
             log INFO "Available releases:"
-            echo "$install_json" | jq -r '.releases[].codename' | while read -r rel; do
-                log INFO "  - $rel"
-            done
+            curl -sSL "https://api.github.com/repos/dpipstudio/botwave/releases" | \
+                jq -r '.[].tag_name' | while read -r tag; do
+                    log INFO "  - $tag"
+                done
             exit 1
         fi
 
-        log INFO "Found commit: ${commit:0:7} at branch ${TARGET_BRANCH}"
-        echo "$commit"
+        log INFO "Found release: $TARGET_VERSION"
+        echo "release"
+        echo "$TARGET_VERSION"
         return 0
     fi
 
     # Default: latest release
     log INFO "Fetching latest release..."
-    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-    local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
+    local release_json=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/releases/latest")
+    local tag=$(echo "$release_json" | jq -r '.tag_name')
 
-    if [[ -z "$latest_release_commit" ]]; then
+    if [[ -z "$tag" || "$tag" == "null" ]]; then
         log ERROR "Failed to fetch latest release"
         exit 1
     fi
 
-    local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
-    log INFO "Latest release: $codename (${latest_release_commit:0:7})"
-    echo "$latest_release_commit"
+    log INFO "Latest release: $tag"
+    echo "release"
+    echo "$tag"
 }
 
-# ============================================================================
-# SYSTEM SETUP
-# ============================================================================
+# source download
 
+fetch_source_tarball() {
+    local kind="$1" # "commit" or "release", from resolve_target
+    local ref="$2" # commit SHA or release tag, from resolve_target
+
+    local extract_dir="$TMP_DIR/src"
+    local tarball_path="$TMP_DIR/src.tar.gz"
+    local tarball_url
+
+    rm -rf "$extract_dir"
+    mkdir -p "$extract_dir"
+
+    if [[ "$kind" == "release" ]]; then
+        tarball_url="${GITHUB_REPO_URL}/archive/refs/tags/${ref}.tar.gz"
+
+    else
+        tarball_url="${GITHUB_REPO_URL}/archive/${ref}.tar.gz"
+    fi
+
+    log INFO "Downloading source tarball..."
+    silent curl -SL "$tarball_url" -o "$tarball_path"
+
+    log INFO "Extracting tarball..."
+    silent tar -xzf "$tarball_path" -C "$extract_dir" --strip-components=1
+
+    if [[ ! -f "$extract_dir/assets/installation.json" ]]; then
+        log ERROR "installation.json not found in extracted tarball"
+        exit 1
+    fi
+
+    SRC_DIR="$extract_dir"
+    log INFO "Source extracted to $SRC_DIR"
+}
+
+# system setup
 install_system_dependencies() {
     log INFO "Installing system dependencies..."
 
@@ -517,32 +553,13 @@ EOF
 }
 
 
-# ============================================================================
-# INSTALLATION CONFIGURATION
-# ============================================================================
-
+# install config
 fetch_installation_config() {
-    log INFO "Fetching installation configuration..."
-
-    if [[ "$LOCAL_REPO" == true ]]; then
-        cat "$LOCAL_REPO_ROOT/assets/installation.json"
-        return 0
-    fi
-
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-
-    if [[ -z "$config" ]]; then
-        log ERROR "Failed to fetch installation.json"
-        exit 1
-    fi
-
-    echo "$config"
+    log INFO "Reading installation configuration..."
+    cat "$SRC_DIR/assets/installation.json"
 }
 
-# ============================================================================
-# FILE OPERATIONS
-# ============================================================================
-
+# files ops
 create_symlink() {
     local link_name="$1"
 
@@ -555,17 +572,16 @@ create_symlink() {
     log INFO "Symlink created: $link_name"
 }
 
-download_files() {
+install_files() {
     local section="$1"
     local install_json="$2"
-    local commit="$3"
     local file_list=$(echo "$install_json" | jq -r ".${section}.files[]?" 2>/dev/null)
 
     if [[ -z "$file_list" ]]; then
         return 0
     fi
 
-    log INFO "Downloading files for: $section"
+    log INFO "Installing files for: $section"
     while IFS= read -r file; do
         [[ -z "$file" ]] && continue
 
@@ -574,12 +590,7 @@ download_files() {
 
         mkdir -p "$target_dir"
         log INFO "  - $file"
-
-        if [[ "$LOCAL_REPO" == true ]]; then
-            cp "$LOCAL_REPO_ROOT/$file" "$target_path"
-        else
-            silent curl -SL "${GITHUB_RAW_URL}/${commit}/${file}?t=$(date +%s)" -o "$target_path"
-        fi
+        cp "$SRC_DIR/$file" "$target_path"
     done <<< "$file_list"
 }
 
@@ -603,7 +614,6 @@ install_requirements() {
 install_binaries() {
     local section="$1"
     local install_json="$2"
-    local commit="$3"
     local bin_list=$(echo "$install_json" | jq -r ".${section}.binaries[]?" 2>/dev/null)
 
     if [[ -z "$bin_list" ]]; then
@@ -619,22 +629,14 @@ install_binaries() {
 
         mkdir -p "$(dirname "$target_path")"
         log INFO "  - $binary"
-
-        if [[ "$LOCAL_REPO" == true ]]; then
-            cp "$LOCAL_REPO_ROOT/$binary" "$target_path"
-        else
-            silent curl -SL "${GITHUB_RAW_URL}/${commit}/${binary}?t=$(date +%s)" -o "$target_path"
-        fi
+        cp "$SRC_DIR/$binary" "$target_path"
 
         chmod +x "$target_path"
         create_symlink "$bin_name"
     done <<< "$bin_list"
 }
 
-# ============================================================================
-# BACKEND INSTALLATION
-# ============================================================================
-
+# backend install
 install_backends() {
     local install_json="$1"
     local backend_list=$(echo "$install_json" | jq -r ".backends[]?" 2>/dev/null)
@@ -686,26 +688,21 @@ install_backends() {
     cd "$INSTALL_DIR"
 }
 
-# ============================================================================
-# COMPONENT INSTALLATION
-# ============================================================================
-
+# component install (client, server, always)
 install_components() {
     local mode="$1"
     local install_json="$2"
-    local commit="$3"
+    local target_kind="$3"
+    local target_ref="$4"
     local sections=()
 
     # Show version info
     if [[ "$LOCAL_REPO" == true ]]; then
-        log INFO "Installing from local repo (${commit:0:7})"
-    elif [[ -n "$TARGET_VERSION" ]]; then
-        log INFO "Target version: $TARGET_VERSION"
-    elif [[ "$USE_LATEST" == true ]]; then
-        log WARN "Using latest commit (unreleased)"
+        log INFO "Installing from local repo"
+    elif [[ "$target_kind" == "release" ]]; then
+        log INFO "Installing release: $target_ref"
     else
-        local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
-        log INFO "Installing release: $codename"
+        log WARN "Using latest commit (unreleased): ${target_ref:0:7}"
     fi
 
     # Determine sections to install
@@ -723,32 +720,28 @@ install_components() {
     # Install each section
     for section in "${sections[@]}"; do
         log INFO "Processing section: $section"
-        download_files "$section" "$install_json" "$commit"
+        install_files "$section" "$install_json"
         install_requirements "$section" "$install_json"
-        install_binaries "$section" "$install_json" "$commit"
+        install_binaries "$section" "$install_json"
     done
 }
 
-# ============================================================================
-# POST-INSTALLATION
-# ============================================================================
-
+# post install
 save_version_info() {
-    local commit="$1"
+    local kind="$1"
+    local ref="$2"
     log INFO "Saving version information..."
-    echo "$commit" > "$INSTALL_DIR/last_commit"
 
-    # Save release info if applicable
     if [[ "$LOCAL_REPO" == true ]]; then
+        echo "local:$LOCAL_REPO_ROOT" > "$INSTALL_DIR/last_commit"
         echo "local:$LOCAL_REPO_ROOT" > "$INSTALL_DIR/last_release"
-    elif [[ -n "$TARGET_VERSION" ]]; then
-        echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
-    elif [[ "$USE_LATEST" != true ]]; then
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-        local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
-        if [[ -n "$codename" ]]; then
-            echo "$codename" > "$INSTALL_DIR/last_release"
-        fi
+        return 0
+    fi
+
+    if [[ "$kind" == "release" ]]; then
+        echo "$ref" > "$INSTALL_DIR/last_release"
+    else
+        echo "$ref" > "$INSTALL_DIR/last_commit"
     fi
 }
 
@@ -770,12 +763,18 @@ print_summary() {
     log INFO "Log file: $LOG_FILE"
 }
 
-# ============================================================================
-# MAIN INSTALLATION FLOW
-# ============================================================================
+cleanup() {
+    if [[ -n "$SRC_DIR" && "$SRC_DIR" == "$TMP_DIR/src" ]]; then
+        rm -rf "$SRC_DIR"
+    fi
 
+    rm -f "$TMP_DIR/src.tar.gz"
+}
+
+# main
 main() {
     mkdir -p "$TMP_DIR"
+    trap cleanup EXIT
 
     echo "$BANNER"
 
@@ -814,9 +813,16 @@ main() {
     # System setup 1
     install_system_dependencies
 
-    # Find target commit
-    local target_commit
-    target_commit=$(resolve_target_commit) || exit 1
+    # Find what to install
+    local target_kind target_ref
+    { read -r target_kind; read -r target_ref; } < <(resolve_target) || exit 1
+
+    # Fetch source tarball, or point SRC_DIR at the local repo checkout
+    if [[ "$LOCAL_REPO" == true ]]; then
+        SRC_DIR="$LOCAL_REPO_ROOT"
+    else
+        fetch_source_tarball "$target_kind" "$target_ref"
+    fi
 
     # System setup 2
     setup_directory_structure
@@ -825,10 +831,10 @@ main() {
 
     # Fetch configuration and install
     local install_json=$(fetch_installation_config)
-    install_components "$mode" "$install_json" "$target_commit"
+    install_components "$mode" "$install_json" "$target_kind" "$target_ref"
 
     # Finalize
-    save_version_info "$target_commit"
+    save_version_info "$target_kind" "$target_ref"
     print_summary "$mode"
 
     cd "$START_PWD"
