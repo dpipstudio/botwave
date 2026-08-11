@@ -572,7 +572,7 @@ create_symlink() {
     log INFO "Symlink created: $link_name"
 }
 
-install_fies() {
+install_files() {
     local section="$1"
     local install_json="$2"
     local file_list=$(echo "$install_json" | jq -r ".${section}.files[]?" 2>/dev/null)
@@ -720,7 +720,7 @@ install_components() {
     # Install each section
     for section in "${sections[@]}"; do
         log INFO "Processing section: $section"
-        install_fies "$section" "$install_json"
+        install_files "$section" "$install_json"
         install_requirements "$section" "$install_json"
         install_binaries "$section" "$install_json"
     done
