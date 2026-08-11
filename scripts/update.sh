@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.3.1"
+readonly SCRIPT_VERSION="1.4.0"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -28,7 +28,7 @@ readonly RED='\033[0;31m'
 readonly GRN='\033[0;32m'
 readonly YEL='\033[1;33m'
 readonly NC='\033[0m'
-readonly GITHUB_RAW_URL="https://raw.githubusercontent.com/dpipstudio/botwave"
+readonly GITHUB_REPO_URL="https://github.com/dpipstudio/botwave"
 readonly INSTALL_DIR="/opt/BotWave"
 readonly BIN_DIR="$INSTALL_DIR/bin"
 readonly BACKENDS_DIR="$INSTALL_DIR/backends"
@@ -36,10 +36,10 @@ readonly SYMLINK_DIR="/usr/local/bin"
 readonly TMP_DIR="/tmp/bw_update"
 readonly LOG_FILE="$TMP_DIR/update_$(date +%s).log"
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
+# filled by fetch_source_tarball() once the tarball has been extracted
+SRC_DIR=""
 
+# utility
 log() {
     local level="$1"
     shift
@@ -58,10 +58,7 @@ silent() {
     "$@" >> "$LOG_FILE" 2>&1
 }
 
-# ============================================================================
-# ARGUMENT PARSING
-# ============================================================================
-
+# argument parsing
 parse_arguments() {
     TARGET_VERSION=""
     USE_LATEST=false
@@ -86,6 +83,7 @@ parse_arguments() {
                     log ERROR "Option --branch requires a branch name"
                     exit 1
                 fi
+                USE_LATEST=true
                 TARGET_BRANCH="$2"
                 shift 2
                 ;;
@@ -126,10 +124,7 @@ Examples:
 EOF
 }
 
-# ============================================================================
-# INTERACTIVE MENU SYSTEM
-# ============================================================================
-
+# interactive menu
 select_option() {
     # Credit: https://unix.stackexchange.com/questions/146570/arrow-key-enter-menu
     set +e
@@ -223,10 +218,7 @@ _arrow_key_menu() {
     return $selected
 }
 
-# ============================================================================
-# VALIDATION FUNCTIONS
-# ============================================================================
-
+# validation funcs
 check_root_privileges() {
     if [[ "$EUID" -ne 0 ]]; then
         if [[ ! -t 0 ]]; then
@@ -278,10 +270,7 @@ validate_installation() {
     fi
 }
 
-# ============================================================================
-# FILE OPERATIONS
-# ============================================================================
-
+# file ops
 create_symlink() {
     local link_name="$1"
 
@@ -294,10 +283,9 @@ create_symlink() {
     log INFO "Symlink created: $link_name"
 }
 
-download_files() {
+install_files() {
     local section="$1"
     local install_json="$2"
-    local commit="$3"
     local file_list=$(echo "$install_json" | jq -r ".${section}.files[]?" 2>/dev/null)
 
     if [[ -z "$file_list" ]]; then
@@ -313,7 +301,7 @@ download_files() {
 
         mkdir -p "$target_dir"
         log INFO "  - $file"
-        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${file}?t=$(date +%s)" -o "$target_path"
+        cp "$SRC_DIR/$file" "$target_path"
     done <<< "$file_list"
 }
 
@@ -337,7 +325,6 @@ install_requirements() {
 update_binaries() {
     local section="$1"
     local install_json="$2"
-    local commit="$3"
     local bin_list=$(echo "$install_json" | jq -r ".${section}.binaries[]?" 2>/dev/null)
 
     if [[ -z "$bin_list" ]]; then
@@ -353,16 +340,13 @@ update_binaries() {
 
         mkdir -p "$(dirname "$target_path")"
         log INFO "  - $binary"
-        silent curl -SL "${GITHUB_RAW_URL}/${commit}/${binary}?t=$(date +%s)" -o "$target_path"
+        cp "$SRC_DIR/$binary" "$target_path"
         chmod +x "$target_path"
         create_symlink "$bin_name"
     done <<< "$bin_list"
 }
 
-# ============================================================================
-# BACKEND UPDATES
-# ============================================================================
-
+# backends
 update_backends() {
     local install_json="$1"
     local backend_list=$(echo "$install_json" | jq -r ".backends[]?" 2>/dev/null)
@@ -448,10 +432,10 @@ update_backends() {
     cd "$INSTALL_DIR"
 }
 
-# ============================================================================
-# VERSION MANAGEMENT
-# ============================================================================
-
+# version management
+# Resolves what to update to and whether an update is needed. On update
+# available, prints two lines ("commit"/"release" then the ref) and returns 0.
+# On already up-to-date, returns 1
 check_for_updates() {
     if [[ "$USE_LATEST" == true ]]; then
         log INFO "Fetching latest commit..."
@@ -473,136 +457,161 @@ check_for_updates() {
         fi
         
         log INFO "Latest commit: ${latest_commit:0:7}"
+        echo "commit"
         echo "$latest_commit"
         return 0
     fi
     
     if [[ -n "$TARGET_VERSION" ]]; then
-        log INFO "Looking up release: $TARGET_VERSION"
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-        local commit=$(echo "$install_json" | jq -r ".releases[] | select(.codename==\"$TARGET_VERSION\") | .commit")
-        
-        if [[ -z "$commit" ]]; then
+        log INFO "Checking release: $TARGET_VERSION"
+        local http_status=$(curl -sSL -o /dev/null -w "%{http_code}" \
+            "https://api.github.com/repos/dpipstudio/botwave/releases/tags/${TARGET_VERSION}")
+
+        if [[ "$http_status" != "200" ]]; then
             log ERROR "Release '$TARGET_VERSION' not found"
             log INFO "Available releases:"
-            echo "$install_json" | jq -r '.releases[].codename' | while read -r rel; do
-                log INFO "  - $rel"
-            done
+            curl -sSL "https://api.github.com/repos/dpipstudio/botwave/releases" | \
+                jq -r '.[].tag_name' | while read -r tag; do
+                    log INFO "  - $tag"
+                done
             exit 1
         fi
-        
-        local current_commit=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
-        
-        if [[ "$commit" == "$current_commit" ]]; then
+
+        local current_release=$(cat "$INSTALL_DIR/last_release" 2>/dev/null || echo "")
+
+        if [[ "$TARGET_VERSION" == "$current_release" ]]; then
             log INFO "Already on version $TARGET_VERSION"
             return 1
         fi
-        
-        log INFO "Found commit: ${commit:0:7} at branch ${TARGET_BRANCH}"
-        echo "$commit"
+
+        log INFO "Found release: $TARGET_VERSION"
+        echo "release"
+        echo "$TARGET_VERSION"
         return 0
     fi
     
     # Default: latest release
     log INFO "Checking for updates..."
-    local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-    local latest_release_commit=$(echo "$install_json" | jq -r '.releases[0].commit')
-    
-    if [[ -z "$latest_release_commit" ]]; then
+    local release_json=$(curl -sSL "https://api.github.com/repos/dpipstudio/botwave/releases/latest")
+    local tag=$(echo "$release_json" | jq -r '.tag_name')
+
+    if [[ -z "$tag" || "$tag" == "null" ]]; then
         log ERROR "Failed to fetch latest release"
         exit 1
     fi
-    
-    local current_commit=$(cat "$INSTALL_DIR/last_commit" 2>/dev/null || echo "")
-    
-    if [[ "$latest_release_commit" == "$current_commit" ]]; then
+
+    local current_release=$(cat "$INSTALL_DIR/last_release" 2>/dev/null || echo "")
+
+    if [[ "$tag" == "$current_release" ]]; then
         log INFO "BotWave is already up-to-date."
         return 1
     fi
-    
-    local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
-    log INFO "New release available: $codename (${latest_release_commit:0:7})"
-    echo "$latest_release_commit"
+
+    log INFO "New release available: $tag"
+    echo "release"
+    echo "$tag"
 }
 
-fetch_installation_config() {
-    log INFO "Fetching installation configuration..."
-    local config=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
+# source download
+fetch_source_tarball() {
+    local kind="$1" # "commit" or "release", from check_for_updates
+    local ref="$2" # commit SHA or release tag, from check_for_updates
 
-    if [[ -z "$config" ]]; then
-        log ERROR "Failed to fetch installation.json"
+    local extract_dir="$TMP_DIR/src"
+    local tarball_path="$TMP_DIR/src.tar.gz"
+    local tarball_url
+
+    rm -rf "$extract_dir"
+    mkdir -p "$extract_dir"
+
+    if [[ "$kind" == "release" ]]; then
+        tarball_url="${GITHUB_REPO_URL}/archive/refs/tags/${ref}.tar.gz"
+
+    else
+        tarball_url="${GITHUB_REPO_URL}/archive/${ref}.tar.gz"
+    fi
+
+    log INFO "Downloading source tarball..."
+    silent curl -SL "$tarball_url" -o "$tarball_path"
+
+    log INFO "Extracting tarball..."
+    silent tar -xzf "$tarball_path" -C "$extract_dir" --strip-components=1
+
+    if [[ ! -f "$extract_dir/assets/installation.json" ]]; then
+        log ERROR "installation.json not found in extracted tarball"
         exit 1
     fi
 
-    echo "$config"
+    SRC_DIR="$extract_dir"
+    log INFO "Source extracted to $SRC_DIR"
+}
+
+fetch_installation_config() {
+    log INFO "Reading installation configuration..."
+    cat "$SRC_DIR/assets/installation.json"
 }
 
 save_version_info() {
-    local commit="$1"
+    local kind="$1"
+    local ref="$2"
     log INFO "Saving version information..."
-    echo "$commit" > "$INSTALL_DIR/last_commit"
-    
-    # Save release info if applicable
-    if [[ -n "$TARGET_VERSION" ]]; then
-        echo "$TARGET_VERSION" > "$INSTALL_DIR/last_release"
-    elif [[ "$USE_LATEST" != true ]]; then
-        local install_json=$(curl -sSL "${GITHUB_RAW_URL}/${TARGET_BRANCH}/assets/installation.json?t=$(date +%s)")
-        local codename=$(echo "$install_json" | jq -r ".releases[] | select(.commit==\"$commit\") | .codename")
-        if [[ -n "$codename" ]]; then
-            echo "$codename" > "$INSTALL_DIR/last_release"
-        fi
+
+    if [[ "$kind" == "release" ]]; then
+        echo "$ref" > "$INSTALL_DIR/last_release"
+
     else
-        # Clear release info if on latest commit
+        echo "$ref" > "$INSTALL_DIR/last_commit"
+        # clear release info, we're now on an unreleased commit
         rm -f "$INSTALL_DIR/last_release"
     fi
 }
 
-# ============================================================================
-# COMPONENT UPDATES
-# ============================================================================
-
+# update components (client/server/always)
 update_components() {
     local install_json="$1"
-    local commit="$2"
+    local target_kind="$2"
+    local target_ref="$3"
 
     # Show version info
-    if [[ -n "$TARGET_VERSION" ]]; then
-        log INFO "Target version: $TARGET_VERSION"
-    elif [[ "$USE_LATEST" == true ]]; then
-        log WARN "Using latest commit (unreleased)"
+    if [[ "$target_kind" == "release" ]]; then
+        log INFO "Updating to release: $target_ref"
     else
-        local codename=$(echo "$install_json" | jq -r '.releases[0].codename')
-        log INFO "Updating to release: $codename"
+        log WARN "Using latest commit (unreleased): ${target_ref:0:7}"
     fi
 
     # Update backends if client exists
     if [[ -d "$INSTALL_DIR/client" ]]; then
         log INFO "Updating client components..."
         update_backends "$install_json"
-        download_files "client" "$install_json" "$commit"
+        install_files "client" "$install_json"
         install_requirements "client" "$install_json"
-        update_binaries "client" "$install_json" "$commit"
+        update_binaries "client" "$install_json"
     fi
 
     # Update server if it exists
     if [[ -d "$INSTALL_DIR/server" ]]; then
         log INFO "Updating server components..."
-        download_files "server" "$install_json" "$commit"
+        install_files "server" "$install_json"
         install_requirements "server" "$install_json"
-        update_binaries "server" "$install_json" "$commit"
+        update_binaries "server" "$install_json"
     fi
 
     # Always update common components
     log INFO "Updating common components..."
-    download_files "always" "$install_json" "$commit"
+    install_files "always" "$install_json"
     install_requirements "always" "$install_json"
-    update_binaries "always" "$install_json" "$commit"
+    update_binaries "always" "$install_json"
 }
 
-# ============================================================================
-# MAIN UPDATE FLOW
-# ============================================================================
+cleanup() {
+    if [[ -n "$SRC_DIR" && "$SRC_DIR" == "$TMP_DIR/src" ]]; then
+        rm -rf "$SRC_DIR"
+    fi
 
+    rm -f "$TMP_DIR/src.tar.gz"
+}
+
+# main
 main() {
     mkdir -p "$TMP_DIR"
 
@@ -616,23 +625,28 @@ main() {
     
     log INFO "Full log transcript will be written to $LOG_FILE"
     
+    trap cleanup EXIT
+
     validate_installation
 
     cd "$INSTALL_DIR"
 
     # Check for updates
-    local latest_commit
-    if ! latest_commit=$(check_for_updates); then
+    local target_kind target_ref
+    { read -r target_kind; read -r target_ref; } < <(check_for_updates) || {
         cd "$START_PWD"
         exit 0
-    fi
+    }
+
+    # Fetch and extract the source tarball for the resolved target
+    fetch_source_tarball "$target_kind" "$target_ref"
 
     # Fetch configuration and update
     local install_json=$(fetch_installation_config)
-    update_components "$install_json" "$latest_commit"
+    update_components "$install_json" "$target_kind" "$target_ref"
 
     # Save version and complete
-    save_version_info "$latest_commit"
+    save_version_info "$target_kind" "$target_ref"
 
     log INFO "Update complete!"
     log INFO "Log file: $LOG_FILE"
