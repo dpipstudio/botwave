@@ -12,20 +12,24 @@
     <!--=============== FONTS ===============-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 
     <!--=============== CSS ===============-->
     <link rel="stylesheet" href="assets/css/styles.css">
 
-    <title>Your RPI FM Network</title>
+    <title>Your Raspberry Pi FM Network</title>
     <meta property="og:title" content="Your Raspberry Pi FM Network">
-    <meta property="og:description" content="Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.">
+    <meta property="og:description"
+        content="Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.">
     <meta property="og:image" content="https://images.dpip.lol/bw-logo-r.png">
     <meta property="og:url" content="https://botwave.dpip.lol">
     <meta name="theme-color" content="#0a0a0a" />
     <meta property="og:type" content="website" />
     <meta name='keywords' content='botwave, raspberry pi, fm radio, broadcast, audio, piwave, pifmrds, dpip'>
-    <meta name='description' content='Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.'>
+    <meta name='description'
+        content='Broadcast audio files over FM radio using Raspberry Pi devices. Server-client architecture for managing multiple Pi clients remotely.'>
     <meta name='author' content='douxx.tech, douxx@douxx.tech'>
     <meta name='designer' content='douxx.tech'>
     <meta name='reply-to' content='admin@dpip.lol'>
@@ -36,155 +40,45 @@
 </head>
 
 <body>
+    <main class="container">
 
-    <header id="header">
-        <nav>
-            <a href="/" class="logo">
-                <img src="https://images.dpip.lol/bw-logo-big.png" alt="BotWave" />
+        <header>
+            <h1>BotWave</h1>
+            <div class="subtitle">BotWave – Your Raspberry Pi FM network. ¹</div>
+        </header>
+
+        <h2>What it is</h2>
+        <p>
+            BotWave lets you broadcast audio over FM radio using cheap Raspberry Pi devices. It supports both single-device
+            setups and multi-Pi networks, with features like remote control, live streaming, automated actions, and
+            more, making it great for learning, experimentation, and creative projects.
+        </p>
+
+        <h2>Quick Install</h2>
+        <pre><code>curl -sSL botwave.dpip.lol/install | sudo bash</code></pre>
+        <a href="https://github.com/dpipstudio/botwave#get-started" target="_blank">Detailed setup instructions ↗</a>
+
+        <h2>Source Code</h2>
+        <p>
+            View the project on GitHub:
+        </p>
+        <p>
+            <a href="https://github.com/dpipstudio/botwave" target="_blank">
+                github.com/dpipstudio/botwave
             </a>
-            <ul class="nav-links">
-                <li><a href="#top">Home</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#installation">Install</a></li>
-            </ul>
-            <div class="mobile-menu-btn" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </nav>
-    </header>
+        </p>
 
-    <div id="top"></div>
-    <section class="hero">
-        <div class="hero-overlay">
-            <div class="hero-text">
-                <span class="hero-label">Raspberry Pi FM Network</span>
-                <p class="hero-tagline">Broadcast.<br>Anywhere.<br>Now.</p>
-            </div>
-        </div>
-    </section>
+        <footer>
+            GPLv3.0 // A <a href="https://dpip.lol" target="_blank">DPIP Studio</a> Studio project.
+            <br>
+            ¹. All em-dashes were human-generated.
+        </footer>
 
-    <main>
-
-        <section class="about-section" id="about">
-            <div class="container">
-                <h1 class="about-title">FM radio, reimagined for the maker.</h1>
-                <p class="about-body">BotWave is a server-client platform built around Raspberry Pi. Upload audio, configure frequencies, manage multiple Pi clients from one place — and broadcast over the airwaves. Prefer to keep it simple? Run the client standalone on a single Pi, no server needed.</p>
-                <div class="hero-actions">
-                    <a href="#installation" class="cta-btn">Get Started</a>
-                    <a href="https://github.com/dpipstudio/botwave" target="_blank" rel="noopener" class="cta-btn cta-btn--ghost">
-                        GitHub
-                        <img src="assets/icons/external-link-line.svg" alt="" class="cta-icon">
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section class="features-section" id="features">
-            <div class="container">
-                <span class="section-label">What it does</span>
-                <h2 class="section-title">Everything you need<br>to run your station.</h2>
-            </div>
-            <div class="container">
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <span class="feature-num">01</span>
-                        <h3>Server-Client Architecture</h3>
-                        <p>Manage multiple Raspberry Pi clients from a single central server.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-num">02</span>
-                        <h3>Audio Broadcasting</h3>
-                        <p>Broadcast audio files or live streams over FM radio with high-quality transmission.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-num">03</span>
-                        <h3>Remote File Upload</h3>
-                        <p>Upload audio files directly to clients for broadcasting, from anywhere.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-num">04</span>
-                        <h3>Remote Management</h3>
-                        <p>Start, stop, and manage broadcasts without touching your Pi.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-num">05</span>
-                        <h3>Authentication</h3>
-                        <p>Secure client-server communication with passkey-based auth.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-num">06</span>
-                        <h3>Integration</h3>
-                        <p>Easy integration with other applications and scripts.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="install-section" id="installation">
-            <div class="container">
-                <span class="section-label">Setup</span>
-                <h2 class="section-title">Up and running<br>in minutes.</h2>
-                <div class="steps">
-
-                    <div class="step">
-                        <span class="step-num">01</span>
-                        <div class="step-body">
-                            <h3>Installation</h3>
-                            <p>For Linux systems, run the automatic install script:</p>
-                            <div class="code-block">
-                                <code>curl -sSL https://botwave.dpip.lol/install | sudo bash</code>
-                                <button class="copy-btn" aria-label="Copy command">Copy</button>
-                            </div>
-                            <p>Append <code class="inline">-s &lt;server, client or both&gt;</code> to install a specific component directly.</p>
-                        </div>
-                    </div>
-
-                    <div class="step">
-                        <span class="step-num">02</span>
-                        <div class="step-body">
-                            <h3>Hardware Setup</h3>
-                            <p>Connect an antenna or wire to your Raspberry Pi's <code class="inline">GPIO 4 (pin 7)</code> for FM broadcast.</p>
-                        </div>
-                    </div>
-
-                    <div class="step">
-                        <span class="step-num">03</span>
-                        <div class="step-body">
-                            <h3>Start Broadcasting</h3>
-                            <p>Use the BotWave server to manage your clients, upload audio files, and go live over FM.</p>
-                        </div>
-                    </div>
-
-                </div>
-                <a href="https://github.com/dpipstudio/botwave/wiki" target="_blank" rel="noopener" class="gh-link">
-                    Read full documentation ↗
-                </a>
-            </div>
-        </section>
+        <script>
+            fetch('https://track.dpip.lol?id=botwave'); // dpip.lol/privacy for the privacy policy
+        </script>
 
     </main>
-
-    <footer>
-        <div class="container footer-inner">
-            <div class="footer-left">
-                <div class="footer-logo">BotWave</div>
-                <p class="footer-sub">Your Raspberry Pi FM Network.<br>Built by DPIP Studio.</p>
-            </div>
-            <div class="footer-right">
-                <nav class="footer-nav">
-                    <a href="mailto:admin@dpip.lol">Contact</a>
-                    <a href="https://github.com/dpipstudio/botwave" target="_blank" rel="noopener">GitHub</a>
-                    <a href="https://dpip.lol" target="_blank" rel="noopener">DPIP Studio</a>
-                </nav>
-                <p class="footer-copy">&copy; 2025-2026 DPIP Studio. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="assets/js/main.js"></script>
 </body>
 
 </html>
