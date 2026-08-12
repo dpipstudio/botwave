@@ -96,6 +96,7 @@ BotWave injects context as environment variables when a handler runs. These are 
 |--|--|
 | `l_onstart` / `s_onstart` | `BW_BROADCAST_FILE`, `BW_BROADCAST_FREQ` |
 | `l_onstop` / `s_onstop` | `BW_BROADCAST_FILE` |
+| `l_onwsjoin` / `s_onwsjoin` / `l_onwsleave` / `s_onwsleave` | `REMOTE_CLIENT_IP` |
 | `s_onconnect` / `s_ondisconnect` | `BW_CLIENT_ID`, `BW_CLIENT_HOSTNAME`, `BW_CLIENT_MACHINE`, `BW_CLIENT_SYSTEM`, `BW_CLIENT_PROTO`, `BW_CLIENT_CONNECTED_AT` |
 
 > [!NOTE]
