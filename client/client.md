@@ -41,7 +41,7 @@ sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir 
 - `--upload-dir`: The directory to store uploaded files (default: `/opt/BotWave/uploads/`).
 - `--pk`: Optional passkey for authentication.
 - `--skip-checks`: Skip system requirements checks.
-- `--talk`: Makes PiWave (broadcast manager) output logs visible.
+- `--talk`: Show debug logs.
 - `--config`: Path to a config file to load into environment.
 
 ### Example

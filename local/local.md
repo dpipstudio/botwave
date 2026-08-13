@@ -40,7 +40,7 @@ sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--sk
 - `--daemon`: Run in daemon mode (non-interactive).
 - `--rc`: Port for the remote CLI. You can connect remotely to your websocket server via [botwave.dpip.lol](https://botwave.dpip.lol/websocket/). 
 - `--pk`: Optional passkey for websocket authentication.
-- `--talk`: Show the debug logs.
+- `--talk`: Show debug logs.
 - `--config`: Path to a config file to load into environment.
 
 ### Example
