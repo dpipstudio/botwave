@@ -124,6 +124,8 @@ sudo bash bw_install.sh
 
 > `sudo` is required for system-wide installation. BotWave installs to `/opt/BotWave` with binary symlinks in `/usr/local/bin`.
 
+Or, alternatively, you can install BotWave manually following our guide at [`Advanced/Installing BotWave manually`](https://github.com/dpipstudio/botwave/wiki/Installing-botwave-manually).
+
 **During installation, you'll be asked a few questions:**
 
 - **Installation type**: If you have a single Raspberry Pi, choose **Client**. If you also want to run a server on the same machine, choose **Both**. Other devices will only be able to run the **Server**.
