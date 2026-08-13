@@ -73,24 +73,28 @@ class TipEngine:
             return True    
 
     def __check_lock_conflict(self):
-        if not os.path.exists(self.__lockfile):
-            return
-
         try:
-            with open(self.__lockfile) as f:
-                pid = int(f.read().strip())
+            if not os.path.exists(self.__lockfile):
+                return
 
-        except (ValueError, OSError):
-            return
+            try:
+                with open(self.__lockfile) as f:
+                    pid = int(f.read().strip())
 
-        if pid == os.getpid():
-            return
+            except (ValueError, OSError):
+                return
 
-        if self.__pid_exists(pid):
-            Log.warning(f"Another BotWave instance may already be running (PID {pid}). This could cause conflicts.")
+            if pid == os.getpid():
+                return
 
-        else:
-            os.remove(self.__lockfile)
+            if self.__pid_exists(pid):
+                Log.warning(f"Another BotWave instance may already be running (PID {pid}). This could cause conflicts.")
+
+            else:
+                os.remove(self.__lockfile)
+
+        except Exception as e:
+            Log.warning(f"Failed to check for lockfile: {e}")
 
     def __write_lockfile(self):
         try:
