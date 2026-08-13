@@ -15,6 +15,7 @@
 ## Advanced
 * **[Using environment variables](https://github.com/dpipstudio/botwave/wiki/Using-environment-variables)**
 * **[Creating custom commands](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands)**
+* **[Installing BotWave manually](https://github.com/dpipstudio/botwave/wiki/Installing-botwave-manually)**
 * **[Using BotWave without a Raspberry Pi](https://github.com/dpipstudio/botwave/wiki/Using-botwave-without-a-raspberrypi)**
 
 ## For Developers

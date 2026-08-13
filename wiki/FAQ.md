@@ -57,7 +57,7 @@ Here you'll find the most asked questions ! If this page didn't reply to your ne
 **A:** Local Mode lets you broadcast directly from a Raspberry Pi without a server. It's useful for standalone setups or testing.
 
 **Q: How can I contribute ?**  
-**A:** Contributions are welcome! Check the [For Developers/Contributing to BotWave](https://none.com) section in the wiki for contribution guidelines.
+**A:** Contributions are welcome! Check the [CONTRIBUTING.md](https://github.com/dpipstudio/botwave/blob/main/CONTRIBUTING.md) file for contribution guidelines.
 
 ## Troubleshooting
 This part of the FAQ will focus on troubleshooting common errors. (**I**ssue/**S**olution)

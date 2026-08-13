@@ -34,7 +34,9 @@ curl -sSL https://botwave.dpip.lol/install | sudo bash
 | `both` | You want to run both on the same machine |
 
 > [!NOTE]
-> Alternatively, if you don't want to use our services, for privacy or unavailability reasons, you can either directly download the file from the GitHub repo: [`install.sh`](https://github.com/dpipstudio/botwave/blob/main/scripts/install.sh), or directly replace `[...]botwave.dpip.lol[...]` with `https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/scripts/install.sh` in the install url.
+> Alternatively, if you don't want to use our services, for privacy or unavailability reasons, you can either directly download the file from the GitHub repo: [`install.sh`](https://github.com/dpipstudio/botwave/blob/main/scripts/install.sh), or directly replace `[...]botwave.dpip.lol[...]` with `https://raw.githubusercontent.com/dpipstudio/botwave/refs/heads/main/scripts/install.sh` in the install url.  
+>  
+> You can also install BotWave manually following our guide at [`Advanced/Installing BotWave manually`](https://github.com/dpipstudio/botwave/wiki/Installing-botwave-manually).
 
 ## Setting Up: Choose Your Path
 
