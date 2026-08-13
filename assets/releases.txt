@@ -14,6 +14,14 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.2-icuria ---=
+### What Changed
+- **Install/update source fetching update**: `install.sh` and `update.sh` no longer download files one by one from `raw.githubusercontent.com`. They now fetch a single source tarball from GitHub (matching the target release or commit), extract it once, and copy files from there. This should make installs and updates faster and more resilient to network issues.
+- **`--talk` on the server**: `bw-server` now properly supports `--talk` to show debug logs, matching the client and local client.
+- **Bug fix**: The "another BotWave instance may already be running" lockfile check could itself throw and crash startup in rare edge cases. It now fails safe and just logs a warning instead.
+- **Misc**: Minor help text and doc cleanups across `bw-local`, `bw-client`, `bw-server`, and wiki.
+=--- END ---=
+
 =--- v1.2.1-bikinia ---=
 A small release with minor improvements, and a slight repo restructure.
 
