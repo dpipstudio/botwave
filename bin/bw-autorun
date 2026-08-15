@@ -6,5 +6,8 @@
 # A DPIP Studio project. https://dpip.lol
 # Licensed under GPL-v3.0 (see LICENSE)
 
+# resolve the BotWave dir
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+BW_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
 
-/opt/BotWave/venv/bin/python3 /opt/BotWave/autorun/autorun.py "$@"
+"$BW_DIR/venv/bin/python3" "$BW_DIR"/autorun/autorun.py "$@"
