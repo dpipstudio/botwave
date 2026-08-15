@@ -14,6 +14,11 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.4-payera ---=
+### What Changed
+- **Fixed BW_ARGV0 bug**: In `v1.2.0`, a bug caused `BW_ARGV0` to contain the first argument of the last command instead of the command name itself (in handler contexts). This is now fixed.
+=--- END ---=
+
 =--- v1.2.3-pilea ---=
 A release mainly focusing on install location freeness.
 
