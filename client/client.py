@@ -13,11 +13,11 @@ from pathlib import Path
 import sys
 
 # using this to access to the shared dir files
-BW_PATH = str(Path(__file__).resolve().parent.parent)
-sys.path.append(BW_PATH)
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from shared.alsa import Alsa
 from shared.cat import check
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.protocol import Commands, ProtocolParser

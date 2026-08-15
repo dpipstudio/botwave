@@ -20,12 +20,12 @@ import traceback
 from typing import Dict, List, Optional
 
 # using this to access to the shared dir files
-BW_PATH = str(Path(__file__).resolve().parent.parent)
-sys.path.append(BW_PATH)
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from shared.alsa import Alsa
 from shared.cat import check
 from shared.custom_cmds import CCMD
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
