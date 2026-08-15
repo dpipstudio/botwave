@@ -13,7 +13,8 @@ from pathlib import Path
 import sys
 
 # using this to access to the shared dir files
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+BW_PATH = str(Path(__file__).resolve().parent.parent)
+sys.path.append(BW_PATH)
 
 from shared.alsa import Alsa
 from shared.cat import check
@@ -141,7 +142,7 @@ async def main():
     set_prio("SERVER_PORT", args.port, 9938, immutable=True)
     set_prio("FHOST", args.fhost, Env.get("SERVER_HOST"), immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
-    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
+    set_prio("UPLOAD_DIR", args.upload_dir, str(Path(BW_PATH) / "uploads"))
     set_prio("TALK", args.talk, False)
     set_prio("SKIP_CHECKS", args.skip_checks, False)
 
