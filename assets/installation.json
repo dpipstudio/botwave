@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.3-pilea",
+      "commit": "6600494d7dc17e2a8a4a97c8f2bb513f2fb11c87"
+    },
+    {
       "codename": "v1.2.2-icuria",
       "commit": "c98ff57e00706b498f4f7b415c575319d9b52e33"
     },
