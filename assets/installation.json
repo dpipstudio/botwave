@@ -219,6 +219,7 @@
       "shared/cat.jpg",
       "shared/converter.py",
       "shared/custom_cmds.py",
+      "shared/dirutils.py",
       "shared/env.py",
       "shared/handlers.py",
       "shared/http.py",
