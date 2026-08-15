@@ -10,4 +10,4 @@
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 BW_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
 
-"$BW_DIR/venv/bin/python3" "$BW_DIR"/autorun/autorun.py "$@"
+"$BW_DIR/venv/bin/python3" "$BW_DIR/autorun/autorun.py" "$@"
