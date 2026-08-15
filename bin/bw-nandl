@@ -64,13 +64,14 @@ list_handlers() {
     local total_handlers=0
     local silent_count=0
     local regular_count=0
+    local cmd_count=0
 
     echo "=============================================="
     printf "%-30s %-10s %s\n" "Filename" "Type" "Status"
     echo "----------------------------------------------"
 
     shopt -s nullglob
-    local handler_files=("$BOTWAVE_DIR"/*.hdl "$BOTWAVE_DIR"/*.shdl)
+    local handler_files=("$BOTWAVE_DIR"/*.hdl "$BOTWAVE_DIR"/*.shdl "$BOTWAVE_DIR"/*.cmd)
     shopt -u nullglob
 
     if [[ ${#handler_files[@]} -gt 0 ]]; then
@@ -91,6 +92,9 @@ list_handlers() {
                 elif [[ "$filename" =~ \.hdl$ ]]; then
                     type="Regular"
                     ((regular_count++))
+                elif [[ "$filename" =~ \.cmd$ ]]; then
+                    type="Command"
+                    ((cmd_count++))
                 else
                     type="Unknown"
                 fi
@@ -171,15 +175,21 @@ open_handler() {
 
     if [[ -f "$target_file" ]] && [[ -s "$target_file" ]]; then
         echo ""
-        if validate_handler_content "$target_file"; then
-            echo ""
-            echo "=============================================="
-            cat "$target_file"
-            echo "=============================================="
-        else
+        if [[ "$target_file" =~ \.cmd$ ]]; then
+            if ! validate_cmd_shebang "$target_file"; then
+                log ERROR "Custom command validation failed. Please review and edit again if needed."
+                return 1
+            fi
+
+        elif ! validate_handler_content "$target_file"; then
             log ERROR "Handler file validation failed. Please review and edit again if needed."
             return 1
         fi
+
+        echo ""
+        echo "=============================================="
+        cat "$target_file"
+        echo "=============================================="
     else
         log WARN "Handler file is empty or was not saved."
     fi
@@ -192,6 +202,11 @@ open_handler() {
 check_handler_format() {
     local filename="$1"
     local basename=$(basename "$filename")
+
+    # no prefix required for custom commands
+    if [[ "$basename" =~ \.cmd$ ]]; then
+        return 0
+    fi
 
     if [[ ! "$basename" =~ \.(hdl|shdl)$ ]]; then
         return 1
@@ -248,6 +263,23 @@ validate_handler_content() {
             return 1
         fi
     fi
+}
+
+# check #!/<server, local, or *>/<filename without .cmd>
+validate_cmd_shebang() {
+    local filepath="$1"
+    local first_line
+
+    first_line=$(head -n 1 "$filepath")
+
+    if [[ ! "$first_line" =~ ^#!/(server|local|\*)/[^/]+$ ]]; then
+        log ERROR "Invalid shebang in $(basename "$filepath")"
+        log INFO "Expected: #!/<server, local, or *>/<filename without .cmd>"
+        log INFO "Found:    $first_line"
+        return 1
+    fi
+
+    return 0
 }
 
 # Handle commands
@@ -309,7 +341,27 @@ if [[ ! -f "$TARGET_FILE" ]]; then
     touch "$TARGET_FILE"
     chmod 644 "$TARGET_FILE"
 
-    if check_handler_format "$FILENAME"; then
+if [[ "$FILENAME" =~ \.cmd$ ]]; then
+        CMD_NAME="${FILENAME%.cmd}"
+        cat > "$TARGET_FILE" << EOF
+#!/*/$CMD_NAME
+# $CMD_NAME
+#   Description of what this command does
+
+# The line above is the help text shown by the "help" command.
+# Keep it as a single unbroken # block right after the shebang.
+#
+# Shebang scope ("server", "local", or "*" for both):
+#   server -> available in bw-server
+#   local  -> available in bw-local
+#   *      -> available in both
+#
+# Use {BW_ARGVn} to access arguments (BW_ARGV1 is the first user arg).
+# Check documentation on github.com/dpipstudio/botwave/wiki/Creating-custom-commands for more details
+
+EOF
+
+    elif check_handler_format "$FILENAME"; then
         cat > "$TARGET_FILE" << EOF
 # BotWave Handler: $FILENAME
 # Each line represents a command to be executed
@@ -332,15 +384,20 @@ fi
 
 if [[ -f "$TARGET_FILE" ]] && [[ -s "$TARGET_FILE" ]]; then
     echo ""
-    if validate_handler_content "$TARGET_FILE"; then
-        echo ""
-        echo "=============================================="
-        cat "$TARGET_FILE"
-        echo "=============================================="
-    else
+    if [[ "$TARGET_FILE" =~ \.cmd$ ]]; then
+        if ! validate_cmd_shebang "$TARGET_FILE"; then
+            log ERROR "Custom command validation failed. Please review and edit again if needed."
+            exit 1
+        fi
+        
+    elif ! validate_handler_content "$TARGET_FILE"; then
         log ERROR "Handler file validation failed. Please review and edit again if needed."
         exit 1
     fi
+    echo ""
+    echo "=============================================="
+    cat "$TARGET_FILE"
+    echo "=============================================="
 else
     log WARN "Handler file is empty or was not saved."
 fi
