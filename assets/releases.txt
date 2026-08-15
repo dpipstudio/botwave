@@ -14,6 +14,16 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.3-pilea ---=
+A release mainly focusing on install location freeness.
+
+### What Changed
+- **App install location deduction**: BotWave no longer hardcodes `/opt/BotWave` everywhere. The install directory is now deducted based on the actual python files location.
+- **Manual install guide**: A new wiki page is not available, helping users to install BotWave manually: [`Advanced/Installing BotWave manually`](https://github.com/dpipstudio/botwave/wiki/Installing-botwave-manually)
+- **`.cmd` support in `bw-nandl`: `bw-nandl` now detects and supports custom commands (`.cmd` files), instead of throwing warnings at them.
+
+=--- END ---=
+
 =--- v1.2.2-icuria ---=
 ### What Changed
 - **Install/update source fetching update**: `install.sh` and `update.sh` no longer download files one by one from `raw.githubusercontent.com`. They now fetch a single source tarball from GitHub (matching the target release or commit), extract it once, and copy files from there. This should make installs and updates faster and more resilient to network issues.
