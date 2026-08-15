@@ -99,7 +99,7 @@ class BotWaveLocal:
                 Log.end()
                 return
 
-            self.last_argv = cmd_parts
+            self.last_argv = cmd_parts.copy()
 
             cmd = cmd_parts[0].lower()
             cmd_parts.pop(0)
