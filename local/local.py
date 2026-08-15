@@ -17,7 +17,8 @@ import shlex
 import sys
 
 # using this to access to the shared dir files
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+BW_PATH = str(Path(__file__).resolve().parent.parent)
+sys.path.append(BW_PATH)
 
 from shared.alsa import Alsa
 from shared.cat import check
@@ -172,12 +173,12 @@ async def main():
     if args.config:
         Env.load(args.config)
 
-    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
-    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
+    set_prio("UPLOAD_DIR", args.upload_dir, str(Path(BW_PATH) / "uploads"))
+    set_prio("HANDLERS_DIR", args.handlers_dir, str(Path(BW_PATH) / "handlers"))
     set_prio("SKIP_CHECKS", args.skip_checks, False)
     set_prio("DAEMON", args.daemon, False, immutable=True)
     set_prio("HOST", None, "0.0.0.0", immutable=True)
-    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("HISTORY_PATH", None, str(Path(BW_PATH) / ".history"))
     set_prio("PROMPT_TEXT", None, "botwave › ")
     set_prio("TALK", args.talk, False)
     set_prio("PASSKEY", args.pk, None, immutable=True)
@@ -225,7 +226,7 @@ async def main():
 
     prompt = get_prompt(
         commands={op.name: op.syntax for op in local.registry.get_instances() if isinstance(op, CliOp)},
-        history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history")
+        history_path=Env.get("HISTORY_PATH")
         )
 
     Log.print("Type 'help' for commands", 'bright_yellow')
