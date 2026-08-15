@@ -5,6 +5,7 @@ import tempfile
 import uuid
 
 from shared.converter import SUPPORTED_EXTENSIONS
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -242,7 +243,7 @@ class SyncOp(CliOp):
 
         allowed_dirs = [
             tempfile.gettempdir(),
-            "/opt/BotWave",
+            BW_PATH,
             Path.home(),
             *extra_dirs
         ]

@@ -3,8 +3,8 @@
 from piwave.backends.base import Backend, BackendError
 from pathlib import Path
 
+from shared.dirutils import BW_PATH
 from shared.env import Env
-from shared.logger import Log
 
 class BWCustom(Backend):
     @property
@@ -48,7 +48,7 @@ class BWCustom(Backend):
         if path:
             return [str(Path(path).parent)]
         
-        return ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
+        return [str(Path(BW_PATH) / "backends" / "bw_custom" / "src"), "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
 
     def build_command(self, wav_file: str, loop: bool):
         if not Path(wav_file).exists():

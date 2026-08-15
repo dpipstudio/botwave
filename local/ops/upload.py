@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -26,7 +27,7 @@ class UploadOp(CliOp):
         allowed_source_dirs = [
             '/tmp',
             '/home',
-            '/opt/BotWave',
+            BW_PATH,
             Env.get("UPLOAD_DIR"),
             Path.home()
         ]

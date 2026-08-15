@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Optional
 
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 
@@ -14,7 +15,7 @@ def check_backends_paths() -> Optional[str]:
     cache_file = os.path.join(current_dir, "..", "backend_path")
     envpath = Env.get("BACKEND_PATH")
 
-    search_paths = [str(Path(envpath).parent)] if envpath else ["/opt/BotWave/backends/bw_custom/src", "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
+    search_paths = [str(Path(envpath).parent)] if envpath else [str(Path(BW_PATH) / "backends" / "bw_custom" / "src"), "/opt", "/usr/local/bin", "/usr/bin", "/bin", "/home"]
     exe_name = str(Path(envpath).name) if envpath else "bw_custom"
     
     if os.path.isfile(cache_file):

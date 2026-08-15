@@ -2,6 +2,7 @@ import os
 import re
 from typing import Dict
 
+from shared.dirutils import BW_PATH
 
 class EnvManager:
     """Manages environment variables with support for .env files and typed access."""
@@ -11,7 +12,7 @@ class EnvManager:
         self.load(filepath)
 
         # Always try to load /opt/BotWave/.env
-        self.load("/opt/BotWave/.env")
+        self.load(f"{BW_PATH}/.env")
 
     def load(self, filepath: str = ".env") -> None:
         """Load environment variables from a .env file into os.environ."""
