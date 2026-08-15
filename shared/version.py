@@ -2,12 +2,13 @@ import urllib.request
 import urllib.error
 from typing import Optional
 
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.protocol import PROTOCOL_VERSION
 
 # if mismatch of 1st or 2nd part of ver: error
 LATEST_CHECK_URL = "https://botwave.dpip.lol/api/latest/" # line 1 = proto, line 2 = release
-RELEASE_FILE = "/opt/BotWave/last_release" # written by install.sh, might not exist on custom installs
+RELEASE_FILE = f"{BW_PATH}/last_release" # written by install.sh, might not exist on custom installs
 
 def parse_version(version_str: str) -> tuple:
     try:

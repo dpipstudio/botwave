@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -47,7 +48,7 @@ class UploadOp(CliOp):
 
         allowed_source_dirs = [
             tempfile.gettempdir(),
-            "/opt/BotWave",
+            BW_PATH,
             Path.home(),
             *extra_dirs
         ]

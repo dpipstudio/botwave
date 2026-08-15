@@ -8,6 +8,7 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import os
+from pathlib import Path
 import sys
 import subprocess
 import argparse
@@ -15,12 +16,16 @@ import platform
 from typing import List
 from dlogger import DLogger
 
+# using this to access to the shared dir files
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from shared.dirutils import BW_PATH
+
 # Configuration
-BOTWAVE_BASE_DIR = "/opt/BotWave"
-VENV_PYTHON = "/opt/BotWave/venv/bin/python3"
-CLIENT_SCRIPT = "/opt/BotWave/client/client.py"
-SERVER_SCRIPT = "/opt/BotWave/server/server.py"
-LOCAL_SCRIPT = "/opt/BotWave/local/local.py"
+VENV_PYTHON = str(Path(BW_PATH) / "venv" / "bin" / "python3")
+CLIENT_SCRIPT = str(Path(BW_PATH) / "client" / "client.py")
+SERVER_SCRIPT = str(Path(BW_PATH) / "server" / "server.py")
+LOCAL_SCRIPT = str(Path(BW_PATH) / "local" / "local.py")
 SYSTEMD_DIR = "/etc/systemd/system"
 
 Log = DLogger(
@@ -80,8 +85,8 @@ Group=root
 KillSignal=SIGINT
 
 #environment
-Environment=PYTHONPATH=/opt/BotWave
-Environment=PATH=/opt/BotWave/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PYTHONPATH={BW_PATH}
+Environment=PATH={BW_PATH}/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
@@ -165,8 +170,8 @@ def check_system_requirements():
         errors.append("systemd is required but not found")
     if os.geteuid() != 0:
         errors.append("This script must be run as root (use sudo)")
-    if not os.path.exists(BOTWAVE_BASE_DIR):
-        errors.append(f"BotWave directory not found: {BOTWAVE_BASE_DIR}")
+    if not os.path.exists(BW_PATH):
+        errors.append(f"BotWave directory not found: {BW_PATH}")
     if not os.path.exists(VENV_PYTHON):
         errors.append(f"Python virtual environment not found: {VENV_PYTHON}")
     if errors:
@@ -189,8 +194,8 @@ def check_script_exists(script_path: str, script_type: str):
 
 def create_directories():
     directories = [
-        "/opt/BotWave/uploads",
-        "/opt/BotWave/handlers"
+        f"{BW_PATH}/uploads",
+        f"{BW_PATH}/handlers"
     ]
     for directory in directories:
         os.makedirs(directory, exist_ok=True)

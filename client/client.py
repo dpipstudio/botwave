@@ -17,6 +17,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from shared.alsa import Alsa
 from shared.cat import check
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.protocol import Commands, ProtocolParser
@@ -141,7 +142,7 @@ async def main():
     set_prio("SERVER_PORT", args.port, 9938, immutable=True)
     set_prio("FHOST", args.fhost, Env.get("SERVER_HOST"), immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
-    set_prio("UPLOAD_DIR", args.upload_dir, '/opt/BotWave/uploads/')
+    set_prio("UPLOAD_DIR", args.upload_dir, str(Path(BW_PATH) / "uploads"))
     set_prio("TALK", args.talk, False)
     set_prio("SKIP_CHECKS", args.skip_checks, False)
 

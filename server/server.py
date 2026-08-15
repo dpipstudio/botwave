@@ -25,6 +25,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from shared.alsa import Alsa
 from shared.cat import check
 from shared.custom_cmds import CCMD
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.handlers import HandlerExecutor
 from shared.logger import Log
@@ -282,13 +283,14 @@ async def main():
     set_prio("HOST", args.host, '0.0.0.0', immutable=True)
     set_prio("PORT", args.port, 9938, immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
-    set_prio("HANDLERS_DIR", args.handlers_dir, '/opt/BotWave/handlers/')
+    set_prio("HANDLERS_DIR", args.handlers_dir, str(Path(BW_PATH) / "handlers"))
     set_prio("SKIP_CHECKS", args.skip_checks, False)
     set_prio("TALK", args.talk, False)
     set_prio("DAEMON", args.daemon, False, immutable=True)
     set_prio("REMOTE_CMD_PORT", args.rc, None, immutable=True)
     set_prio("PASSKEY", args.pk, None, immutable=True)
-    set_prio("HISTORY_PATH", None, "/opt/BotWave/.history")
+    set_prio("UPLOAD_DIR", None, str(Path(BW_PATH) / "uploads")) # not used by server, but some shared stuff needs it
+    set_prio("HISTORY_PATH", None, str(Path(BW_PATH) / ".history"))
     set_prio("PROMPT_TEXT", None, "botwave › ")
     set_prio("EXTRA_ALLOWED_DIRS", None, str(Path.cwd()))
 
@@ -357,7 +359,7 @@ async def main():
 
     prompt = get_prompt(
         commands={op.name: op.syntax for op in server.registry.get_instances() if isinstance(op, CliOp)},
-        history_path=Env.get("HISTORY_PATH", "/opt/BotWave/.history")
+        history_path=Env.get("HISTORY_PATH")
         )
 
     Log.print("Type 'help' for commands", 'bright_yellow')
