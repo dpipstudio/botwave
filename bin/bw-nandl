@@ -43,9 +43,14 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
+# resolve the BotWave dir
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+BW_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
+
+HANDLERS_DIR="$BW_DIR/handlers"
+
 COMMAND="$1"
 INPUT="$2"
-BOTWAVE_DIR="/opt/BotWave/handlers"
 EDITOR="${EDITOR:-nano}"
 
 # supported handlers and commands
@@ -55,8 +60,8 @@ VALID_COMMANDS=("start" "stop" "list" "upload" "dl" "handlers" "<" "help" "exit"
 list_handlers() {
     echo ""
 
-    if [[ ! -d "$BOTWAVE_DIR" ]]; then
-        log WARN "Handler directory does not exist: $BOTWAVE_DIR"
+    if [[ ! -d "$HANDLERS_DIR" ]]; then
+        log WARN "Handler directory does not exist: $HANDLERS_DIR"
         return 1
     fi
 
@@ -71,7 +76,7 @@ list_handlers() {
     echo "----------------------------------------------"
 
     shopt -s nullglob
-    local handler_files=("$BOTWAVE_DIR"/*.hdl "$BOTWAVE_DIR"/*.shdl "$BOTWAVE_DIR"/*.cmd)
+    local handler_files=("$HANDLERS_DIR"/*.hdl "$HANDLERS_DIR"/*.shdl "$HANDLERS_DIR"/*.cmd)
     shopt -u nullglob
 
     if [[ ${#handler_files[@]} -gt 0 ]]; then
@@ -119,9 +124,9 @@ list_handlers() {
     echo "=============================================="
 
     if [[ "$found_handlers" == false ]]; then
-        log INFO "No handler files found in $BOTWAVE_DIR"
+        log INFO "No handler files found in $HANDLERS_DIR"
         log INFO "Checking directory permissions..."
-        ls -la "$BOTWAVE_DIR" 2>/dev/null || log ERROR "Cannot access directory $BOTWAVE_DIR"
+        ls -la "$HANDLERS_DIR" 2>/dev/null || log ERROR "Cannot access directory $HANDLERS_DIR"
     fi
 
     return 0
@@ -134,7 +139,7 @@ show_handler() {
     if [[ "$handler" == *"/"* ]]; then
         target_file="$handler"
     else
-        target_file="$BOTWAVE_DIR/$handler"
+        target_file="$HANDLERS_DIR/$handler"
     fi
 
     if [[ ! -f "$target_file" ]]; then
@@ -161,7 +166,7 @@ open_handler() {
     if [[ "$handler" == *"/"* ]]; then
         target_file="$handler"
     else
-        target_file="$BOTWAVE_DIR/$handler"
+        target_file="$HANDLERS_DIR/$handler"
     fi
 
     if [[ ! -f "$target_file" ]]; then
@@ -311,8 +316,8 @@ if [[ "$INPUT" == *"/"* ]]; then
     TARGET_DIR=$(dirname "$TARGET_FILE")
 else
     # just a file, use default dir
-    TARGET_FILE="$BOTWAVE_DIR/$INPUT"
-    TARGET_DIR="$BOTWAVE_DIR"
+    TARGET_FILE="$HANDLERS_DIR/$INPUT"
+    TARGET_DIR="$HANDLERS_DIR"
 fi
 
 if [[ ! -d "$TARGET_DIR" ]]; then
@@ -389,7 +394,7 @@ if [[ -f "$TARGET_FILE" ]] && [[ -s "$TARGET_FILE" ]]; then
             log ERROR "Custom command validation failed. Please review and edit again if needed."
             exit 1
         fi
-        
+
     elif ! validate_handler_content "$TARGET_FILE"; then
         log ERROR "Handler file validation failed. Please review and edit again if needed."
         exit 1
