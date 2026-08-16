@@ -447,6 +447,26 @@ For more detailed documentation, check the following resources:
 sudo bw-update
 ```
 
+<details>
+<summary><code>Updater options</code></summary>
+<hr>
+<pre>
+Usage: bw-update [OPTIONS]
+
+Options:
+  -l, --latest        Update to the latest commit (even if unreleased)
+  -t, --to <version>  Update to a specific release version
+  -b, --branch <name> Install from a specific branch (default: main)
+  -h, --help          Show this help message
+
+Examples:
+  bash                    # Update to latest release
+  bash --latest           # Update to latest commit
+  bash --to v1.0.0-oak
+</pre>
+<hr>
+</details>
+
 ### Uninstallation
 ```bash
 curl -sSL https://botwave.dpip.lol/uninstall | sudo bash
