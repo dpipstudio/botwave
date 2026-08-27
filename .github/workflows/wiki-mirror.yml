@@ -35,7 +35,7 @@ jobs:
           git add wiki
 
           if ! git diff --cached --quiet; then
-            git commit -m "wiki: sync GitHub wiki into /wiki"
+            git commit -m "[wiki] wiki/*.md: sync GitHub wiki into /wiki"
             git push
 
           else
