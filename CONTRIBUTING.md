@@ -5,7 +5,6 @@ Contributions of all kinds are welcome, whether it’s code, documentation, bug 
 
 Please take a moment to read this guide before contributing.
 
----
 
 ## Ways to Contribute
 
@@ -16,7 +15,6 @@ You can contribute by:
 - Submitting pull requests
 - Reviewing existing pull requests
 
----
 
 ## Reporting Bugs & Issues
 
@@ -33,7 +31,6 @@ When reporting an issue, try to include:
 **Security vulnerabilities should NOT be reported via issues.**  
 Please refer to the `SECURITY.md` file for responsible disclosure instructions.
 
----
 
 ## Feature Requests
 
@@ -45,7 +42,6 @@ When suggesting a feature:
 - Describe the proposed solution
 - Mention any alternatives you’ve considered
 
----
 
 ## Pull Requests
 
@@ -63,7 +59,6 @@ When opening a pull request:
 - Reference related issues if applicable
 - Be open to feedback and requested changes
 
----
 
 ## Code Style & Guidelines
 
@@ -71,23 +66,35 @@ When opening a pull request:
 - Avoid unnecessary dependencies
 - Comment complex or non-obvious logic
 
----
-
 ## Commit Messages
 
-Please use clear and descriptive commit messages.  
-For the moment, we don't have a specific commit template, such as [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), however, we'd like having:
-- No garbage commits (e.g, `adsfds`)
-- Clear mention of the component / feature affected (e.g, `server: added xy` or `added xy in server.py`)
+Even though we won't reject contributions that don't follow our commit formatting, we'd appreciate it if you followed this pattern when writing commits:
 
----
+```
+[<component>] <path>: <commit message>
+```
+
+The message is made up of 3 parts:
+
+- **Component**: the specific part of the project affected by the change. Examples: `client`, `server`, `docs`, `workflows`, etc. If you can't find a specific enough component, you can use a generic term such as `project`.
+- **Path**: the path within that component. To avoid long paths, you can omit the part that's already implied by the component. For example, if the component is `workflows`, you can simply write `wiki-mirror.yml` and we'll understand that the commit concerns `.github/workflows/wiki-mirror.yml`. If the commit affects multiple paths, you can use globbing, or separate them with commas. Examples: `ops/*.py`, `shared/tls.py, shared/http.py`.
+- **Commit message**: a short message describing your changes.
+
+### Examples
+
+```
+[server] ops/live.py: fix ALSA rate being wrongly sent
+[client] client.py: better exception handling
+[docs] README.md: update installation steps
+[workflows] wiki-mirror.yml: ensure the new commit recommendation
+[docs] client/client.md: updated cli documentation
+```
 
 ## Community & Conduct
 
 Be respectful and constructive in discussions.  
 Harassment, hate speech, or hostile behavior will not be tolerated.
 
----
 
 ## Questions
 
