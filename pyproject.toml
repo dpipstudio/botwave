@@ -21,7 +21,7 @@ dev = [
 
 
 [tool.pyright]
-include = ["cli"]
+include = ["."]
 exclude = ["**/__pycache__", "**/venv"]
 typeCheckingMode = "strict"
 reportMissingTypeStubs = false
