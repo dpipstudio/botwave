@@ -71,7 +71,7 @@ class EnvManager:
         value = self.get(key)
 
         try:
-            return int(value) if type(value) is int else default
+            return int(value) if value is not None else default
         
         except ValueError:
             return default
@@ -82,7 +82,7 @@ class EnvManager:
         value = self.get(key)
 
         try:
-            return float(value) if type(value) is str else default
+            return float(value) if value is not None else default
         
         except ValueError:
             return default
