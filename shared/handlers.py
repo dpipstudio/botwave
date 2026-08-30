@@ -7,7 +7,7 @@ from shared.logger import Log
 
 class HandlerExecutor:
     
-    def __init__(self, command_executor: Callable[..., Awaitable[bool]]):
+    def __init__(self, command_executor: Callable[..., Awaitable[None]]):
         self.command_executor = command_executor
 
     @property
