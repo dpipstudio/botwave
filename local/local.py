@@ -112,7 +112,7 @@ class BotWaveLocal:
                     
                     await self.handlers_executor.execute_handler(
                         Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
-                        next(inst for inst in self.registry.get_instances() if type(inst).__name__ == "HandlersEventsOp").build_context(), # This has to be the worst line of code I ever wrote
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # This has to be the worst line of code I ever wrote
                         silent=True
                         )
 
@@ -225,7 +225,7 @@ async def main():
         return # to be sure to exit
 
     prompt = get_prompt(
-        commands={op.name: op.syntax for op in local.registry.get_instances() if isinstance(op, CliOp)},
+        commands={op.name: op.syntax for op in local.registry.get_instances().values() if isinstance(op, CliOp)},
         history_path=Env.get("HISTORY_PATH")
         )
 
