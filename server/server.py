@@ -9,15 +9,16 @@
 
 import argparse
 import asyncio
-from datetime import datetime
-from pathlib import Path
-from prompt_toolkit.formatted_text import ANSI
-from prompt_toolkit.patch_stdout import patch_stdout
 import re
 import shlex
 import sys
 import traceback
-from typing import Dict, List, Optional, TYPE_CHECKING
+from datetime import datetime
+from pathlib import Path
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.patch_stdout import patch_stdout
+from typing import Any, TYPE_CHECKING
+from websockets.legacy.client import WebSocketClientProtocol
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -52,7 +53,7 @@ class BotWaveServer:
         self.handlers_executor = HandlerExecutor(self.cmd_exec)
         self.http_server = None
         self.registry = Registry(self)
-        self.ws_handler = None
+        self.ws_handler: WSCMDH | None = None
         self.ws_server = None
 
         # core components & state
@@ -63,11 +64,11 @@ class BotWaveServer:
         self.tips = TipEngine()
 
         # clients & stuff
-        self.clients: Dict[str, "BotWaveClient"] = {}
+        self.clients: dict[str, "BotWaveClient"] = {}
         self.last_argv = []
         self.rc_clients = 0
 
-    def parse_targets(self, targets: str) -> List[str]:
+    def parse_targets(self, targets: str) -> list[str]:
         if not targets:
             Log.error("No targets specified")
             return []
@@ -76,7 +77,7 @@ class BotWaveServer:
             return list(self.clients.keys())
 
         target_list = [t.strip() for t in targets.split(',')]
-        valid_targets = []
+        valid_targets: list[str] = []
 
         for target in target_list:
             if target in self.clients:
@@ -96,7 +97,7 @@ class BotWaveServer:
 
         return valid_targets
 
-    async def handle_message(self, client_id: Optional[str], message: str, websocket):
+    async def handle_message(self, client_id: str | None, message: str, websocket: WebSocketClientProtocol):
         try:
             Log.debug(f"{client_id}: {message}")
 
@@ -134,7 +135,7 @@ class BotWaveServer:
                 Log.warning(f"Unexpected command from {client_id}: {cmd}")
 
                 if client_id in self.clients:
-                    self.clients[client_id].proto.reply(
+                    await self.clients[client_id].proto.reply(
                         parsed,
                         Commands.ERROR,
                         message=f"Unknown command: {cmd}. Perhaps a protocol mismatch?"
@@ -186,8 +187,8 @@ class BotWaveServer:
                 if self.custom_commands.exists(cmd):
                     
                     await self.handlers_executor.execute_handler(
-                        Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
-                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # This has to be the worst line of code I ever wrote
+                        str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore | This has to be the worst line of code I ever wrote
                         silent=True
                         )
 
@@ -204,7 +205,7 @@ class BotWaveServer:
             Log.end()
             Log.clear_transaction_id()
 
-    async def client_connect(self, client_id: str, websocket):
+    async def client_connect(self, client_id: str, websocket: WebSocketClientProtocol):
         return
 
     async def client_disconnect(self, client_id: str):
@@ -216,7 +217,7 @@ class BotWaveServer:
             del self.clients[client_id]
 
 # startup helpers
-def set_prio(key, cli_value, default, immutable=False):
+def set_prio(key: str, cli_value: Any | None, default: Any | None, immutable: bool = False):
     if cli_value is not None:
         Env.set(key, str(cli_value), immutable=immutable)
 
@@ -240,7 +241,7 @@ def check_updates():
         else:
             Log.success("You are using the latest version")
 
-    except Exception as e:
+    except Exception:
         Log.warning("Unable to check for updates (continuing anyway)")
 
 def fail_banner():
