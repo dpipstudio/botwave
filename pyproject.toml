@@ -17,6 +17,9 @@ dev = [
     "pyalsaaudio==0.11.0",
     "pyright",
     "websockets==11.0.3",
+    "pysstv",
+    "numpy",
+    "pillow"
 ]
 
 
@@ -24,4 +27,7 @@ dev = [
 include = ["."]
 exclude = ["**/__pycache__", "**/venv"]
 typeCheckingMode = "strict"
+useLibraryCodeForTyes = true
 reportMissingTypeStubs = false
+reportIncompatibleMethodOverride = false
+reportUnknownMemberType = false
