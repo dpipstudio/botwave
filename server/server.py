@@ -17,7 +17,7 @@ import re
 import shlex
 import sys
 import traceback
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -37,6 +37,9 @@ from shared.registry import Registry, UpperException
 from shared.tips import TipEngine
 from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
+
+if TYPE_CHECKING:
+    from ops.register import BotWaveClient
 
 class BotWaveServer:
     """
@@ -60,7 +63,7 @@ class BotWaveServer:
         self.tips = TipEngine()
 
         # clients & stuff
-        self.clients: Dict[str, object] = {}
+        self.clients: Dict[str, "BotWaveClient"] = {}
         self.last_argv = []
         self.rc_clients = 0
 
@@ -184,7 +187,7 @@ class BotWaveServer:
                     
                     await self.handlers_executor.execute_handler(
                         Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
-                        next(inst for inst in self.registry.get_instances() if type(inst).__name__ == "HandlersEventsOp").build_context(), # This has to be the worst line of code I ever wrote
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # This has to be the worst line of code I ever wrote
                         silent=True
                         )
 
@@ -358,7 +361,7 @@ async def main():
         return
 
     prompt = get_prompt(
-        commands={op.name: op.syntax for op in server.registry.get_instances() if isinstance(op, CliOp)},
+        commands={op.name: op.syntax for op in server.registry.get_instances().values() if isinstance(op, CliOp)},
         history_path=Env.get("HISTORY_PATH")
         )
 
