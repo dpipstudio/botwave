@@ -1,9 +1,10 @@
 import asyncio
 import ssl
 import websockets
-from typing import Callable, Dict, Optional
-from websockets.server import WebSocketServerProtocol
-from websockets.client import WebSocketClientProtocol
+from typing import Any, Awaitable, Callable
+from websockets.exceptions import ConnectionClosed
+from websockets.legacy.client import WebSocketClientProtocol
+from websockets.legacy.server import WebSocketServerProtocol
 
 from shared.env import Env
 from shared.logger import Log
@@ -12,16 +13,16 @@ PING_INTERVAL = 30
 PING_TIMEOUT = 5
 
 class BWWebSocketServer:
-    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable, on_connect_callback: Callable, on_disconnect_callback: Callable):
+    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable[..., Awaitable[Any]], on_connect_callback: Callable[..., Awaitable[Any]], on_disconnect_callback: Callable[..., Awaitable[Any]]):
         self.ssl_context = ssl_context
         self.on_message = on_message_callback
         self.on_connect = on_connect_callback
         self.on_disconnect = on_disconnect_callback
         
         # client_id -> ws
-        self.clients: Dict[str, WebSocketServerProtocol] = {}
+        self.clients: dict[str, WebSocketServerProtocol] = {}
         
-        self.pending_clients: Dict[WebSocketServerProtocol, dict] = {}
+        self.pending_clients: dict[WebSocketServerProtocol, dict[Any, Any]] = {}
         
         self.server = None
         self.running = False
@@ -36,7 +37,7 @@ class BWWebSocketServer:
     
     async def start(self):
         self.running = True
-        self.server = await websockets.serve(
+        self.server = await websockets.serve( # pyright: ignore
             self._handle_client,
             self.host,
             self.port,
@@ -72,17 +73,20 @@ class BWWebSocketServer:
                             del self.pending_clients[websocket]
                             self.clients[client_id] = websocket
                             await self.on_connect(client_id, websocket)
+
                 else:
                     # registred = process normally
                     await self.on_message(client_id, message, websocket)
         
-        except websockets.exceptions.ConnectionClosed:
+        except ConnectionClosed:
             pass
+
         except Exception as e:
             Log.error(
                 f"Error handling client "
                 f"({type(e).__name__}): {repr(e)}"
                 )
+            
         finally:
             if websocket in self.pending_clients:
                 del self.pending_clients[websocket]
@@ -107,8 +111,8 @@ class BWWebSocketServer:
                     f"({type(e).__name__}): {repr(e)}"
                     )
     
-    async def broadcast(self, message: str, exclude: Optional[str] = None):
-        tasks = []
+    async def broadcast(self, message: str, exclude: str | None = None):
+        tasks: list[Any] = []
         for client_id, websocket in self.clients.items():
             if client_id != exclude:
                 tasks.append(websocket.send(message))
@@ -118,11 +122,11 @@ class BWWebSocketServer:
 
 
 class BWWebSocketClient:    
-    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable):
+    def __init__(self, ssl_context: ssl.SSLContext, on_message_callback: Callable[..., Awaitable[Any]]):
         self.ssl_context = ssl_context
         self.on_message = on_message_callback
         
-        self.ws: Optional[WebSocketClientProtocol] = None
+        self.ws: WebSocketClientProtocol | None = None
         self.connected = False
         self.running = False
         
@@ -141,7 +145,7 @@ class BWWebSocketClient:
 
         try:
             uri = f"wss://{self.host}:{self.port}"
-            self.ws = await websockets.connect(
+            self.ws = await websockets.connect( # pyright: ignore
                 uri,
                 ssl=self.ssl_context,
                 ping_interval=PING_INTERVAL,
@@ -191,16 +195,19 @@ class BWWebSocketClient:
                 try:
                     message = await self.ws.recv()
                     await self.on_message(message)
-                except websockets.exceptions.ConnectionClosed:
+
+                except ConnectionClosed:
                     Log.warning("Connection closed by server")
                     self.connected = False
                     break
+
                 except Exception as e:
                     Log.warning(
                         f"Error receiving message "
                         f"({type(e).__name__}): {repr(e)}"
                         )
                     break
+                
         except asyncio.CancelledError:
             pass
     

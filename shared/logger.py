@@ -2,6 +2,8 @@ from dlogger import DLogger
 import asyncio
 import contextvars
 import re
+from typing import Any
+from websockets.legacy.client import WebSocketClientProtocol
 
 from shared.env import Env
 
@@ -52,7 +54,7 @@ class Logger(DLogger):
         'environ': 'rgb(224,107,61)'
     }
 
-    ws_clients = set()
+    ws_clients: set[WebSocketClientProtocol] = set()
     ws_loop = None
 
     def __init__(self):
@@ -63,8 +65,8 @@ class Logger(DLogger):
         save_to = Env.get("LOG_FILE")
         save = True if save_to else False
 
-        self.transaction_id = contextvars.ContextVar('transaction_id', default=None)
-        self.remote_cmd_socket = contextvars.ContextVar('remote_cmd_socket', default=None)
+        self.transaction_id: Any = contextvars.ContextVar('transaction_id', default=None)
+        self.remote_cmd_socket: Any = contextvars.ContextVar('remote_cmd_socket', default=None)
         
         super().__init__(
             icons=self.ICONS,
@@ -97,14 +99,14 @@ class Logger(DLogger):
                 if self.ws_loop:
                     asyncio.run_coroutine_threadsafe(origin_ws.send(ws_message), self.ws_loop)
             except Exception as e:
-                self.warn(f"Error sending to WebSocket client: {e}")
+                self.warn(f"Error sending to WebSocket client: {e}") # pyright: ignore
         else:
             for ws in list(self.ws_clients):
                 try:
                     if self.ws_loop:
                         asyncio.run_coroutine_threadsafe(ws.send(ws_message), self.ws_loop)
                 except Exception as e:
-                    self.warn(f"Error sending to WebSocket client: {e}")
+                    self.warn(f"Error sending to WebSocket client: {e}") # pyright: ignore
                     try:
                         self.ws_clients.discard(ws)
                     except Exception:
@@ -124,11 +126,11 @@ class Logger(DLogger):
     def clear_transaction_id(self):
         self.transaction_id.set(None)
 
-    def set_remote_cmd(self, socket):
+    def set_remote_cmd(self, socket: WebSocketClientProtocol):
         self.remote_cmd_socket.set(socket)
 
     def clear_remote_cmd(self):
         self.remote_cmd_socket.set(None)
 
 
-Log = Logger()
+Log: Any = Logger()

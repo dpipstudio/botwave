@@ -1,15 +1,17 @@
+import shlex
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
+from prompt_toolkit.document import Document
 from prompt_toolkit.history import FileHistory, InMemoryHistory
 from prompt_toolkit.validation import Validator, ValidationError
-import shlex
+from typing import Any
 
 class SyntaxSuggester(AutoSuggest):
-    def __init__(self, commands: dict):
+    def __init__(self, commands: dict[str, str]):
         self.commands = commands
         super().__init__()
 
-    def get_suggestion(self, buffer, document):
+    def get_suggestion(self, _, document: Document):
         text = document.text
 
         if "#" in text:
@@ -64,11 +66,11 @@ class SyntaxSuggester(AutoSuggest):
         return Suggestion(" " + " ".join(remaining))
 
 class CommandValidator(Validator):
-    def __init__(self, commands: dict):
+    def __init__(self, commands: dict[str, str]):
         self.commands = commands
         super().__init__()
 
-    def validate(self, document):
+    def validate(self, document: Document):
         text = document.text
         if not text:
             return
@@ -101,7 +103,7 @@ class CommandValidator(Validator):
             )
 
 
-def get_prompt(commands: dict, history_path: str):
+def get_prompt(commands: dict[str, str], history_path: str) -> PromptSession[Any]:
 
     try:
         # test if the file is  readable and writable

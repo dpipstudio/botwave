@@ -2,11 +2,14 @@ import asyncio
 import fnmatch
 import os
 import shlex
-from typing import List, Dict, Set
+from typing import Any, TYPE_CHECKING
 
 from shared.env import Env
 from shared.logger import Log
 
+if TYPE_CHECKING:
+    from local.local import BotWaveLocal
+    from server.server import BotWaveServer
 
 class Queue:
     """Queue system for managing and playing broadcast files in sequence.
@@ -14,20 +17,23 @@ class Queue:
     Supports both local (single client) and server (multi-client) modes.
     """
     
-    def __init__(self, server_instance=None, client_instance=None, is_local=False):
+    def __init__(self,
+                 server_instance: "BotWaveServer | None" = None,
+                 client_instance: "BotWaveLocal | None" = None,
+                 is_local: bool = False):
         """Initialize the queue system.
         
         Args:
             server_instance: BotWaveServer instance (for server mode)
-            client_instance: BotWaveCLI instance (for local mode)
+            client_instance: BotWaveLocal instance (for local mode)
             is_local: True for local client mode, False for server mode
             upload_dir: Directory containing broadcast files
         """
         # Queue data
-        self.queue = []
+        self.queue: list[str] = []
         self.paused = True
         self.current_index = 0  # For local mode
-        self.client_indices = {}  # {client_id: current_index} for server mode
+        self.client_indices: dict[str, int] = {}  # {client_id: current_index} for server mode
         
         # Instances
         self.server = server_instance
@@ -124,14 +130,15 @@ class Queue:
         else:
             asyncio.create_task(self._add_server(file_specs, force))
     
-    def _add_local(self, file_specs: List[str], force: bool):
+    def _add_local(self, file_specs: list[str], force: bool):
         """Add files in local mode."""
-        added = []
+        added: list[str] = []
         
         for spec in file_specs:
             if '*' in spec:
                 files = self._match_files_local(spec, self.upload_dir)
                 added.extend(files)
+
             else:
                 if os.path.exists(os.path.join(self.upload_dir, spec)):
                     added.append(spec)
@@ -142,7 +149,7 @@ class Queue:
         Log.queue(f"Added {len(added)} file(s) to queue")
         self.show("")
     
-    async def _add_server(self, file_specs: List[str], force: bool):
+    async def _add_server(self, file_specs: list[str], force: bool):
         """Add files in server mode with client availability checks."""
         if not self.server or not self.server.clients:
             Log.error("No clients connected")
@@ -150,17 +157,20 @@ class Queue:
         
         # Force mode: add without checking all clients
         if force:
-            added = []
+            added: list[str] = []
             for spec in file_specs:
                 if '*' in spec:
                     # Get files from first available client
                     client_ids = list(self.server.clients.keys())
                     if client_ids:
                         client_files = await self._get_all_client_files([client_ids[0]])
+
                         if client_files:
                             all_files = list(client_files.values())[0]
+                            
                             if spec == '*':
                                 added.extend(sorted(all_files))
+
                             else:
                                 pattern_matches = [f for f in all_files if fnmatch.fnmatch(f, spec)]
                                 added.extend(sorted(pattern_matches))
@@ -196,6 +206,7 @@ class Queue:
                     missing_list = ', '.join(list(missing_files)[:3])
                     suffix = '...' if len(missing_files) > 3 else ''
                     Log.error(f"  {client_name}: missing {missing_list}{suffix}")
+
             Log.queue("Use '!' at the end to force add anyway (e.g., 'queue +file!')")
             return
         
@@ -203,18 +214,21 @@ class Queue:
         Log.queue(f"Added {len(candidates)} file(s) to queue")
         self.show("")
     
-    async def _get_all_client_files(self, client_ids: List[str]) -> Dict[str, Set[str]]:
+    async def _get_all_client_files(self, client_ids: list[str]) -> dict[str, set[str]]:
         """Retrieve file lists from all specified clients."""
-        client_files = {}
+        client_files: dict[str, set[str]] = {}
+
+        if not self.server:
+            return client_files
         
         for client_id in client_ids:
             try:
                 if client_id not in self.server.clients:
                     continue
                 
-                lf_hdl = next(inst for inst in self.server.registry.get_instances() if type(inst).__name__ == "SyncOp")
+                sync_op: Any = self.server.registry.get_instances()["SyncOp"]
 
-                files = await lf_hdl.request_files(self.server.clients[client_id], timeout=10)
+                files = await sync_op.request_files(self.server.clients[client_id], timeout=10)
                 if files:
                     client_files[client_id] = set(f['name'] for f in files)
                 else:
@@ -227,7 +241,7 @@ class Queue:
         
         return client_files
     
-    def _resolve_file_specs(self, file_specs: List[str], client_files: Dict[str, Set[str]]) -> tuple[List[str], Dict[str, Set[str]]]:
+    def _resolve_file_specs(self, file_specs: list[str], client_files: dict[str, set[str]]) -> tuple[list[str], dict[str, set[str]]]:
         """Resolve file specs to actual files that exist on ALL clients.
         
         Returns:
@@ -242,10 +256,10 @@ class Queue:
             return [], {}
         
         # Find intersection of all client files
-        common_files = set.intersection(*non_empty_client_files)
+        common_files: set[str] = set.intersection(*non_empty_client_files) # pyright: ignore
         
-        matched = set()
-        requested_files = set()
+        matched: set[str] = set()
+        requested_files: set[str] = set()
         
         for spec in file_specs:
             if spec == '*':
@@ -254,6 +268,7 @@ class Queue:
                 # For *, consider all files from any client as "requested"
                 for files in client_files.values():
                     requested_files.update(files)
+
             elif '*' in spec:
                 # Wildcard pattern
                 pattern_matches = [f for f in common_files if fnmatch.fnmatch(f, spec)]
@@ -272,7 +287,7 @@ class Queue:
                     matched.add(spec)
         
         # Calculate missing files per client
-        missing_per_client = {}
+        missing_per_client: dict[str, set[str]] = {}
         if requested_files:
             for client_id, files in client_files.items():
                 missing = requested_files - files
@@ -281,13 +296,15 @@ class Queue:
         
         return sorted(list(matched)), missing_per_client
     
-    def _match_files_local(self, pattern: str, directory: str) -> List[str]:
+    def _match_files_local(self, pattern: str, directory: str) -> list[str]:
         """Match files using wildcard pattern in local directory."""
         try:
             all_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
+
             if pattern == '*':
                 return sorted(all_files)
             return sorted([f for f in all_files if fnmatch.fnmatch(f, pattern)])
+        
         except Exception as e:
             Log.error(f"Error matching files: {e}")
             return []
@@ -351,7 +368,7 @@ class Queue:
             # Server mode: show per-client progress
             Log.queue(f"Queue ({len(self.queue)} files) - {status}:")
             
-            if self.client_indices:
+            if self.client_indices and self.server:
                 Log.print("Client positions:", 'yellow')
                 for client_id, index in self.client_indices.items():
                     if client_id in self.server.clients:
@@ -407,7 +424,7 @@ class Queue:
         else:
             asyncio.create_task(self._toggle_server(args))
     
-    def _parse_toggle_args(self, command: str) -> dict:
+    def _parse_toggle_args(self, command: str) -> dict[str, Any]:
         """Parse toggle command arguments with support for quoted strings.
         
         Server format: targets,freq,loop,ps,rt,pi
@@ -465,7 +482,7 @@ class Queue:
             return defaults
 
     
-    def _toggle_local(self, args: dict):
+    def _toggle_local(self, args: dict[str, Any]):
         """Toggle queue playback in local mode."""
         if not self.queue:
             Log.error("Queue is empty")
@@ -479,7 +496,7 @@ class Queue:
             self.broadcast_settings = args
             self._play_current_local()
     
-    async def _toggle_server(self, args: dict):
+    async def _toggle_server(self, args: dict[str, Any]):
         """Toggle queue playback in server mode."""
         if not self.queue:
             Log.error("Queue is empty")
@@ -543,8 +560,11 @@ class Queue:
             loop=False,
         ))
     
-    async def _play_all_clients(self, target_clients: List[str]):
+    async def _play_all_clients(self, target_clients: list[str]):
         """Start playback for all target clients at their individual positions."""
+        if not self.server:
+            return
+        
         for client_id in target_clients:
             index = self.client_indices.get(client_id, 0)
             
@@ -561,17 +581,17 @@ class Queue:
             await self.server.registry.dispatch(
                 "start",
                 [client_id],
-                file=filename,
-                frequency=self.broadcast_settings['frequency'],
-                ps=self.broadcast_settings['ps'],
-                rt=self.broadcast_settings['rt'],
-                pi=self.broadcast_settings['pi'],
-                loop=False
+                file = filename,
+                frequency = self.broadcast_settings['frequency'],
+                ps = self.broadcast_settings['ps'],
+                rt = self.broadcast_settings['rt'],
+                pi = self.broadcast_settings['pi'],
+                loop = False
             )
     
     # AUTO-ADVANCE (NEXT TRACK)
     
-    def on_broadcast_ended(self, client_id: str = None):
+    def on_broadcast_ended(self, client_id: str):
         """Called when a broadcast ends - advance to next in queue.
         
         Args:
@@ -601,6 +621,10 @@ class Queue:
     
     async def _next_server(self, client_id: str):
         """Advance to next file for specific client in server mode."""
+
+        if not self.server:
+            return
+
         if not client_id or client_id not in self.client_indices:
             Log.warning(f"Client {client_id} not in queue tracking")
             return

@@ -55,7 +55,7 @@ def gen_cert():
     return cert_pem, key_pem
 
 
-def save_cert(cert_pem, key_pem):
+def save_cert(cert_pem: str, key_pem: str):
     cert_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.crt')
     cert_file.write(cert_pem)
     cert_file.flush()

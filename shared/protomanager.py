@@ -1,9 +1,15 @@
 import asyncio
-from typing import Callable, Awaitable
+from typing import Callable, Awaitable, Any, TypedDict
 
 from shared.logger import Log
-from shared.protocol import ProtocolParser, Commands, gen_tx
+from shared.protocol import ProtocolParser, Commands, gen_tx, ParsedCommand
 
+class CmdContext(TypedDict):
+    command: str
+    callbacks: dict[str, Callable[[ParsedCommand], Any] | Callable[[BaseException], Any] | None]
+    expect_multiple: bool
+    last_response: ParsedCommand | None
+    timer: asyncio.TimerHandle | None
 
 class CommandHandle:
     """
@@ -11,18 +17,18 @@ class CommandHandle:
     Can be awaited directly, or used to cancel / manually complete the command.
     """
 
-    def __init__(self, tx_id: str, future: asyncio.Future, context: dict, cancel_cb: Callable):
+    def __init__(self, tx_id: str, future: asyncio.Future[ParsedCommand | None], context: CmdContext, cancel_cb: Callable[[str, BaseException | None], None]) -> None:
         self.tx_id = tx_id
         self.__future = future
         self.__ctx = context
         self.__cancel = cancel_cb
 
-    def cancel(self):
+    def cancel(self) -> None:
         """Cancel the command, triggering on_error with a TimeoutError."""
         
         self.__cancel(self.tx_id, TimeoutError("Cancelled"))
 
-    def complete(self):
+    def complete(self) -> None:
         """
         Manually resolve the handle with the last received response.
         Useful when using expect_multiple=True and you decide the command is done.
@@ -60,26 +66,29 @@ class ProtoManager:
     Every incoming message must be passed to dispatch() so pending futures can be resolved.
     """
 
-    def __init__(self, send_fn: Callable[[str], Awaitable] = None, default_timeout: float = 10.0):
+    def __init__(self, send_fn: Callable[[str], Awaitable[Any]], default_timeout: float = 10.0) -> None:
         self.__send_func = send_fn
-        self.__pending: dict[str, tuple] = {}
+        self.__pending: dict[str, tuple[asyncio.Future[ParsedCommand | None], CmdContext, Callable[[str, BaseException | None], None]]] = {}
         self.__timeout = default_timeout
 
-    def __safe_call(self, fn: Callable, *args):
+    def __safe_call(self, fn: Callable[..., Any] | None, *args: Any) -> None:
         """Call a callback safely, logging any exceptions instead of crashing."""
+
         if fn is None:
             return
         try:
             fn(*args)
+
         except Exception as e:
+
             Log.error(f"Callback error: {e}")
 
-    def execute(self, command: str, *args,
-                on_ok: Callable = None,
-                on_error: Callable = None,
-                expect_multiple: bool = False,
-                timeout: float = None,
-                **kwargs) -> CommandHandle:
+    def execute(self, command: str, *args: Any,
+            on_ok: Callable[[ParsedCommand], Any] | None = None,
+            on_error: Callable[[BaseException], Any] | None = None,
+            expect_multiple: bool = False,
+            timeout: float | None = None,
+            **kwargs: Any) -> CommandHandle:
         """
         Send a command and return a CommandHandle.
 
@@ -105,7 +114,7 @@ class ProtoManager:
         future = loop.create_future()
         future.add_done_callback(lambda f: f.exception() if f.done() and not f.cancelled() else None) # to avoid printing exceptions
 
-        context = {
+        context: CmdContext = {
             'command': command,
             'callbacks': {
                 'on_ok': on_ok,
@@ -116,12 +125,14 @@ class ProtoManager:
             'timer': None,
         }
 
-        def cancel(tx_id, exc=None):
+        def cancel(tx_id: str, exc: BaseException | None = None) -> None:
             self.__pending.pop(tx_id, None)
+
             if not future.done():
                 err = exc or asyncio.CancelledError()
                 future.set_exception(err)
                 self.__safe_call(on_error, err)
+
             if context['timer']:
                 context['timer'].cancel()
 
@@ -139,10 +150,10 @@ class ProtoManager:
 
         return CommandHandle(tx_id, future, context, cancel)
 
-    async def send(self, command: str, *args,
-                   expected: tuple = (Commands.OK,),
-                   timeout: float = None,
-                   **kwargs) -> dict:
+    async def send(self, command: str, *args: Any,
+               expected: tuple[str, ...] = (Commands.OK,),
+               timeout: float | None = None,
+               **kwargs: Any) -> ParsedCommand:
         """
         Send a command and await the response directly.
 
@@ -166,14 +177,15 @@ class ProtoManager:
 
         future = asyncio.get_event_loop().create_future()
 
-        def on_ok(data):
+        def on_ok(data: ParsedCommand):
             if not future.done():
                 if data['command'] not in expected:
                     future.set_exception(RuntimeError(f"Unexpected response: {data['command']}"))
+
                 else:
                     future.set_result(data)
 
-        def on_error(err):
+        def on_error(err: BaseException):
             if not future.done():
                 future.set_exception(err)
 
@@ -181,7 +193,7 @@ class ProtoManager:
 
         return await future
 
-    async def fire(self, command: str, *args, **kwargs):
+    async def fire(self, command: str, *args: Any, **kwargs: Any) -> None:
         """
         Send a command with no response tracking.
 
@@ -197,7 +209,7 @@ class ProtoManager:
         msg = ProtocolParser.build_command(command, *args, **kwargs)
         await self.__send_func(msg)
 
-    def dispatch(self, parsed: dict) -> bool:
+    def dispatch(self, parsed: ParsedCommand) -> bool:
         """
         Route an incoming parsed message to its pending future/callbacks.
 
@@ -233,22 +245,23 @@ class ProtoManager:
 
         if command == Commands.ERROR:
             err = RuntimeError(parsed['kwargs'].get('message', 'Unknown error'))
-            err.data = parsed
+            err.data = parsed # pyright: ignore
             self.__safe_call(callbacks['on_error'], err)
-            cancel(tx_id)
+            cancel(tx_id, None)
             return True
 
         if command == Commands.OK:
             self.__safe_call(callbacks['on_ok'], parsed)
             if not context['expect_multiple']:
-                cancel(tx_id)
+                cancel(tx_id, None)
+
             return True
 
         # any other non-error response (custom response types, etc)
         self.__safe_call(callbacks['on_ok'], parsed)
         return True
     
-    async def reply(self, parsed: dict, command: str, **kwargs):
+    async def reply(self, parsed: ParsedCommand, command: str, **kwargs: Any) -> None:
         tx_id = parsed['kwargs'].get('transaction_id')
 
         if tx_id:

@@ -1,8 +1,7 @@
 import os
-from typing import Dict, List
+from pathlib import Path
 
 from shared.env import Env
-from shared.logger import Log
 
 class CCMD:
     def __init__(self, is_server: bool = True):
@@ -30,18 +29,17 @@ class CCMD:
 
         return first_line == shebang or first_line == wildcard
     
-    def get_all(self) -> List[Dict]:
-        matches = []
+    def get_all(self) -> list[dict[str, str | list[str]]]:
+        matches: list[dict[str, str | list[str]]] = []
 
-        for name in os.listdir(self.handlers_dir):
-            if not name.endswith(".cmd"):
-                continue
+        handlers_path = Path(self.handlers_dir)
+        for file in handlers_path.rglob("*.cmd"):
 
-            full_path = os.path.join(self.handlers_dir, name)
+            full_path = handlers_path / file
             if not os.path.isfile(full_path):
                 continue
 
-            cmd_name = os.path.splitext(name)[0]
+            cmd_name = file.stem
             shebang = f"#!/{'server' if self.is_server else 'local'}/{cmd_name}"
             wildcard = f"#!/*/{cmd_name}"
 
@@ -56,7 +54,7 @@ class CCMD:
                         continue
 
                     # process help lines 
-                    help_lines = []
+                    help_lines: list[str] = []
                     for line in lines[1:]:
                         line = line.rstrip("\n")
 

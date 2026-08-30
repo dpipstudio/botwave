@@ -1,7 +1,7 @@
 import itertools
 import shlex
 import time
-from typing import Dict, Tuple
+from typing import Any, TypedDict
 
 PROTOCOL_VERSION = "2.1.3"
 
@@ -46,12 +46,17 @@ __tx_counter = itertools.count(1)
 def gen_tx() -> str:
     return f"tx_{int(time.monotonic() * 1000)}_{next(__tx_counter)}"
 
+class ParsedCommand(TypedDict):
+    command: str
+    args: list[str]
+    kwargs: dict[str, str]
+
 class ProtocolParser:
     # parse protocol commands
     # should be able to support: COMMAND arg1 arg2 'quoted arg' key=value key2='value with spaces'
     
     @staticmethod
-    def parse_command(line: str) -> Dict:
+    def parse_command(line: str) -> ParsedCommand:
         """
         Parse a command line into structured data.
         
@@ -104,7 +109,7 @@ class ProtocolParser:
         }
     
     @staticmethod
-    def build_command(command: str, *args, **kwargs) -> str:
+    def build_command(command: str, *args: Any, **kwargs: Any) -> str:
         """
         Build a command line from structured data.
         
@@ -139,7 +144,7 @@ class ProtocolParser:
         return ' '.join(parts)
     
     @staticmethod
-    def parse_response(line: str) -> Tuple[str, str]:
+    def parse_response(line: str) -> tuple[str, str]:
         """
         Parse a simple response line (OK, ERROR, etc).
         

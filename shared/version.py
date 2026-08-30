@@ -10,9 +10,10 @@ from shared.protocol import PROTOCOL_VERSION
 LATEST_CHECK_URL = "https://botwave.dpip.lol/api/latest/" # line 1 = proto, line 2 = release
 RELEASE_FILE = f"{BW_PATH}/last_release" # written by install.sh, might not exist on custom installs
 
-def parse_version(version_str: str) -> tuple:
+def parse_version(version_str: str) -> tuple[int, ...]:
     try:
         return tuple(map(int, version_str.split('.')))
+
     except (ValueError, AttributeError):
         return (0, 0, 0)
 

@@ -36,7 +36,7 @@ class TipEngine:
                 ram = psutil.virtual_memory().percent
 
                 now = time.monotonic()
-                issues = []
+                issues: list[str] = []
 
                 if cpu >= cpu_threshold:
                     issues.append(f"CPU at {cpu:.0f}% (threshold: {cpu_threshold}%)")

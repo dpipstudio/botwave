@@ -1,11 +1,11 @@
-from aiohttp import web, ClientSession, TCPConnector, ClientTimeout
 import aiofiles
 import asyncio
 import os
 import ssl
 import time
 import uuid
-from typing import Dict, Optional
+from aiohttp import web, ClientSession, TCPConnector, ClientTimeout
+from typing import Any, AsyncGenerator, Callable, Generator
 
 from shared.env import Env
 from shared.logger import Log
@@ -22,9 +22,9 @@ class BWHTTPFileServer:
     def __init__(self, ssl_context: ssl.SSLContext):
         self.ssl_context = ssl_context
 
-        self.upload_tokens: Dict[str, dict] = {}
-        self.download_tokens: Dict[str, dict] = {}
-        self.stream_tokens: Dict[str, dict] = {}
+        self.upload_tokens: dict[str, dict[str, Any]] = {}
+        self.download_tokens: dict[str, dict[str, Any]] = {}
+        self.stream_tokens: dict[str, dict[str, Any]] = {}
         
         self.app = None
         self.runner = None
@@ -45,7 +45,7 @@ class BWHTTPFileServer:
     def token_lifetime(self):
         return Env.get_int("FTOKEN_LIFETIME", 300)
     
-    def create_upload_token(self, filename: str, size: int, upload_dir: str = None) -> str:
+    def create_upload_token(self, filename: str, size: int, upload_dir: str | None = None) -> str:
         token = uuid.uuid4().hex
         self.upload_tokens[token] = {
             'filename': filename,
@@ -63,7 +63,7 @@ class BWHTTPFileServer:
         }
         return token
     
-    def create_stream_token(self, audio_generator, rate: int = 48000, channels: int = 2) -> str:
+    def create_stream_token(self, audio_generator: Generator[Any], rate: int = 48000, channels: int = 2) -> str:
         token = uuid.uuid4().hex
         self.stream_tokens[token] = {
             'generator': audio_generator,
@@ -119,7 +119,7 @@ class BWHTTPFileServer:
         expected_size = token_data['size']
         
         try:
-            filepath = PathValidator.safe_join(token_data.get('upload_dir'), filename)
+            filepath = PathValidator.safe_join(token_data.get('upload_dir', self.upload_dir), filename)
         except SecurityError as e:
             Log.error(f"Path traversal attempt in upload: {e}")
             return web.Response(status=403, text="Invalid file path")
@@ -267,7 +267,7 @@ class BWHTTPFileServer:
         
         return response
     
-    async def _async_generator_wrapper(self, sync_generator, loop):
+    async def _async_generator_wrapper(self, sync_generator: Generator[Any], loop: asyncio.AbstractEventLoop) -> AsyncGenerator[Any, None]:
         import concurrent.futures
         
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -323,7 +323,7 @@ class BWHTTPFileClient:
     def __init__(self, ssl_context: ssl.SSLContext):
         self.ssl_context = ssl_context
     
-    async def upload_file(self, server_host: str, server_port: int, token: str, filepath: str, progress_callback: Optional[callable] = None) -> bool:
+    async def upload_file(self, server_host: str, server_port: int, token: str, filepath: str, progress_callback: Callable[..., Any] | None = None) -> bool:
 
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"File not found: {filepath}")
@@ -363,7 +363,7 @@ class BWHTTPFileClient:
             Log.error(f"Upload error: {e}")
             return False
     
-    async def download_file(self, server_host: str, server_port: int, token: str, save_path: str, progress_callback: Optional[callable] = None) -> bool:
+    async def download_file(self, server_host: str, server_port: int, token: str, save_path: str, progress_callback: Callable[..., Any] | None = None) -> bool:
         url = f"https://{server_host}:{server_port}/download/{token}"
         
         try:

@@ -1,21 +1,23 @@
 import os
-from typing import Callable, Dict
+from pathlib import Path
+from typing import Awaitable, Callable
 
 from shared.env import Env
 from shared.logger import Log
 
 class HandlerExecutor:
     
-    def __init__(self, command_executor: Callable):
+    def __init__(self, command_executor: Callable[..., Awaitable[bool]]):
         self.command_executor = command_executor
 
     @property
-    def handlers_dir(self):
+    def handlers_dir(self) -> str:
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
     
-    async def execute_handler(self, file_path: str, ctx: Dict[str, str] = {}, silent: bool = False):
+    async def execute_handler(self, file_path: str, ctx: dict[str, str] = {}, silent: bool = False):
+        old_env = {k: os.environ.get(k) for k in ctx}
+
         try:
-            old_env = {k: os.environ.get(k) for k in ctx}
             os.environ.update(ctx)
 
             if not silent:
@@ -41,11 +43,11 @@ class HandlerExecutor:
                 else:
                     os.environ[k] = v
     
-    async def run_handlers(self, prefix: str, dir_path: str = None, context: Dict[str, str] = {}):
+    async def run_handlers(self, prefix: str, dir_path: str | None = None, context: dict[str, str] = {}):
         if dir_path is None:
             dir_path = self.handlers_dir
         
-        if not os.path.exists(dir_path):
+        if not Path(dir_path).is_dir():
             Log.error(f"Directory {dir_path} not found")
             return False
         
@@ -57,11 +59,11 @@ class HandlerExecutor:
                 if filename.endswith(".hdl") or silent:
                     await self.execute_handler(file_path, ctx=context, silent=silent)
     
-    def list_handlers(self, dir_path: str = None):
+    def list_handlers(self, dir_path: str | None = None):
         if dir_path is None:
             dir_path = self.handlers_dir
         
-        if not os.path.exists(dir_path):
+        if not Path(dir_path).is_dir():
             Log.error(f"Directory {dir_path} not found")
             return False
         
@@ -79,13 +81,13 @@ class HandlerExecutor:
         except Exception as e:
             Log.error(f"Error listing handlers: {e}")
     
-    def list_handler_commands(self, filename: str, dir_path: str = None):
+    def list_handler_commands(self, filename: str, dir_path: str | None = None):
         if dir_path is None:
             dir_path = self.handlers_dir
         
         file_path = os.path.join(dir_path, filename)
         
-        if not os.path.exists(file_path):
+        if not Path(file_path).is_file():
             Log.error(f"Handler file {filename} not found")
             return False
         

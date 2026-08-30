@@ -68,6 +68,7 @@ def is_raspberry_pi() -> bool:
         with open('/proc/cpuinfo', 'r') as f:
             cpuinfo = f.read()
         return 'Raspberry' in cpuinfo
+    
     except:
         return False
 
@@ -89,5 +90,6 @@ def check_requirements(skip_checks: bool = False):
     if not pi_fm_rds_path:
         Log.error("Backend not found. Please install bw_custom first.")
         sys.exit(1)
+
     else:
         Log.success(f"Found backend at: {pi_fm_rds_path}")
