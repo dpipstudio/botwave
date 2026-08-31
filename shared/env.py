@@ -92,10 +92,10 @@ class EnvManager:
 
         value = self.get(key)
 
-        if type(value) is not str:
+        if value is not None:
             return default
 
-        return value.lower() in ("1", "true", "yes", "on", "absolutely!")
+        return str(value).lower() in ("1", "true", "yes", "on", "absolutely!")
 
     def __load_env(self, filepath: str) -> None:
         """Parse a .env file and return a dict of key-value pairs."""
