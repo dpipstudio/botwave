@@ -29,12 +29,14 @@ from shared.custom_cmds import CCMD
 from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.handlers import HandlerExecutor
+from shared.http import BWHTTPFileServer
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.prompt import get_prompt
 from shared.protocol import Commands, ProtocolParser, PROTOCOL_VERSION
 from shared.queue import Queue
 from shared.registry import Registry, UpperException
+from shared.socket import BWWebSocketServer
 from shared.tips import TipEngine
 from shared.version import check_for_updates
 from shared.ws_cmd import WSCMDH
@@ -50,23 +52,23 @@ class BotWaveServer:
 
     def __init__(self):
         # servers & handlers
-        self.handlers_executor = HandlerExecutor(self.cmd_exec)
-        self.http_server = None
+        self.handlers_executor: HandlerExecutor = HandlerExecutor(self.cmd_exec)
+        self.http_server: BWHTTPFileServer | Any = None
         self.registry = Registry(self)
-        self.ws_handler: WSCMDH | None = None
-        self.ws_server = None
+        self.ws_handler: WSCMDH | Any = None
+        self.ws_server: BWWebSocketServer | Any = None
 
         # core components & state
-        self.alsa = Alsa()
-        self.custom_commands = CCMD(is_server=True)
-        self.queue = Queue(self)
-        self.running = False
-        self.tips = TipEngine()
+        self.alsa: Alsa = Alsa()
+        self.custom_commands: CCMD = CCMD(is_server=True)
+        self.queue: Queue = Queue(self)
+        self.running: bool = False
+        self.tips: TipEngine = TipEngine()
 
         # clients & stuff
         self.clients: dict[str, "BotWaveClient"] = {}
-        self.last_argv = []
-        self.rc_clients = 0
+        self.last_argv: list[str] = []
+        self.rc_clients: int = 0
 
     def parse_targets(self, targets: str) -> list[str]:
         if not targets:
