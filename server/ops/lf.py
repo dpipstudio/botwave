@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from shared.logger import Log
 from shared.ops import CliOp
@@ -14,10 +15,10 @@ class ListFilesOp(CliOp):
     syntax = "<targets>"
 
     async def handle(
-            self,
-            targets: list = [],
-            is_cmd: bool = False,
-            cmd_parts: list = []
+        self,
+        targets: list[str] = [],
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets = self.parse(cmd_parts)
@@ -31,7 +32,7 @@ class ListFilesOp(CliOp):
                 Log.warning("No client(s) found matching the query")
                 return
 
-        results = {'fetched': [], 'failed': []}
+        results: dict[str, list[str]] = {'fetched': [], 'failed': []}
 
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -68,12 +69,12 @@ class ListFilesOp(CliOp):
         Log.info(f"Success: {len(results['fetched'])}, Failure: {len(results['failed'])}")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: lf <targets>")
             return None
 
         return cmd_parts[0]
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ListFilesOp)

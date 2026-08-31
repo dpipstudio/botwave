@@ -1,7 +1,8 @@
 import asyncio
 import hashlib
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -24,8 +25,8 @@ class MorseOp(CliOp):
 
     async def handle(
         self,
-        targets: list = [],
-        text_src: str = None,
+        targets: list[str] = [],
+        text_src: str = "",
         wpm: int = 20,
         morse_freq: int = 700,
         frequency: float = 90.0,
@@ -34,7 +35,7 @@ class MorseOp(CliOp):
         rt: str = "Broadcasting",
         pi: str = "FFFF",
         is_cmd: bool = False,
-        cmd_parts: list = []
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, text_src, wpm, morse_freq, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
@@ -99,7 +100,7 @@ class MorseOp(CliOp):
             pi=pi,
         )
 
-    def cache(self, text, freq, rate):
+    def cache(self, text: str, freq: int, rate: int):
         key = f"{text}|{freq}|{rate}"
         digest = hashlib.sha256(key.encode()).hexdigest()[:16]
 
@@ -109,7 +110,7 @@ class MorseOp(CliOp):
         # including morse_ prefix on server because it'll end into the clients upload folder
         return str(cache_dir / f"morse_{digest}.wav") 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: morse <targets> <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None, None, None, None)
@@ -127,5 +128,5 @@ class MorseOp(CliOp):
         return (targets, text_src, wpm, morse_freq, frequency, loop, ps, rt, pi)
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(MorseOp)

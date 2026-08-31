@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from shared.logger import Log
 from shared.ops import CliOp
@@ -19,10 +20,10 @@ class UpdateOp(CliOp):
 
     async def handle(
             self,
-            targets: list = [],
-            version: str = None,
+            targets: list[str] = [],
+            version: str = "",
             is_cmd: bool = False,
-            cmd_parts: list = []
+            cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, version = self.parse(cmd_parts)
@@ -40,7 +41,7 @@ class UpdateOp(CliOp):
                 Log.warning(f"'update {targets} latest' is deprecated and will be removed in a future release.")
                 Log.warning(f"Please omit the version to update to the latest release.")
 
-                version = None
+                version = ""
 
         args = ''
 
@@ -56,7 +57,7 @@ class UpdateOp(CliOp):
 
         Log.update(f"Sending update request to {len(targets)} client(s)...")
         
-        results = {'updated': [], 'failed': []}
+        results: dict[str, list[str]] = {'updated': [], 'failed': []}
 
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -85,7 +86,7 @@ class UpdateOp(CliOp):
         Log.print("")
         Log.info(f"Success: {len(results['updated'])}, Failure: {len(results['failed'])}")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: update <targets> [version]")
             return (None, None)
@@ -95,5 +96,5 @@ class UpdateOp(CliOp):
 
         return (targets, reason)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(UpdateOp)

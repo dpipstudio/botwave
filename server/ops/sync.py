@@ -1,9 +1,11 @@
 import asyncio
 import json
-from pathlib import Path
 import tempfile
 import uuid
+from pathlib import Path
+from typing import Any
 
+from ops.register import BotWaveClient
 from shared.converter import SUPPORTED_EXTENSIONS
 from shared.dirutils import BW_PATH
 from shared.env import Env
@@ -11,6 +13,7 @@ from shared.logger import Log
 from shared.ops import CliOp
 from shared.protocol import Commands
 from shared.security import PathValidator, SecurityError
+
 
 class SyncOp(CliOp):
     """
@@ -32,10 +35,10 @@ class SyncOp(CliOp):
 
     async def handle(
             self,
-            target: str = None,
-            source: str = None,
+            target: str = "",
+            source: str = "",
             is_cmd: bool = False,
-            cmd_parts: list = []
+            cmd_parts: list[str] = []
     ):
         if is_cmd:
             target, source = self.parse(cmd_parts)
@@ -67,7 +70,7 @@ class SyncOp(CliOp):
             Log.info("  - Client to local folder")
             Log.info("  - Client to client(s)")
     
-    async def client_to_local(self, target, source):
+    async def client_to_local(self, target: str, source: str):
         allowed_target_dirs = self.get_allowed_dirs()
         try:
             target = PathValidator.validate_read(target, allowed_target_dirs)
@@ -93,7 +96,7 @@ class SyncOp(CliOp):
 
         Log.info(f"Found {len(files)} files to sync")
 
-        results = {"downloaded": [], "failed": []}
+        results: dict[str, list[str]] = {"downloaded": [], "failed": []}
 
         for file_info in files:
             filename = file_info.get('name')
@@ -157,8 +160,8 @@ class SyncOp(CliOp):
             except Exception as e:
                 Log.error(f"  {filename} - {e}")
                 try:
-                    if temp_path.exists():
-                        temp_path.unlink()
+                    if temp_path.exists(): # pyright: ignore
+                        temp_path.unlink() # pyright: ignore
 
                 except:
                     pass
@@ -171,7 +174,7 @@ class SyncOp(CliOp):
         else:
             Log.error("Sync failed: no files transferred")
 
-    async def local_to_client(self, target, source):
+    async def local_to_client(self, target: str, source: str):
         allowed_source_dirs = self.get_allowed_dirs()
         try:
             source = PathValidator.validate_read(source, allowed_source_dirs)
@@ -209,7 +212,7 @@ class SyncOp(CliOp):
             file=source
         )
 
-    async def client_to_client(self, target, source):
+    async def client_to_client(self, target: str, source: str):
         target_p = self.owner.parse_targets(target)
         source_p = self.owner.parse_targets(source)
 
@@ -228,7 +231,7 @@ class SyncOp(CliOp):
 
         #TODO: check how to delete the tempdir when we're sure that all the clients downloaded all the files :/
 
-    async def request_files(self, client, timeout: int = 30):        
+    async def request_files(self, client: BotWaveClient, timeout: int = 30):        
         try:
             response = await client.proto.send(Commands.LIST_FILES, timeout=float(timeout))
             return json.loads(response['kwargs'].get('files', '[]'))
@@ -237,7 +240,7 @@ class SyncOp(CliOp):
             Log.error(f"Error getting file list: {e}")
             return None      
 
-    def get_allowed_dirs(self):
+    def get_allowed_dirs(self) -> list[Any]:
         extra = Env.get("EXTRA_ALLOWED_DIRS", "")
         extra_dirs = [d for d in extra.split(":") if d.strip()]
 
@@ -250,19 +253,19 @@ class SyncOp(CliOp):
 
         return allowed_dirs
 
-    async def wait_for_completion(self, path, timeout=120):
+    async def wait_for_completion(self, path: str, timeout: int = 120):
         last_size = -1
         stable_cycles = 0
         elapsed = 0
 
-        path = Path(path)
+        path_o = Path(path)
 
         while elapsed < timeout:
-            if path.is_file():
+            if path_o.is_file():
                 try:
-                    size = path.stat().st_size
+                    size = path_o.stat().st_size
 
-                    with open(path, "rb"):
+                    with open(path_o, "rb"):
                         pass
 
                     if size == last_size:
@@ -282,7 +285,7 @@ class SyncOp(CliOp):
 
         return False  
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: sync <targets|folder> <source_target|source_folder>")
             return (None, None)
@@ -290,5 +293,5 @@ class SyncOp(CliOp):
         return (cmd_parts[0], cmd_parts[1])
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(SyncOp)

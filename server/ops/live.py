@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -18,13 +20,13 @@ class LiveOp(CliOp):
 
     async def handle(
         self,
-        targets: list = [],
+        targets: list[str] = [],
         freq: float = 90,
         ps: str = "BotWave",
         rt: str = "Streaming",
         pi: str = "FFFF",
         is_cmd: bool = False,
-        cmd_parts: list = []
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, freq, ps, rt, pi = self.parse(cmd_parts)
@@ -50,7 +52,7 @@ class LiveOp(CliOp):
 
         Log.broadcast(f"Sending stream tokens to {len(targets)} client(s)...")
         
-        results = {'streamed': [], 'failed': []}
+        results: dict[str, list[str]] = {'streamed': [], 'failed': []}
         
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -98,7 +100,7 @@ class LiveOp(CliOp):
         Log.alsa(f"We're expecting {self.owner.alsa.rate}kHz on {self.owner.alsa.channels} channels.")
 
         
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: live <targets> [frequency] [ps] [rt] [pi]")
             return (None, None, None, None, None)
@@ -111,5 +113,5 @@ class LiveOp(CliOp):
 
         return (targets, frequency, ps, rt, pi)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(LiveOp)

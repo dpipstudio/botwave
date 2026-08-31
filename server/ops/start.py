@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -19,15 +20,15 @@ class StartOp(CliOp):
 
     async def handle(
         self,
-        targets: list = [],
-        file: str = None,
+        targets: list[str] = [],
+        file: str = "",
         frequency: float = 90,
         loop: bool = False,
         ps: str = "BotWave",
         rt: str = "Broadcasting",
         pi: str = "FFFF",
         is_cmd: bool = False,
-        cmd_parts: list = []
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, file, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
@@ -55,7 +56,7 @@ class StartOp(CliOp):
 
         Log.broadcast(f"Starting broadcast on {len(targets)} client(s)...")
 
-        results = {'started': [], 'failed': []}
+        results: dict[str, list[str]] = {'started': [], 'failed': []}
         
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -89,14 +90,14 @@ class StartOp(CliOp):
                 err = str(e)
 
                 Log.error(f"  {client.get_display_name()}: {err}")
-                results['failed'].append((client_id, err))
+                results['failed'].append(client_id)
 
         Log.print("")        
         Log.info(f"Success: {len(results['started'])}, Failure: {len(results['failed'])}")
 
         await self.registry.dispatch("handlers_onstart",  context={"BW_BROADCAST_FILE": file, "BW_BROADCAST_FREQ": str(frequency)})
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: start <targets> <file> [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None, None)
@@ -111,5 +112,5 @@ class StartOp(CliOp):
 
         return (targets, file, frequencyuency, loop, ps, rt, pi)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StartOp)

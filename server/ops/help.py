@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 
@@ -13,7 +15,7 @@ class HelpOp(CliOp):
 
     name = "help"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         Log.header("BotWave Server - Help")
         Log.section("Available Commands")
 
@@ -183,5 +185,5 @@ class HelpOp(CliOp):
         Log.print("  all", "cyan")
         Log.print("  kitchen-pi", "cyan")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(HelpOp)

@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -14,27 +16,27 @@ class StatusOp(CliOp):
 
     async def handle(
             self,
-            targets: list = [],
+            targets: list[str] = [],
             is_cmd: bool = False,
-            cmd_parts: list = []
+            cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets = self.parse(cmd_parts)
 
-            targets_resolved = False
+            targets_resolved: list[str] = []
 
             if targets:
                 targets_resolved = self.owner.parse_targets(targets)
 
         else:
-            targets_resolved = True
+            targets_resolved = targets
 
 
         if targets and not targets_resolved:
             Log.warning("No client(s) found matching the query")
 
         elif targets and targets_resolved:
-            results = {'success': [], 'failed': []}
+            results: dict[str, list[str]] = {'success': [], 'failed': []}
 
             for client_id in targets_resolved:
                 if client_id not in self.owner.clients:
@@ -86,10 +88,10 @@ class StatusOp(CliOp):
         Log.print(f"Passkey           : {'yes' if Env.get("PASSKEY") else 'no'}", "white")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         targets = cmd_parts[0] if len(cmd_parts) > 0 else None
 
         return targets
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StatusOp)

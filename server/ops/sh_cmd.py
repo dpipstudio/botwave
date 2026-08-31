@@ -1,5 +1,6 @@
 import asyncio
 import os
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -14,7 +15,7 @@ class ShellOp(CliOp):
     name = "<"
     syntax = "<command>"
 
-    async def handle(self, command: str = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             command = self.parse(cmd_parts)
             if not command:
@@ -27,7 +28,7 @@ class ShellOp(CliOp):
 
         await self.run(command, env)
 
-    async def run(self, command, env):
+    async def run(self, command: str, env: dict[str, str]):
         try:
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -37,7 +38,7 @@ class ShellOp(CliOp):
             )
 
             try:
-                async def read_stream(stream, is_stderr=False):
+                async def read_stream(stream: Any, is_stderr: bool = False):
                     while True:
                         line = await stream.readline()
                         if not line:
@@ -65,7 +66,7 @@ class ShellOp(CliOp):
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: < <command>")
             return None
@@ -81,7 +82,7 @@ class PipeOp(CliOp):
     name = "|"
     syntax = "<command>"
 
-    async def handle(self, command: str = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             command = self.parse(cmd_parts)
             if not command:
@@ -94,7 +95,7 @@ class PipeOp(CliOp):
 
         await self.run(command, env)
 
-    async def run(self, command, env):
+    async def run(self, command: str, env: dict[str, str]):
         try:
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -103,16 +104,17 @@ class PipeOp(CliOp):
                 env=env
             )
 
-            tasks = []
+            tasks: list[Any] = []
 
-            async for line in process.stdout:
-                line = line.decode('utf-8').strip()
-                if line:
-                    tasks.append(
-                        asyncio.create_task(
-                            self.owner.cmd_exec(line)
+            if process.stdout:
+                async for line in process.stdout:
+                    line = line.decode('utf-8').strip()
+                    if line:
+                        tasks.append(
+                            asyncio.create_task(
+                                self.owner.cmd_exec(line)
+                            )
                         )
-                    )
 
             # wait for the subprocess itself to finish too
             await process.wait()
@@ -124,7 +126,7 @@ class PipeOp(CliOp):
         except Exception as e:
             Log.error(f"Error executing pipe command: {e}")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: | <command>")
             return None
@@ -132,6 +134,6 @@ class PipeOp(CliOp):
         return ' '.join(cmd_parts)
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ShellOp)
     reg.register(PipeOp)

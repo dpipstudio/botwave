@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.protocol import Commands
@@ -13,10 +15,10 @@ class RemoveOp(CliOp):
 
     async def handle(
             self,
-            targets: list = [],
-            file: str = None,
+            targets: list[str] = [],
+            file: str = "",
             is_cmd: bool = False,
-            cmd_parts: list = []
+            cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, file = self.parse(cmd_parts)
@@ -35,7 +37,7 @@ class RemoveOp(CliOp):
                 file = "*.wav" # old behavior only deleted .wav files
 
 
-        results = {'deleted': [], 'failed': []}
+        results: dict[str, list[str]] = {'deleted': [], 'failed': []}
 
         Log.info(f"Removing '{file}' from {len(targets)} client(s)...")
                 
@@ -67,12 +69,12 @@ class RemoveOp(CliOp):
         Log.info(f"Success: {len(results['deleted'])}, Failure: {len(results['failed'])}")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: rm <targets> <filename|glob>")
             return (None, None)
 
         return (cmd_parts[0], cmd_parts[1])
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(RemoveOp)

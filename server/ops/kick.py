@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.protocol import Commands
@@ -14,11 +16,11 @@ class KickOp(CliOp):
     syntax = "<targets> [reason]"
 
     async def handle(
-            self,
-            targets: list = [],
-            reason: str = None,
-            is_cmd: bool = False,
-            cmd_parts: list = []
+        self,
+        targets: list[str] = [],
+        reason: str = "",
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, reason = self.parse(cmd_parts)
@@ -34,7 +36,7 @@ class KickOp(CliOp):
 
         Log.client(f"Kicking {len(targets)} client(s)...")
         
-        results = {'kicked': [], 'failed': []}
+        results: dict[str, list[str]] = {'kicked': [], 'failed': []}
 
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -61,7 +63,7 @@ class KickOp(CliOp):
         Log.info(f"Success: {len(results['kicked'])}, Failure: {len(results['failed'])}")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: kick <targets> [reason]")
             return (None, None)
@@ -71,5 +73,5 @@ class KickOp(CliOp):
 
         return (targets, reason)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(KickOp)

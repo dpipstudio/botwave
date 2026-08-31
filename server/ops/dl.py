@@ -1,5 +1,6 @@
+import urllib.parse
 from pathlib import Path
-import urllib
+from typing import Any
 
 from shared.logger import Log
 from shared.ops import CliOp
@@ -18,12 +19,12 @@ class DownloadOp(CliOp):
     syntax = "<targets> <url> [destination]"
 
     async def handle(
-            self,
-            targets: list = [],
-            url: str = None,
-            destination: str = None,
-            is_cmd: bool = False,
-            cmd_parts: list = []
+        self,
+        targets: list[str] = [],
+        url: str = "",
+        destination: str = "",
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, url, destination = self.parse(cmd_parts)
@@ -58,7 +59,7 @@ class DownloadOp(CliOp):
         Log.info(f"Download requests sent to {len(targets)} client(s)")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: dl <targets> <url> [destination]")
             return (None, None, None)
@@ -69,5 +70,5 @@ class DownloadOp(CliOp):
 
         return (targets, url, dest)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(DownloadOp)
