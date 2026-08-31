@@ -1,15 +1,17 @@
 import asyncio
+import queue
+import time
 from pathlib import Path
 from piwave import PiWave
 from piwave.backends import backend_classes
-import queue
-import time
+from typing import Any
 
 from shared.bw_custom import BWCustom
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 
 class StreamOp(GeneralOp):
     """
@@ -20,12 +22,12 @@ class StreamOp(GeneralOp):
 
     commands = {Commands.STREAM_TOKEN: "stream"}
 
-    async def stream(self, parsed):
+    async def stream(self, parsed: ParsedCommand):
         kwargs = parsed["kwargs"]
 
         token = kwargs.get('token')
-        rate = int(kwargs.get('rate', self.owner.alsa.rate))
-        channels = int(kwargs.get('channels', self.owner.alsa.channels))
+        rate = int(str(kwargs.get('rate', self.owner.alsa.rate)))
+        channels = int(str(kwargs.get('channels', self.owner.alsa.channels)))
 
         # Broadcast params
         frequency = float(kwargs.get('frequency', Env.get_float("DEFAULT_FREQ", 90)))
@@ -43,7 +45,7 @@ class StreamOp(GeneralOp):
 
         Log.broadcast(f"Received stream token (rate={rate}, channels={channels})")
 
-        started = await self.start_stream(token, rate, channels, frequency, ps, rt, pi)
+        started = await self.start_stream(token, rate, channels, frequency, ps, rt, pi) # pyright: ignore
 
         if isinstance(started, Exception):
             await self.owner.proto.reply(
@@ -59,7 +61,7 @@ class StreamOp(GeneralOp):
             )
 
 
-    async def start_stream(self, token, rate, channels, frequency, ps, rt, pi):
+    async def start_stream(self, token: str, rate: int, channels: int, frequency: float, ps: str, rt: str, pi: str) -> bool | Exception:
         async def finished():
             Log.info("Stream finished, stopping broadcast...")
             await self.registry.dispatch("stop_broadcast", silent=True)
@@ -71,7 +73,7 @@ class StreamOp(GeneralOp):
             backend_name = Path(Env.get("BACKEND_PATH", "bw_custom")).name
             talk = Env.get_bool("TALK")
 
-            backend_classes[backend_name] = BWCustom
+            backend_classes[backend_name] = BWCustom # pyright: ignore
 
             self.owner.piwave = PiWave(
                 frequency=frequency,
@@ -97,12 +99,13 @@ class StreamOp(GeneralOp):
             captured = self.owner.stream_task
             self.owner.stream_active = True
 
-            stream_queue = queue.Queue(maxsize=50)
+            stream_queue: queue.Queue[Any] = queue.Queue(maxsize=50)
 
             if self.owner.feed_task and not self.owner.feed_task.done():
                 self.owner.feed_task.cancel()
                 try:
                     await self.owner.feed_task
+
                 except asyncio.CancelledError:
                     pass
 
@@ -156,7 +159,7 @@ class StreamOp(GeneralOp):
             self.owner.broadcast_start_time = None
             return e
 
-    async def feed_queue(self, captured, stream_queue):
+    async def feed_queue(self, captured: Any, stream_queue: queue.Queue[Any]):
         try:
             async for chunk in captured:
                 if not self.owner.stream_active:
@@ -171,5 +174,5 @@ class StreamOp(GeneralOp):
             stream_queue.put(None)  # sentinel
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StreamOp)

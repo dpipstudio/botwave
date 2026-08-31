@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import GeneralOp
 
@@ -25,5 +27,5 @@ class ClientStopOp(GeneralOp):
 
         Log.client("Client stopped")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ClientStopOp)

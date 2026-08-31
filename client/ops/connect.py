@@ -1,15 +1,16 @@
 import asyncio
-from pathlib import Path
 import platform
 import ssl
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands, PROTOCOL_VERSION
-from shared.protomanager import ProtoManager
+from shared.protomanager import ParsedCommand, ProtoManager
 from shared.registry import UpperException
 from shared.socket import BWWebSocketClient
 from shared.version import get_release_version
@@ -99,7 +100,7 @@ class ConnectOp(GeneralOp):
         ssl_context.verify_mode = ssl.CERT_NONE
         return ssl_context
 
-    async def register_ok(self, parsed):
+    async def register_ok(self, parsed: ParsedCommand):
         kwargs = parsed['kwargs']
 
         self.owner.client_id = kwargs.get('client_id', 'unknown')
@@ -121,7 +122,7 @@ class ConnectOp(GeneralOp):
             await self.owner.proto.fire(Commands.OK, message=message)
             update_flag.unlink()
 
-    async def auth_failed(self, parsed):
+    async def auth_failed(self, parsed: ParsedCommand):
         kwargs = parsed['kwargs']
 
         self.owner.registered = True # to exit the wait-for-register loop
@@ -130,7 +131,7 @@ class ConnectOp(GeneralOp):
 
         raise UpperException("auth_failed")
 
-    async def ver_mismatch(self, parsed):
+    async def ver_mismatch(self, parsed: ParsedCommand):
         kwargs = parsed['kwargs']
 
         self.owner.registered = True
@@ -139,5 +140,5 @@ class ConnectOp(GeneralOp):
 
         raise UpperException("version_mismatch")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ConnectOp)

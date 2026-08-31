@@ -1,7 +1,10 @@
+from typing import Any
+
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 from shared.security import PathValidator, SecurityError
 
 class UploadOp(GeneralOp):
@@ -12,7 +15,7 @@ class UploadOp(GeneralOp):
 
     commands = {Commands.UPLOAD_TOKEN: "upload"}   
 
-    async def upload(self, parsed):
+    async def upload(self, parsed: ParsedCommand):
         kwargs = parsed["kwargs"]
 
         token = kwargs.get('token')
@@ -42,7 +45,7 @@ class UploadOp(GeneralOp):
             )
             return
 
-        def progress(bytes_sent, total):
+        def progress(bytes_sent: int, total: int):
             if total > 0:
                 Log.progress_bar(bytes_sent, total, prefix=f'Uploading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=(bytes_sent == total))
 
@@ -70,5 +73,5 @@ class UploadOp(GeneralOp):
                 message="Upload failed"
             )
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(UploadOp)

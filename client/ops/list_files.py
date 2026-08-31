@@ -1,11 +1,13 @@
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 
 class ListFilesOp(GeneralOp):
     """
@@ -23,9 +25,9 @@ class ListFilesOp(GeneralOp):
 
     commands = {Commands.LIST_FILES: "list"}
 
-    async def list(self, parsed):
+    async def list(self, parsed: ParsedCommand):
         try:
-            wav_files = []
+            wav_files: list[dict[str, Any]] = []
             upload_dir = Path(Env.get("UPLOAD_DIR"))
 
             for file_path in upload_dir.iterdir():
@@ -51,5 +53,5 @@ class ListFilesOp(GeneralOp):
         except Exception as e:
             await self.owner.proto.reply(parsed, Commands.ERROR, message=str(e))
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ListFilesOp)
