@@ -249,7 +249,7 @@
       "shared/ws_cmd.py"
     ],
     "requirements": [
-      "websockets==11.0.3",
+      "websockets==13.1",
       "dlogger==1.0.5",
       "aiofiles==0.8.0",
       "aiohttp",
