@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any
-from websockets.legacy.client import WebSocketClientProtocol
+from websockets.asyncio.server import ServerConnection
 
 from shared.env import Env
 from shared.logger import Log
@@ -18,7 +18,7 @@ class BotWaveClient:
     def __init__(
             self,
             client_id: str,
-            websocket: WebSocketClientProtocol,
+            websocket: ServerConnection,
             machine_info: dict[str, str],
             protocol_version: str
         ):
