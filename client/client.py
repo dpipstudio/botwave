@@ -30,7 +30,7 @@ from shared.registry import Registry, UpperException
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_updates
+from shared.version import check_for_updates, print_version
 
 class BotWaveClient:
     """
@@ -115,8 +115,6 @@ def check_updates():
 
 # entry point
 async def main():
-    Log.header("BotWave Client")
-
     check()
 
     parser = argparse.ArgumentParser(prog="bw-client", description='BotWave Client')
@@ -129,7 +127,14 @@ async def main():
     parser.add_argument('--skip-checks', dest='skip_checks', action=argparse.BooleanOptionalAction, default=None, help='Skip update and requirements checks')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, default=None, help='Show debug logs')
     parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
+    parser.add_argument('-v', '--version', action="store_true", default=False, help='Display version information')
     args = parser.parse_args()
+
+    if args.version:
+        print_version("client")
+        return
+
+    Log.header("BotWave Client")
 
     if args.config:
         Env.load(args.config) # will silently drop if file doesn't exist
