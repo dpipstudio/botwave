@@ -35,7 +35,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_updates
+from shared.version import check_for_updates, print_version
 from shared.ws_cmd import WSCMDH
 
 class BotWaveLocal:
@@ -157,8 +157,6 @@ def check_updates():
 
 # Entry point
 async def main():
-    Log.header("BotWave Local Client")
-
     check() # from shared.cat
 
     parser = argparse.ArgumentParser(prog="bw-local", description='BotWave Local Client')
@@ -170,7 +168,14 @@ async def main():
     parser.add_argument('--pk', help='Optional passkey for remote management authentication')
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, help='Show debug logs')
     parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
+    parser.add_argument('-v', '--version', action="store_true", default=False, help='Display version information')
     args = parser.parse_args()
+
+    if args.version:
+        print_version("local")
+        return
+
+    Log.header("BotWave Local Client")
 
     if args.config:
         Env.load(args.config)
