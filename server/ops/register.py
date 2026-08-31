@@ -1,9 +1,11 @@
 from datetime import datetime
+from typing import Any
+from websockets.legacy.client import WebSocketClientProtocol
 
 from shared.env import Env
 from shared.logger import Log
 from shared.protocol import Commands, ProtocolParser, PROTOCOL_VERSION
-from shared.protomanager import ProtoManager
+from shared.protomanager import ParsedCommand, ProtoManager
 from shared.ops import GeneralOp
 from shared.version import versions_compatible
 
@@ -13,7 +15,13 @@ class BotWaveClient:
     Has it own ProtoManager instance, alongside other useful information.
     """
 
-    def __init__(self, client_id: str, websocket, machine_info: dict, protocol_version: str):
+    def __init__(
+            self,
+            client_id: str,
+            websocket: WebSocketClientProtocol,
+            machine_info: dict[str, str],
+            protocol_version: str
+        ):
         self.client_id = client_id
         self.websocket = websocket
         self.proto = ProtoManager(send_fn=websocket.send)
@@ -47,7 +55,7 @@ class RegisterOp(GeneralOp):
         Commands.VER: "ver"
     }
 
-    async def register(self, client_id, parsed, websocket):
+    async def register(self, client_id: str | None, parsed: ParsedCommand, websocket: Any):
         self.setup_attr(websocket)
 
         kwargs = parsed['kwargs']
@@ -66,7 +74,7 @@ class RegisterOp(GeneralOp):
         if not Env.get("PASSKEY"):
             websocket.reg_data['authenticated'] = True
 
-    async def auth(self, client_id, parsed, websocket):
+    async def auth(self, client_id: str | None, parsed: ParsedCommand, websocket: Any):
         self.setup_attr(websocket)
 
         args = parsed['args']
@@ -101,7 +109,7 @@ class RegisterOp(GeneralOp):
         websocket.reg_data['authenticated'] = True
         Log.auth("Client authenticated")
 
-    async def ver(self, client_id, parsed, websocket):
+    async def ver(self, client_id: str | None, parsed: ParsedCommand, websocket: Any):
         self.setup_attr(websocket)
 
         args = parsed['args']
@@ -154,7 +162,7 @@ class RegisterOp(GeneralOp):
         
         return
 
-    async def complete_reg(self, websocket):
+    async def complete_reg(self, websocket: Any):
             
             reg_data = websocket.reg_data
             machine_info = reg_data['machine_info']
@@ -211,7 +219,7 @@ class RegisterOp(GeneralOp):
             delattr(websocket, 'reg_data')
             await self.registry.dispatch("handlers_onconnect", client_id=client_id)
 
-    def setup_attr(self, websocket):
+    def setup_attr(self, websocket: Any):
         if not hasattr(websocket, 'reg_data'):
             websocket.reg_data = {
                 'machine_info': None,
@@ -219,5 +227,5 @@ class RegisterOp(GeneralOp):
                 'protocol_version': None
             }
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(RegisterOp)

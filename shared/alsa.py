@@ -1,3 +1,5 @@
+# type: ignore fuck this shit anyways (pyalsaaudio doesnt ship stubs)
+
 import threading
 import queue
 import time

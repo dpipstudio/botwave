@@ -1,0 +1,33 @@
+# This file is for development only. It won't be used
+# by any other program like scripts/install.sh.
+
+# For practical purposes, please add the pypi deps
+# into this file, but the only source of truth is
+# assets/installation.json.
+[dependency-groups]
+dev = [
+    "aiofiles==0.8.0",
+    "aiohttp",
+    "cryptography==36.0.2",
+    "dlogger==1.0.5",
+    "morse-talk==0.2",
+    "piwave==2.1.14",
+    "prompt_toolkit==3.0.52",
+    "psutil==7.2.2",
+    "pyalsaaudio==0.11.0",
+    "pyright",
+    "websockets==11.0.3",
+    "pysstv",
+    "numpy",
+    "pillow"
+]
+
+
+[tool.pyright]
+include = ["."]
+exclude = ["**/__pycache__", "**/venv"]
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+reportMissingTypeStubs = false
+reportIncompatibleMethodOverride = false
+reportUnknownMemberType = false

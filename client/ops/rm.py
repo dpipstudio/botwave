@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 from shared.security import PathValidator, SecurityError
 
 class RemoveOp(GeneralOp):
@@ -15,7 +17,7 @@ class RemoveOp(GeneralOp):
 
     commands = {Commands.REMOVE_FILE: "rm"}
 
-    async def rm(self, parsed):
+    async def rm(self, parsed: ParsedCommand):
         filename = parsed['kwargs'].get("filename")
 
         if not filename:
@@ -49,7 +51,7 @@ class RemoveOp(GeneralOp):
 
         # drop anything that resolved outside upl_dir
         # (e.g. via a symlink inside the upload dir)
-        safe_matches = []
+        safe_matches: list[Path] = []
 
         for f in matches:
             try:
@@ -86,5 +88,5 @@ class RemoveOp(GeneralOp):
         )
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(RemoveOp)

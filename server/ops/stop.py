@@ -1,6 +1,5 @@
-from datetime import datetime, timezone
+from typing import Any
 
-from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.protocol import Commands
@@ -16,9 +15,9 @@ class StopOp(CliOp):
 
     async def handle(
         self,
-        targets: list = [],
+        targets: list[str] = [],
         is_cmd: bool = False,
-        cmd_parts: list = []
+        cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets = self.parse(cmd_parts)
@@ -34,7 +33,7 @@ class StopOp(CliOp):
 
             self.owner.queue.manual_pause()
 
-        results = {'stopped': [], 'failed': []}
+        results: dict[str, list[str]] = {'stopped': [], 'failed': []}
         
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -59,7 +58,7 @@ class StopOp(CliOp):
                 err = str(e)
 
                 Log.error(f"  {client.get_display_name()}: {err}")
-                results['failed'].append((client_id, err))
+                results['failed'].append(client_id)
 
         Log.print("")        
         Log.info(f"Success: {len(results['stopped'])}, Failure: {len(results['failed'])}")
@@ -68,12 +67,12 @@ class StopOp(CliOp):
         await self.registry.dispatch("handlers_onstop")
 
         
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: stop <targets>")
             return None
 
         return cmd_parts[0]
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StopOp)

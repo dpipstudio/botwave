@@ -1,5 +1,6 @@
-from pathlib import Path
 import time
+from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -13,7 +14,7 @@ class StatusOp(CliOp):
 
     name = "status"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if self.owner.broadcasting and self.owner.current_file:
             Log.print("On Air", "bright_green")
             Log.print(f"File       : {Path(self.owner.current_file).name}", "white")
@@ -33,5 +34,5 @@ class StatusOp(CliOp):
             Log.print(f"Passkey    : {'yes' if Env.get('PASSKEY') else 'no'}", "white")
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StatusOp)

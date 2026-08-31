@@ -1,13 +1,16 @@
 import asyncio
-from pathlib import Path
 import tempfile
+import urllib.error
 import urllib.request
+from pathlib import Path
+from typing import Any
 
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands, PROTOCOL_VERSION
+from shared.protomanager import ParsedCommand
 from shared.security import PathValidator, SecurityError
 
 class DownloadOp(GeneralOp):
@@ -26,7 +29,7 @@ class DownloadOp(GeneralOp):
         Commands.DOWNLOAD_TOKEN: "download_token"
     }
 
-    async def download_url(self, parsed):
+    async def download_url(self, parsed: ParsedCommand):
         kwargs = parsed["kwargs"]
 
         url = kwargs.get('url')
@@ -121,7 +124,7 @@ class DownloadOp(GeneralOp):
             )
 
 
-    def download(self, url, dest_path):
+    def download(self, url: str, dest_path: str):
         headers = {
             "User-Agent": Env.get("DOWNLOAD_UA", f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)")
         }
@@ -131,7 +134,7 @@ class DownloadOp(GeneralOp):
         with urllib.request.urlopen(request) as response, open(dest_path, "wb") as out_file:
             out_file.write(response.read())
 
-    async def download_token(self, parsed):
+    async def download_token(self, parsed: ParsedCommand):
         kwargs = parsed["kwargs"]
 
         token = kwargs.get('token')
@@ -161,7 +164,7 @@ class DownloadOp(GeneralOp):
             )
             return
 
-        def progress(bytes_received, total):
+        def progress(bytes_received: int, total: int):
             if total > 1024 * 1024:
                 Log.progress_bar(bytes_received, total, prefix=f'Downloading {filename}:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False)
 
@@ -192,5 +195,5 @@ class DownloadOp(GeneralOp):
                 message="Download failed"
             )
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(DownloadOp)

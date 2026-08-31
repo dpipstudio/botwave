@@ -1,23 +1,24 @@
 import asyncio
 import threading
-from typing import Callable, Set, Optional
 import re
 import websockets
+from typing import Awaitable, Callable
+from websockets.exceptions import ConnectionClosed
+from websockets.legacy.client import WebSocketClientProtocol
+
 
 from shared.env import Env
 from shared.logger import Log
-
+from shared.registry import Registry
 
 class WSCMDH: # WebSocket Command Handler
     
-    def __init__(self, command_executor: Callable, registry):
+    def __init__(self, command_executor: Callable[..., Awaitable[None]], registry: Registry):
         
         self.command_executor = command_executor
         self.registry = registry
-        self.ws_clients: Set = set()
-        self.ws_loop: Optional[asyncio.AbstractEventLoop] = None
-        self.command_history = []
-        self.history_index = 0
+        self.ws_clients: set[WebSocketClientProtocol] = set()
+        self.ws_loop: asyncio.AbstractEventLoop | None = None
         
     @property
     def host(self):
@@ -57,11 +58,11 @@ class WSCMDH: # WebSocket Command Handler
         self.ws_loop.run_until_complete(self._serve())
     
     async def _serve(self):
-        async with websockets.serve(self._handle_client, self.host, self.port):
+        async with websockets.serve(self._handle_client, self.host, self.port): # pyright: ignore
             Log.server(f"Remote CLI server started on ws://{self.host}:{self.port}")
             await asyncio.Future()  # run forever
     
-    async def _handle_client(self, websocket):
+    async def _handle_client(self, websocket: WebSocketClientProtocol):
         ip = websocket.remote_address[0] or "unknown"
 
         try:
@@ -90,9 +91,9 @@ class WSCMDH: # WebSocket Command Handler
             
             try:
                 async for message in websocket:
-                    await self._inject_command(message, websocket, ip)
+                    await self._inject_command(str(message), websocket, ip)
 
-            except websockets.exceptions.ConnectionClosed:
+            except ConnectionClosed:
                 pass  # exit
                 
         except asyncio.TimeoutError:
@@ -106,16 +107,13 @@ class WSCMDH: # WebSocket Command Handler
             
             await self.registry.dispatch("handlers_onwsleave", context={"REMOTE_CLIENT_IP": ip})
 
-    async def _close_client(self, websocket):
+    async def _close_client(self, websocket: WebSocketClientProtocol):
         await websocket.close()
         await websocket.wait_closed()
     
-    async def _inject_command(self, message: str, websocket, ip: str):
+    async def _inject_command(self, message: str, websocket: WebSocketClientProtocol, ip: str):
         cmd = re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()
         Log.print(cmd, 'bright_green', icon=ip)
-
-        self.command_history.append(message)
-        self.history_index = len(self.command_history)
         
         cmd_parts = message.strip().split()
         if cmd_parts:

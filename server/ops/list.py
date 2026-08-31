@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 
@@ -9,7 +11,7 @@ class ListOp(CliOp):
 
     name = "list"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if not self.owner.clients:
             Log.warning("No clients connected")
             return
@@ -29,5 +31,5 @@ class ListOp(CliOp):
             Log.print("")
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ListOp)

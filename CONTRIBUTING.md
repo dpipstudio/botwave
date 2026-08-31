@@ -65,6 +65,7 @@ When opening a pull request:
 - Keep code clean, readable, and well-organized (at least try to)
 - Avoid unnecessary dependencies
 - Comment complex or non-obvious logic
+- Please type your python code. Avoid using the `typing` module if you can use a builtin type instead.
 
 ## Commit Messages
 

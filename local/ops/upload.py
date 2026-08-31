@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.dirutils import BW_PATH
@@ -17,14 +18,14 @@ class UploadOp(CliOp):
     name = "upload"
     syntax = "<file|dir>"
 
-    async def handle(self, target: str = None, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, target: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             target = self.parse(cmd_parts)
 
             if not target:
                 return
 
-        allowed_source_dirs = [
+        allowed_source_dirs: list[Any] = [
             '/tmp',
             '/home',
             BW_PATH,
@@ -50,14 +51,14 @@ class UploadOp(CliOp):
         self.upload_single(source_path)
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: upload <file|dir>")
             return None
 
         return cmd_parts[0]
 
-    def upload_folder(self, folder_path):
+    def upload_folder(self, folder_path: Path):
         upl_dir = Path(Env.get("UPLOAD_DIR"))
         silent = not Env.get_bool("TALK")
 
@@ -80,7 +81,7 @@ class UploadOp(CliOp):
             try:
                 if ext == ".wav":
                     dest_name = PathValidator.sanitize_filename(filename)
-                    dest_path = Path(PathValidator.safe_join(upl_dir, dest_name))
+                    dest_path = Path(PathValidator.safe_join(str(upl_dir), dest_name))
 
                     dest_path.write_bytes(source_path.read_bytes())
 
@@ -89,9 +90,9 @@ class UploadOp(CliOp):
 
                 elif ext.lstrip(".") in SUPPORTED_EXTENSIONS:
                     dest_name = PathValidator.sanitize_filename(source_path.stem + ".wav")
-                    dest_path = PathValidator.safe_join(upl_dir, dest_name)
+                    dest_path = PathValidator.safe_join(str(upl_dir), dest_name)
 
-                    Converter.convert_wav(source_path, dest_path, not silent)
+                    Converter.convert_wav(str(source_path), dest_path, not silent)
                     Log.success(f"  Converted & uploaded {dest_name}")
                     success += 1
 
@@ -118,14 +119,14 @@ class UploadOp(CliOp):
                     return False
 
                 dest_name = PathValidator.sanitize_filename(source_path.stem + ".wav")
-                dest_path = PathValidator.safe_join(upl_dir, dest_name)
+                dest_path = PathValidator.safe_join(str(upl_dir), dest_name)
 
-                Converter.convert_wav(source_path, dest_path, not silent)
+                Converter.convert_wav(str(source_path), dest_path, not silent)
                 Log.success(f"File converted and uploaded to {dest_path}")
                 return True
 
             dest_name = PathValidator.sanitize_filename(filename)
-            dest_path = Path(PathValidator.safe_join(upl_dir, dest_name))
+            dest_path = Path(PathValidator.safe_join(str(upl_dir), dest_name))
 
         except SecurityError as e:
             Log.error(f"Invalid destination: {e}")
@@ -145,5 +146,5 @@ class UploadOp(CliOp):
             return False
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(UploadOp)

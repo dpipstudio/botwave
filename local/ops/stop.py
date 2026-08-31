@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 
@@ -9,7 +11,7 @@ class StopOp(CliOp):
 
     name = "stop"
 
-    async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             self.owner.queue.manual_pause()
 
@@ -44,5 +46,5 @@ class StopOp(CliOp):
 
         return True
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StopOp)

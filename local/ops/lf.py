@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -12,7 +13,7 @@ class ListFilesOp(CliOp):
 
     name = "lf"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         target_dir = Path(Env.get("UPLOAD_DIR"))
 
         try:
@@ -30,5 +31,5 @@ class ListFilesOp(CliOp):
         except Exception as e:
             Log.error(f"Error listing files: {e}")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ListFilesOp)

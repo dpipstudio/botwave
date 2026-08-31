@@ -1,8 +1,9 @@
 import os
+import time
 from pathlib import Path
 from piwave import PiWave
 from piwave.backends import backend_classes
-import time
+from typing import Any
 
 from shared.bw_custom import BWCustom
 from shared.env import Env
@@ -25,7 +26,17 @@ class StartOp(CliOp):
     name = "start"
     syntax = "<file> [freq] [loop] [ps] [rt] [pi]"
 
-    async def handle(self, file: str = None, frequency: float = 90.0, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", loop: bool = False, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(
+        self,
+        file: str = "",
+        frequency: float = 90.0,
+        ps: str = "BotWave",
+        rt: str = "Broadcasting",
+        pi: str = "FFFF",
+        loop: bool = False,
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
+    ):
         if is_cmd:
             file, frequency, ps, rt, pi, loop = self.parse(cmd_parts)
 
@@ -46,7 +57,7 @@ class StartOp(CliOp):
         silent = not Env.get_bool("TALK")
 
         try:
-            backend_classes[backend_name] = BWCustom
+            backend_classes[backend_name] = BWCustom # pyright: ignore
 
             self.owner.piwave = PiWave(
                 frequency=frequency,
@@ -97,7 +108,7 @@ class StartOp(CliOp):
             self.owner.piwave = None
             return
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None)
@@ -111,5 +122,5 @@ class StartOp(CliOp):
 
         return (file, frequency, ps, rt, pi, loop)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StartOp)

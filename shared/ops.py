@@ -1,18 +1,23 @@
-class GeneralOp:
-    commands: dict = {}
+from typing import Any, TYPE_CHECKING
 
-    def __init__(self, owner, registry):
+if TYPE_CHECKING:
+    from shared.registry import Registry
+
+class GeneralOp:
+    commands: dict[str, str] = {}
+
+    def __init__(self, owner: Any, registry: "Registry"):
         self.owner = owner
         self.registry = registry
 
 class CliOp:
-    name: str = None
+    name: str = ""
     syntax: str = ""
 
-    def __init__(self, owner, registry):
+    def __init__(self, owner: Any, registry: "Registry"):
         self.owner = owner
         self.registry = registry
 
     @property
-    def commands(self) -> dict:
+    def commands(self) -> dict[str, str]:
         return {self.name: "handle"}

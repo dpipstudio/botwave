@@ -1,10 +1,11 @@
 from pathlib import Path
 import morse_talk as mtalk
 import wave
+from typing import Any
 
 from shared.logger import Log
 
-def morse_timings(wpm):
+def morse_timings(wpm: int):
     dot = 1.2 / wpm
     dash = dot * 3
     intra_char = dot
@@ -12,15 +13,15 @@ def morse_timings(wpm):
     inter_word = dot * 7
     return dot, dash, intra_char, inter_char, inter_word
 
-def tone(np, frequency, duration, sample_rate, volume=0.5):
+def tone(np: Any, frequency: float, duration: float, sample_rate: int, volume: float = 0.5):
     num_samples = int(sample_rate * duration)
     t = np.arange(num_samples, dtype=np.float64)
     return volume * np.sin(2 * np.pi * frequency * t / sample_rate)
 
-def silence(np, duration, sample_rate):
+def silence(np: Any, duration: float, sample_rate: int):
     return np.zeros(int(sample_rate * duration), dtype=np.float64)
 
-def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rate=44100):
+def text_to_morse(text: str, filename: str = "output.wav", wpm: int =20, frequency: int = 700, sample_rate:int = 44100):
     try:
         import numpy as np
 
@@ -37,22 +38,23 @@ def text_to_morse(text, filename="output.wav", wpm=20, frequency=700, sample_rat
         morse = mtalk.encode(text)
 
         dot, dash, intra, inter, word = morse_timings(wpm)
-        chunks = []
+        chunks: list[Any] = []
 
-        for char in morse:
-            if char == ".":
-                chunks.append(tone(np, frequency, dot, sample_rate))
-                chunks.append(silence(np, intra, sample_rate))
+        if morse:
+            for char in morse:
+                if char == ".":
+                    chunks.append(tone(np, frequency, dot, sample_rate))
+                    chunks.append(silence(np, intra, sample_rate))
 
-            elif char == "-":
-                chunks.append(tone(np, frequency, dash, sample_rate))
-                chunks.append(silence(np, intra, sample_rate))
+                elif char == "-":
+                    chunks.append(tone(np, frequency, dash, sample_rate))
+                    chunks.append(silence(np, intra, sample_rate))
 
-            elif char == " ":
-                chunks.append(silence(np, inter, sample_rate))
+                elif char == " ":
+                    chunks.append(silence(np, inter, sample_rate))
 
-            elif char == "\n":
-                chunks.append(silence(np, word, sample_rate))
+                elif char == "\n":
+                    chunks.append(silence(np, word, sample_rate))
 
         # Tail silence so radios don't clip the end
         chunks.append(silence(np, word, sample_rate))

@@ -26,6 +26,7 @@
 !/LICENSE
 !/*.md
 !/.gitignore
+!/pyproject.toml
 
 **/__pycache__/
 **/*.py[cod]

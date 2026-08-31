@@ -7,21 +7,22 @@ from shared.logger import Log
 try:
     from pysstv.color import MODES as COLOR_MODES
     from pysstv.grayscale import MODES as GRAYSCALE_MODES
-    MODES = list(COLOR_MODES) + list(GRAYSCALE_MODES)
-    MODE_MAP = {cls.__name__.lower(): cls for cls in MODES}
+    modes = list(COLOR_MODES) + list(GRAYSCALE_MODES)
+    mode_map = {cls.__name__.lower(): cls for cls in modes}
+
 except ImportError:
-    MODE_MAP = None
-    MODES = None
+    mode_map = None
+    modes = None
 
 def get_best_sstv_mode(width: int, height: int):
-    if MODE_MAP is None or MODES is None:
+    if mode_map is None or modes is None:
         Log.error("PySSTV not installed")
         return None
     
     best = None
     best_score = 999999999
     
-    for cls in MODES:
+    for cls in modes:
         try:
             dw = abs(cls.WIDTH - width)
             dh = abs(cls.HEIGHT - height)
@@ -47,7 +48,7 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
         Log.sstv(f"{pip_path} install pysstv numpy pillow")
         return False
     
-    if MODE_MAP is None:
+    if mode_map is None:
         parent_parent = Path(__file__).parent.parent
         pip_path = parent_parent / "venv" / "bin" / "pip"
         Log.sstv("Please install required modules:")
@@ -63,11 +64,11 @@ def make_sstv_wav(img_path: str, wav_path: str, mode_name: Optional[str] = None)
     # Select mode
     envmode = Env.get("SSTV_DEFAULT_MODE")
 
-    if mode_name and mode_name.lower() in MODE_MAP:
-        cls = MODE_MAP[mode_name.lower()]
+    if mode_name and mode_name.lower() in mode_map:
+        cls = mode_map[mode_name.lower()]
 
-    elif envmode and envmode.lower() in MODE_MAP:
-        cls = MODE_MAP[envmode.lower()]
+    elif envmode and envmode.lower() in mode_map:
+        cls = mode_map[envmode.lower()]
 
     else:
         if mode_name is not None: # guard against default (none)

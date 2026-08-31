@@ -1,42 +1,51 @@
 import importlib.util
-from pathlib import Path
 import traceback
+from pathlib import Path
+from typing import Any, Callable, TYPE_CHECKING
 
 from shared.env import Env
 from shared.logger import Log
+
+if TYPE_CHECKING:
+    from client.client import BotWaveClient
+    from local.local import BotWaveLocal
+    from server.server import BotWaveServer
+    from shared.ops import CliOp, GeneralOp
 
 # exception explicitly raised to pass a message to the dispatcher
 class UpperException(Exception):
     pass
 
 class Registry:
-    def __init__(self, owner):
+    def __init__(self, owner: "BotWaveClient | BotWaveLocal | BotWaveServer"):
         self.owner = owner  # the main BotWave class
-        self.operations = {}
-        self.instances = []
+        self.operations: dict[str, Callable[..., Any]] = {}
+        self.instances: dict[str, "CliOp | GeneralOp"] = {}
 
-    def register(self, op_cls):
-        op = op_cls(self.owner, self)
+    def register(self, op_cls: "type[CliOp] | type[GeneralOp]"):
+        op = op_cls(self.owner, self) # pyright: ignore
 
         for key, method_name in op.commands.items():
             self.operations[key] = getattr(op, method_name)
             Log.debug(f"registered {key} in {op}")
 
-        self.instances.append(op)
+        self.instances[type(op).__name__] = op
 
         return op  
 
-    def from_dir(self, dir):
-        path = Path(dir)
+    def from_dir(self, dir: Path):
 
-        if not path.is_dir():
-            Log.error(f"{path} is not a directory")
+        if not dir.is_dir():
+            Log.error(f"{dir} is not a directory")
             return
 
-        for path in Path(dir).glob("*.py"):
+        for path in dir.glob("*.py"):
             Log.debug(f"Processing op {path.name}")
 
             spec = importlib.util.spec_from_file_location(path.stem, path)
+            if not (spec and spec.loader):
+                continue
+
             op = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(op)
 
@@ -47,7 +56,7 @@ class Registry:
                 Log.error(f"Op '{path.name}' has no setup() function")
 
 
-    async def dispatch(self, key: str, *args, **kwargs):
+    async def dispatch(self, key: str, *args: Any, **kwargs: Any):
         op = self.operations.get(key)
 
         if not op:
@@ -69,5 +78,5 @@ class Registry:
 
         return True
 
-    def get_instances(self):
+    def get_instances(self) -> dict[str, "CliOp | GeneralOp"]:
         return self.instances

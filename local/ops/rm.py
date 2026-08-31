@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -14,7 +15,7 @@ class RmOp(CliOp):
     name = "rm"
     syntax = "<filename|glob>"
 
-    async def handle(self, target: str = None, is_cmd: bool = False, cmd_parts: str = None):
+    async def handle(self, target: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             target = self.parse(cmd_parts)
 
@@ -39,7 +40,7 @@ class RmOp(CliOp):
 
         # drop anything that resolved outside upl_dir
         # (e.g. via a symlink inside the upload dir)
-        safe_matches = []
+        safe_matches: list[Path] = []
 
         for f in matches:
             try:
@@ -64,7 +65,7 @@ class RmOp(CliOp):
         Log.success(f"Removed {count} files from {upl_dir}")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: rm <filename|glob>")
             return None
@@ -72,5 +73,5 @@ class RmOp(CliOp):
         return cmd_parts[0]
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(RmOp)

@@ -8,7 +8,7 @@ from shared.env import Env
 
 class BWCustom(Backend):
     @property
-    def name(self):
+    def name(self) -> str: # type: ignore
         path = Env.get("BACKEND_PATH")
 
         if path:
@@ -17,7 +17,7 @@ class BWCustom(Backend):
         return "bw_custom"
 
     @property
-    def frequency_range(self):
+    def frequency_range(self) -> tuple[float, float]:
         min_freq = Env.get_int("BACKEND_MIN_FREQ", 76)
         max_freq = Env.get_int("BACKEND_MAX_FREQ", 108)
         return (min_freq, max_freq)
@@ -68,7 +68,7 @@ class BWCustom(Backend):
 
         return cmd
 
-    def build_live_command(self, sample_rate=48000, channels=2):
+    def build_live_command(self, sample_rate: int = 48000, channels: int = 2):
         cmd = [
             self.required_executable,
             "-freq", str(self.frequency),

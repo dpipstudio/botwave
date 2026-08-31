@@ -1,10 +1,12 @@
 import asyncio
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 from shared.registry import UpperException
 
 class UpdateOp(GeneralOp):
@@ -20,7 +22,7 @@ class UpdateOp(GeneralOp):
 
     commands = {Commands.UPDATE: "update"}
 
-    async def update(self, parsed):
+    async def update(self, parsed: ParsedCommand):
         update_args = parsed['kwargs'].get('args', '')
 
         Log.update("Update requested by server")
@@ -72,5 +74,5 @@ class UpdateOp(GeneralOp):
 
         raise UpperException("update")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(UpdateOp)

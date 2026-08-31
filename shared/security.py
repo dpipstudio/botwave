@@ -89,13 +89,16 @@ class PathValidator:
         Raises:
             SecurityError: If resulting path escapes base_dir
         """
-        safe_paths = []
+
+        safe_paths: list[str] = []
         for path in paths:
             if not path:
                 continue
+
             safe_component = os.path.basename(path)
             if not safe_component or safe_component in ('.', '..'):
                 raise SecurityError(f"Invalid path component: {path}")
+            
             safe_paths.append(safe_component)
         
         result = os.path.join(base_dir, *safe_paths)
@@ -103,7 +106,7 @@ class PathValidator:
         return PathValidator.path_indir(result, base_dir)
     
     @staticmethod
-    def validate_read(source_path: str, allowed_dirs: list) -> str:
+    def validate_read(source_path: str, allowed_dirs: list[str]) -> str:
         """
         Validate a source path for reading is in allowed directories.
         

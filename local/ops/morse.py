@@ -1,6 +1,7 @@
 import hashlib
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -18,7 +19,18 @@ class MorseOp(CliOp):
     name = "morse"
     syntax = "<text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
 
-    async def handle(self, text_src: str = None, wpm: int = 20, frequency: float = 90.0, loop: bool = False, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(
+        self,
+        text_src: str = "",
+        wpm: int = 20,
+        frequency: float = 90.0,
+        loop: bool = False,
+        ps: str = "BotWave",
+        rt: str = "Broadcasting",
+        pi: str = "FFFF",
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
+    ):
         if is_cmd:
             text_src, wpm, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
 
@@ -69,7 +81,7 @@ class MorseOp(CliOp):
             loop=loop
             )
 
-    def cache(self, text, freq, rate):
+    def cache(self, text: str, freq: int, rate: int):
         key = f"{text}|{freq}|{rate}"
         digest = hashlib.sha256(key.encode()).hexdigest()[:16]
 
@@ -79,7 +91,7 @@ class MorseOp(CliOp):
         return str(cache_dir / f"{digest}.wav")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None, None)
@@ -95,5 +107,5 @@ class MorseOp(CliOp):
         return (text_src, wpm, frequency, loop, ps, rt, pi)
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(MorseOp)

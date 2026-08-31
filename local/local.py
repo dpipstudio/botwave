@@ -9,12 +9,14 @@
 
 import argparse
 import asyncio
-from pathlib import Path
-from prompt_toolkit.formatted_text import ANSI
-from prompt_toolkit.patch_stdout import patch_stdout
 import re
 import shlex
 import sys
+from pathlib import Path
+from piwave import PiWave
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.patch_stdout import patch_stdout
+from typing import Any
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -44,27 +46,27 @@ class BotWaveLocal:
 
     def __init__(self):
         # broadcast state
-        self.broadcast_start_time = None
-        self.broadcasting = False
-        self.current_file = None
-        self.piwave = None
-        self.piwave_monitor = PWM()
+        self.broadcast_start_time: int | None = None
+        self.broadcasting: bool = False
+        self.current_file: str | None = None
+        self.piwave: PiWave | Any = None
+        self.piwave_monitor: PWM = PWM()
 
         # core systems
-        self.alsa = Alsa()
-        self.custom_commands = CCMD(is_server=False)
-        self.handlers_executor = HandlerExecutor(self.cmd_exec)
-        self.queue = Queue(client_instance=self, is_local=True)
-        self.registry = Registry(self)
-        self.tips = TipEngine(is_server=False)
+        self.alsa: Alsa = Alsa()
+        self.custom_commands: CCMD = CCMD(is_server=False)
+        self.handlers_executor: HandlerExecutor = HandlerExecutor(self.cmd_exec)
+        self.queue: Queue = Queue(client_instance=self, is_local=True)
+        self.registry: Registry = Registry(self)
+        self.tips: TipEngine = TipEngine(is_server=False)
 
         # remote control
-        self.rc_clients = 0
-        self.ws_handler = None
+        self.rc_clients: int = 0
+        self.ws_handler: WSCMDH | Any = None
 
         # runtime / misc
-        self.last_argv = []
-        self.running = False
+        self.last_argv: list[str] = []
+        self.running: bool = False
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
         try:
@@ -111,8 +113,8 @@ class BotWaveLocal:
                 if self.custom_commands.exists(cmd):
                     
                     await self.handlers_executor.execute_handler(
-                        Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
-                        next(inst for inst in self.registry.get_instances() if type(inst).__name__ == "HandlersEventsOp").build_context(), # This has to be the worst line of code I ever wrote
+                        str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore | This has to be the worst line of code I ever wrote
                         silent=True
                         )
 
@@ -130,7 +132,7 @@ class BotWaveLocal:
             Log.clear_transaction_id()
 
 # startup helpers
-def set_prio(key, cli_value, default, immutable=False):
+def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
     if cli_value is not None:
         Env.set(key, str(cli_value), immutable=immutable)
 
@@ -150,7 +152,7 @@ def check_updates():
         else:
             Log.success("You are using the latest version")
 
-    except Exception as e:
+    except Exception:
         Log.warning("Unable to check for updates (continuing anyway)")
 
 # Entry point
@@ -225,7 +227,7 @@ async def main():
         return # to be sure to exit
 
     prompt = get_prompt(
-        commands={op.name: op.syntax for op in local.registry.get_instances() if isinstance(op, CliOp)},
+        commands={op.name: op.syntax for op in local.registry.get_instances().values() if isinstance(op, CliOp)},
         history_path=Env.get("HISTORY_PATH")
         )
 

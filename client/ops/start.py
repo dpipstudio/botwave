@@ -1,15 +1,17 @@
 import asyncio
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from piwave import PiWave
 from piwave.backends import backend_classes
-import time
+from typing import Any
 
 from shared.bw_custom import BWCustom
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 from shared.security import PathValidator, SecurityError
 
 class StartOp(GeneralOp):
@@ -28,7 +30,7 @@ class StartOp(GeneralOp):
 
     commands = {Commands.START: "start"}
 
-    async def start(self, parsed: dict):
+    async def start(self, parsed: ParsedCommand):
         kwargs = parsed["kwargs"]
         filename = kwargs.get('filename')
 
@@ -75,7 +77,7 @@ class StartOp(GeneralOp):
                 Log.broadcast(f"Scheduled start in {delay:.2f} seconds")
 
                 asyncio.create_task(self.delay(
-                    file_path, filename, frequency, ps, rt, pi, loop, delay
+                    file_path, filename, frequency, ps, rt, pi, loop, delay # pyright: ignore
                 ))
 
                 await self.owner.proto.reply(
@@ -85,7 +87,7 @@ class StartOp(GeneralOp):
                 )
                 return
 
-        started = await self.start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
+        started = await self.start_broadcast(file_path, filename, frequency, ps, rt, pi, loop) # pyright: ignore
 
         if isinstance(started, Exception):
             await self.owner.proto.reply(
@@ -101,7 +103,7 @@ class StartOp(GeneralOp):
                 message="Broadcast started"
             )
 
-    async def delay(self, file_path, filename, frequency, ps, rt, pi, loop, delay):
+    async def delay(self, file_path: str, filename: str, frequency: float, ps: str, rt: str, pi: str, loop: bool, delay: int):
         await asyncio.sleep(delay)
         started = await self.start_broadcast(file_path, filename, frequency, ps, rt, pi, loop)
 
@@ -118,7 +120,7 @@ class StartOp(GeneralOp):
             )
 
 
-    async def start_broadcast(self, file_path, filename, frequency, ps, rt, pi, loop):
+    async def start_broadcast(self, file_path: str, filename: str, frequency: float, ps: str, rt: str, pi: str, loop: bool):
         async def finished():
             Log.info("Playback finished, stopping broadcast...")
 
@@ -139,7 +141,7 @@ class StartOp(GeneralOp):
             backend_name = Path(Env.get("BACKEND_PATH", "bw_custom")).name
             talk = Env.get_bool("TALK")
 
-            backend_classes[backend_name] = BWCustom
+            backend_classes[backend_name] = BWCustom # pyright: ignore
 
             self.owner.piwave = PiWave(
                 frequency=frequency,
@@ -178,5 +180,5 @@ class StartOp(GeneralOp):
             self.owner.broadcast_start_time = None
             return e
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StartOp)

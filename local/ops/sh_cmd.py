@@ -1,6 +1,7 @@
 import asyncio
 import os
 import subprocess
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -15,7 +16,7 @@ class ShellOp(CliOp):
     name = "<"
     syntax = "<command>"
 
-    async def handle(self, command: str = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             command = self.parse(cmd_parts)
             if not command:
@@ -29,25 +30,29 @@ class ShellOp(CliOp):
         # run in separate thread to avoid blocking the main loop
         await asyncio.to_thread(self.run, command, env)
 
-    def run(self, command, env):
+    def run(self, command: str, env: dict[str, str]):
         try:
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=env)
-            for line in process.stdout:
-                Log.print(line, end='')
+
+            if process.stdout:
+                for line in process.stdout:
+                    Log.print(line, end='')
 
             return_code = process.wait()
 
             if return_code != 0:
                 Log.info(f"STDERR (err {return_code}):")
-                for line in process.stderr:
-                    Log.print(line, end='')
+
+                if process.stderr:
+                    for line in process.stderr:
+                        Log.print(line, end='')
 
                 Log.error(f"Command failed with return code {return_code}")
 
         except Exception as e:
             Log.error(f"Error executing shell command: {e}")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: < <command>")
             return None
@@ -63,7 +68,7 @@ class PipeOp(CliOp):
     name = "|"
     syntax = "<command>"
 
-    async def handle(self, command: str = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             command = self.parse(cmd_parts)
             if not command:
@@ -75,17 +80,19 @@ class PipeOp(CliOp):
             command = f"{shell} \"{command}\""
 
         loop = asyncio.get_running_loop()
-        queue = asyncio.Queue()
+        queue: asyncio.Queue[str | Exception | None]  = asyncio.Queue()
 
         def produce():
             try:
                 process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, universal_newlines=True, env=env)
-                for line in process.stdout:
-                    line = line.strip()
 
-                    if line:
-                        # back to the event loop
-                        loop.call_soon_threadsafe(queue.put_nowait, line)
+                if process.stdout:
+                    for line in process.stdout:
+                        line = line.strip()
+
+                        if line:
+                            # back to the event loop
+                            loop.call_soon_threadsafe(queue.put_nowait, line)
 
             except Exception as e:
                 loop.call_soon_threadsafe(queue.put_nowait, e)
@@ -110,7 +117,7 @@ class PipeOp(CliOp):
         await task
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1:
             Log.error("Usage: | <command>")
             return None
@@ -118,6 +125,6 @@ class PipeOp(CliOp):
         return ' '.join(cmd_parts)
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ShellOp)
     reg.register(PipeOp)

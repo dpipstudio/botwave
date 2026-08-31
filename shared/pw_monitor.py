@@ -3,18 +3,19 @@ import asyncio
 import inspect
 import threading
 import time
-from typing import Callable, Optional
+from piwave import PiWave
+from typing import Callable
 
 class PWM: #pwm hehehe
     def __init__(self, check_interval: float = 1):
         self.check_interval = check_interval
-        self.monitor_thread: Optional[threading.Thread] = None
+        self.monitor_thread: threading.Thread | None = None
         self.stop_event = threading.Event()
         self.piwave = None
-        self.on_finished_callback: Optional[Callable] = None
-        self.event_loop: Optional[asyncio.AbstractEventLoop] = None
+        self.on_finished_callback: Callable[..., None] | None = None
+        self.event_loop: asyncio.AbstractEventLoop | None = None
         
-    def start(self, piwave, on_finished: Callable, event_loop: Optional[asyncio.AbstractEventLoop] = None):
+    def start(self, piwave: PiWave, on_finished: Callable[..., None], event_loop: asyncio.AbstractEventLoop | None = None):
         self.stop()
         
         self.piwave = piwave
@@ -28,9 +29,10 @@ class PWM: #pwm hehehe
         )
         self.monitor_thread.start()
     
-    def _try_get_event_loop(self) -> Optional[asyncio.AbstractEventLoop]:
+    def _try_get_event_loop(self) -> asyncio.AbstractEventLoop | None:
         try:
             return asyncio.get_running_loop()
+        
         except RuntimeError:
             return None
     
@@ -40,8 +42,9 @@ class PWM: #pwm hehehe
                 if self.piwave is None:
                     break
                 
-                status = self.piwave.get_status()
+                status: dict[str, str] = self.piwave.get_status() # pyright: ignore
                 is_active = status.get("is_playing", False) or status.get("is_live_streaming", False)
+
                 if not is_active:
                     if self.on_finished_callback:
                         if self.event_loop and inspect.iscoroutinefunction(self.on_finished_callback):
@@ -49,6 +52,7 @@ class PWM: #pwm hehehe
                                 self.on_finished_callback(),
                                 self.event_loop
                             )
+
                         else:
                             callback_thread = threading.Thread(
                                 target=self.on_finished_callback,

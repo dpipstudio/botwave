@@ -1,6 +1,9 @@
-from pathlib import Path
 import tempfile
+import urllib.error
+import urllib.parse
 import urllib.request
+from pathlib import Path
+from typing import Any
 
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
 from shared.env import Env
@@ -24,7 +27,13 @@ class DownloadOp(CliOp):
     name = "dl"
     syntax  = "<url> [destination]"
 
-    async def handle(self, url: str = None, dest_name: str = None, is_cmd: bool = False, cmd_parts: str = []):
+    async def handle(
+        self,
+        url: str = "",
+        dest_name: str = "",
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
+    ):
         if is_cmd:
             url, dest_name = self.parse(cmd_parts)
 
@@ -89,7 +98,7 @@ class DownloadOp(CliOp):
             Log.error(f"Download error: {e}")
             return
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: dl <url> [destination]")
             return (None, None)
@@ -99,7 +108,7 @@ class DownloadOp(CliOp):
 
         return (url, dest_name)
 
-    def reporthook(self, block_num, block_size, total_size):
+    def reporthook(self, block_num: int, block_size: int, total_size: int):
         downloaded = block_num * block_size
         if total_size > 0:
             Log.progress_bar(downloaded, total_size, prefix='Downloading:', suffix='Complete', style='yellow', icon='FILE', auto_clear=False )
@@ -108,5 +117,5 @@ class DownloadOp(CliOp):
             Log.progress_bar(total_size, total_size, prefix='Downloaded!', suffix='Complete', style='yellow', icon='FILE' )
 
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(DownloadOp)

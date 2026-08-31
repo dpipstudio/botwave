@@ -1,8 +1,10 @@
-from pathlib import Path
 import time
+from pathlib import Path
+from typing import Any
 
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 
 class StatusOp(GeneralOp):
     """
@@ -13,7 +15,7 @@ class StatusOp(GeneralOp):
 
     commands = {Commands.STATUS: "status"}
 
-    async def status(self, parsed):
+    async def status(self, parsed: ParsedCommand):
         if self.owner.broadcasting and self.owner.current_file:
             status = "onair"
             file = Path(self.owner.current_file).name
@@ -37,5 +39,5 @@ class StatusOp(GeneralOp):
         else:
             await self.owner.proto.reply(parsed, Commands.OK, status = "idle")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StatusOp)

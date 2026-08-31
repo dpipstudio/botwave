@@ -1,10 +1,12 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 
 class HelpOp(CliOp):
     name = "help"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         """
         The 'help' command OP.
         Lists every command and its syntax (currently hardcoded, 
@@ -137,5 +139,5 @@ class HelpOp(CliOp):
                 for line in command["help"]:
                     Log.print(line, style="yellow")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(HelpOp)

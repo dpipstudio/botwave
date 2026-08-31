@@ -1,6 +1,7 @@
 import asyncio
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
 from shared.dirutils import BW_PATH
@@ -26,10 +27,10 @@ class UploadOp(CliOp):
 
     async def handle(
             self,
-            targets: list = [],
-            file: str = None,
+            targets: list[str] = [],
+            file: str = "",
             is_cmd: bool = False,
-            cmd_parts: list = []
+            cmd_parts: list[str] = []
     ):
         if is_cmd:
             targets, file = self.parse(cmd_parts)
@@ -46,7 +47,7 @@ class UploadOp(CliOp):
         extra = Env.get("EXTRA_ALLOWED_DIRS", "")
         extra_dirs = [d for d in extra.split(":") if d.strip()]
 
-        allowed_source_dirs = [
+        allowed_source_dirs: list[Any] = [
             tempfile.gettempdir(),
             BW_PATH,
             Path.home(),
@@ -71,7 +72,7 @@ class UploadOp(CliOp):
         else:
             Log.error(f"File does not exist: {filepath}")
 
-    async def upload_file(self, targets, filepath, silent = False):
+    async def upload_file(self, targets: list[str], filepath: str, silent: bool = False):
         try:
             filename = PathValidator.sanitize_filename(Path(filepath).name)
 
@@ -117,7 +118,7 @@ class UploadOp(CliOp):
             return False
 
 
-        results = {"failed": [], "uploaded": []}
+        results: dict[str, list[str]] = {"failed": [], "uploaded": []}
 
         for client_id in targets:
             if client_id not in self.owner.clients:
@@ -147,7 +148,7 @@ class UploadOp(CliOp):
 
         return len(results['uploaded']) >= len(results['failed'])
 
-    async def upload_folder(self, targets, folder_path):
+    async def upload_folder(self, targets: list[str], folder_path: str):
         files = [f.name for f in Path(folder_path).iterdir() if f.is_file()]
 
         if not files:
@@ -156,7 +157,7 @@ class UploadOp(CliOp):
 
         Log.file(f"Found {len(files)} file(s) in {folder_path}")
 
-        results = {"uploaded": [], "failed": []}
+        results: dict[str, list[str]] = {"uploaded": [], "failed": []}
 
         for idx, filename in enumerate(files, 1):
             full_path = Path(folder_path) /  filename
@@ -166,7 +167,7 @@ class UploadOp(CliOp):
             if ext == "wav" or ext in SUPPORTED_EXTENSIONS:
                 Log.file(f"[{idx}/{len(files)}] Processing {filename}...")
 
-                if await self.upload_file(targets, full_path, silent=True):
+                if await self.upload_file(targets, str(full_path), silent=True):
                     results["uploaded"].append(filename)
 
                 else:
@@ -183,12 +184,12 @@ class UploadOp(CliOp):
         Log.info(f"Folder upload requests sent!")
         Log.info(f"Success: {len(results['uploaded'])}, Failure: {len(results['failed'])}")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: upload <targets> <file|folder>")
             return (None, None)
 
         return (cmd_parts[0], cmd_parts[1])
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(UploadOp)

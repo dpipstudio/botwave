@@ -1,3 +1,5 @@
+from typing import Any
+
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.registry import UpperException
@@ -10,7 +12,7 @@ class ExitOp(CliOp):
 
     name = "exit"
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         self.owner.running = False
         if self.owner.broadcasting:
             await self.registry.dispatch("stop")
@@ -22,5 +24,5 @@ class ExitOp(CliOp):
         Log.client("Local client stopped")
         raise UpperException("exit")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(ExitOp)

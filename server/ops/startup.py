@@ -1,8 +1,8 @@
-from pathlib import Path
 import ssl
 import tempfile
+from pathlib import Path
+from typing import Any
 
-from shared.env import Env
 from shared.http import BWHTTPFileServer
 from shared.logger import Log
 from shared.ops import GeneralOp
@@ -74,5 +74,5 @@ class StartupOp(GeneralOp):
         cert_path.write_text(cert_pem)
         key_path.write_text(key_pem)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StartupOp)

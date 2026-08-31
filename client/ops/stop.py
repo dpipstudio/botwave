@@ -1,8 +1,10 @@
 import asyncio
+from typing import Any
 
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands
+from shared.protomanager import ParsedCommand
 
 class StopOp(GeneralOp):
     """
@@ -18,7 +20,7 @@ class StopOp(GeneralOp):
         "stop_broadcast": "stop_broadcast"
     }
 
-    async def stop(self, parsed):
+    async def stop(self, parsed: ParsedCommand):
         try:
             if not self.owner.broadcasting:
                 await self.owner.proto.reply(
@@ -98,5 +100,5 @@ class StopOp(GeneralOp):
             Log.broadcast("Stopped broadcast")
     
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(StopOp)

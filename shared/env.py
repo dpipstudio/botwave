@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict
+from typing import Any
 
 from shared.dirutils import BW_PATH
 
@@ -21,7 +21,7 @@ class EnvManager:
 
         self.__load_env(filepath)
 
-    def get(self, key: str, default = None, get_immutability: bool = False, strip_immutable: bool = True) -> tuple | str | None:
+    def get(self, key: str, default: Any = None, get_immutability: bool = False, strip_immutable: bool = True) -> Any:
         """Return the value of a key case-insensitively, or default if not found.
         
         If get_immutability is True, returns a (value, is_immutable) tuple instead.
@@ -65,7 +65,7 @@ class EnvManager:
 
         os.environ[key.upper()] = value
 
-    def get_int(self, key: str, default: int | None = None) -> int | None:
+    def get_int(self, key: str, default: Any = None) -> int | Any:
         """Return the value of a key as an integer, or default if missing or invalid."""
 
         value = self.get(key)
@@ -76,7 +76,7 @@ class EnvManager:
         except ValueError:
             return default
         
-    def get_float(self, key: str, default: float | None = None) -> float | None:
+    def get_float(self, key: str, default: Any = None) -> float | Any:
         """Return the value of a key as a float, or default if missing or invalid."""
 
         value = self.get(key)
@@ -92,12 +92,12 @@ class EnvManager:
 
         value = self.get(key)
 
-        if value is None:
+        if value is not None:
             return default
 
-        return value.lower() in ("1", "true", "yes", "on", "absolutely!")
+        return str(value).lower() in ("1", "true", "yes", "on", "absolutely!")
 
-    def __load_env(self, filepath: str) -> Dict[str, str]:
+    def __load_env(self, filepath: str) -> None:
         """Parse a .env file and return a dict of key-value pairs."""
 
         try:
@@ -129,7 +129,7 @@ class EnvManager:
 
         value = self.get(key, strip_immutable=False)
 
-        if value is None:
+        if type(value) is not str:
             return False
 
         return bool(re.match(r"immutable\((.*?)\)", value))
