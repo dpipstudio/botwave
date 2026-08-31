@@ -38,7 +38,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.socket import BWWebSocketServer
 from shared.tips import TipEngine
-from shared.version import check_for_updates
+from shared.version import check_for_updates, print_version
 from shared.ws_cmd import WSCMDH
 
 if TYPE_CHECKING:
@@ -265,8 +265,6 @@ def fail_banner():
 
 
 async def main():
-    Log.header("BotWave Server")
-
     check()
 
     parser = argparse.ArgumentParser(prog="bw-server", description='BotWave Server')
@@ -281,7 +279,14 @@ async def main():
     parser.add_argument('--talk', action=argparse.BooleanOptionalAction, default=None, help='Show debug logs')
     parser.add_argument('--config', type=str, help='Path to a config file to load into environment')
     parser.add_argument('--daemon', action=argparse.BooleanOptionalAction, help='Run in non-interactive daemon mode')
+    parser.add_argument('-v', '--version', action="store_true", default=False, help='Display version information')
     args = parser.parse_args()
+
+    if args.version:
+        print_version("server")
+        return
+
+    Log.header("BotWave Server")
 
     if args.config:
         Env.load(args.config) # will silently drop if file doesn't exist
