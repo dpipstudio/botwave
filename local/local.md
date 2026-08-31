@@ -29,7 +29,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 
 To start the BotWave Local Client, use the following command:
 ```bash
-sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks | --no-skip-checks] [--daemon | --no-daemon] [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG]
+sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks | --no-skip-checks] [--daemon | --no-daemon] [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG] [-v]
 ```
 
 ### Arguments
@@ -42,6 +42,7 @@ sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--sk
 - `--pk`: Optional passkey for websocket authentication.
 - `--talk`: Show debug logs.
 - `--config`: Path to a config file to load into environment.
+- `-v`, `--version`: Display version information.
 
 ### Example
 

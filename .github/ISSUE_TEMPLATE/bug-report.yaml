@@ -36,8 +36,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: '`/opt/BotWave/last_release`'
-      placeholder: v1.0.0-oak
+      description: '`bw-server --version`, `bw-local --version`'
+      placeholder: BotWave ??? v???, protocol ???
   - type: input
     id: machine
     attributes:

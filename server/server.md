@@ -26,7 +26,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 To start the BotWave Server, use the following command:
 
 ```bash
-bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap | --no-start-asap] [--skip-checks | --no-skip-checks] [--rc RC] [--talk | --no-talk] [--config CONFIG] [--daemon | --no-daemon]
+bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap | --no-start-asap] [--skip-checks | --no-skip-checks] [--rc RC] [--talk | --no-talk] [--config CONFIG] [--daemon | --no-daemon] [-v]
 ```
 
 ### Arguments
@@ -42,6 +42,7 @@ bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers
 - `--talk`: Show debug logs.
 - `--config`: Path to a config file to load into environment.
 - `--daemon`: Run in daemon mode (non-interactive).
+- `-v`, `--version`: Display version information.
 
 ### Example
 

@@ -29,7 +29,7 @@ We highly recommend using the official installer (Check the [main README](/READM
 
 To start the BotWave Client, use the following command:
 ```bash
-sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [server_host]
+sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [-v] [server_host]
 ```
 
 ### Arguments
@@ -43,6 +43,7 @@ sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir 
 - `--skip-checks`: Skip system requirements checks.
 - `--talk`: Show debug logs.
 - `--config`: Path to a config file to load into environment.
+- `-v`, `--version`: Display version information.
 
 ### Example
 

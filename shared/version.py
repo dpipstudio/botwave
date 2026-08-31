@@ -4,6 +4,7 @@ from typing import Optional
 
 from shared.dirutils import BW_PATH
 from shared.env import Env
+from shared.logger import Log
 from shared.protocol import PROTOCOL_VERSION
 
 # if mismatch of 1st or 2nd part of ver: error
@@ -73,3 +74,6 @@ def check_for_updates() -> tuple[Optional[str], Optional[str]]:
     except (urllib.error.URLError, urllib.error.HTTPError, Exception):
         # don't interrupt startup for client updates, we do not care
         return (None, None)
+
+def print_version(component: str):
+    Log.print(f"BotWave {component} {get_release_version() or 'v???'}, protocol {PROTOCOL_VERSION}")

@@ -179,6 +179,7 @@ sudo bw-local
 usage: bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR]
                 [--skip-checks | --no-skip-checks] [--daemon | --no-daemon]
                 [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG]
+                [-v]
 
 BotWave Local Client
 
@@ -196,6 +197,7 @@ options:
   --pk PK               Optional passkey for remote management authentication
   --talk, --no-talk     Show debug logs
   --config CONFIG       Path to a config file to load into environment
+  -v, --version         Display version information
 </pre>
 <hr>
 </details>
@@ -277,7 +279,7 @@ usage: bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK]
                  [--start-asap | --no-start-asap]
                  [--skip-checks | --no-skip-checks] [--rc RC]
                  [--talk | --no-talk] [--config CONFIG]
-                 [--daemon | --no-daemon]
+                 [--daemon | --no-daemon] [-v]
 
 BotWave Server
 
@@ -298,6 +300,7 @@ options:
   --config CONFIG       Path to a config file to load into environment
   --daemon, --no-daemon
                         Run in non-interactive daemon mode
+  -v, --version         Display version information
 </pre>
 <hr>
 </details>
@@ -319,7 +322,7 @@ sudo bw-client 192.168.1.10    # replace with your server's IP
 usage: bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT]
                  [--upload-dir UPLOAD_DIR] [--pk PK]
                  [--skip-checks | --no-skip-checks] [--talk | --no-talk]
-                 [--config CONFIG]
+                 [--config CONFIG] [-v]
                  [server_host]
 
 BotWave Client
@@ -340,6 +343,7 @@ options:
                         Skip update and requirements checks
   --talk, --no-talk     Show debug logs
   --config CONFIG       Path to a config file to load into environment
+  -v, --version         Display version information
 </pre>
 <hr>
 </details>
