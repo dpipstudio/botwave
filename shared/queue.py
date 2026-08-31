@@ -591,7 +591,7 @@ class Queue:
     
     # AUTO-ADVANCE (NEXT TRACK)
     
-    def on_broadcast_ended(self, client_id: str):
+    def on_broadcast_ended(self, client_id: str = ""):
         """Called when a broadcast ends - advance to next in queue.
         
         Args:
