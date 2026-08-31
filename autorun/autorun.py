@@ -8,12 +8,12 @@
 # Licensed under GPL-v3.0 (see LICENSE)
 
 import os
-from pathlib import Path
 import sys
 import subprocess
 import argparse
 import platform
-from typing import List
+from pathlib import Path
+from typing import Any
 from dlogger import DLogger
 
 # using this to access to the shared dir files
@@ -28,7 +28,7 @@ SERVER_SCRIPT = str(Path(BW_PATH) / "server" / "server.py")
 LOCAL_SCRIPT = str(Path(BW_PATH) / "local" / "local.py")
 SYSTEMD_DIR = "/etc/systemd/system"
 
-Log = DLogger(
+Log: Any = DLogger(
     icons={
         'success': 'OK',
         'error': 'ERR',
@@ -60,7 +60,7 @@ Log = DLogger(
 )
 
 class SystemdService:
-    def __init__(self, service_name: str, script_path: str, args: List[str]):
+    def __init__(self, service_name: str, script_path: str, args: list[str]):
         self.service_name = service_name
         self.script_path = script_path
         self.args = args
@@ -163,22 +163,29 @@ WantedBy=multi-user.target
             return False
 
 def check_system_requirements():
-    errors = []
+    errors: list[str] = []
     if platform.system() not in ['Linux', 'Darwin']:
         errors.append("This script requires a Unix-like system (Linux/macOS)")
+
     if not os.path.exists('/bin/systemctl') and not os.path.exists('/usr/bin/systemctl'):
         errors.append("systemd is required but not found")
+
     if os.geteuid() != 0:
         errors.append("This script must be run as root (use sudo)")
+
     if not os.path.exists(BW_PATH):
         errors.append(f"BotWave directory not found: {BW_PATH}")
+
     if not os.path.exists(VENV_PYTHON):
         errors.append(f"Python virtual environment not found: {VENV_PYTHON}")
+
     if errors:
         Log.error("System requirements check failed:")
         for error in errors:
             Log.error(f"  - {error}")
+
         return False
+    
     Log.success("System requirements check passed")
     return True
 
@@ -186,9 +193,11 @@ def check_script_exists(script_path: str, script_type: str):
     if not os.path.exists(script_path):
         Log.error(f"{script_type} script not found: {script_path}")
         return False
+    
     if not os.access(script_path, os.R_OK):
         Log.error(f"{script_type} script is not readable: {script_path}")
         return False
+    
     Log.success(f"{script_type} script found: {script_path}")
     return True
 
@@ -239,26 +248,33 @@ Service Management:
             Log.error("Mode (client/server/local) required for service management")
             sys.exit(1)
 
-        services = []
+        services: list[SystemdService] = []
         if args.mode == 'client':
             services.append(SystemdService('bw-client', CLIENT_SCRIPT, ['--skip-checks']))
+
         if args.mode == 'server':
             services.append(SystemdService('bw-server', SERVER_SCRIPT, ['--daemon', '--skip-checks']))
+
         if args.mode == 'local':
             services.append(SystemdService('bw-local', LOCAL_SCRIPT, ['--daemon', '--skip-checks']))
 
         for service in services:
             if args.start:
                 service.start()
+
             elif args.stop:
                 service.stop()
+
             elif args.restart:
                 service.stop()
                 service.start()
+
             elif args.status:
                 service.status()
+
             elif args.uninstall:
                 service.uninstall()
+
         sys.exit(0)
 
     if not args.mode:
