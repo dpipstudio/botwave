@@ -9,8 +9,10 @@
 
 import argparse
 import asyncio
-from pathlib import Path
 import sys
+from pathlib import Path
+from piwave import PiWave
+from typing import Any
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -19,10 +21,13 @@ from shared.alsa import Alsa
 from shared.cat import check
 from shared.dirutils import BW_PATH
 from shared.env import Env
+from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.protocol import Commands, ProtocolParser
+from shared.protomanager import ProtoManager
 from shared.pw_monitor import PWM
 from shared.registry import Registry, UpperException
+from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
 from shared.version import check_for_updates
@@ -35,27 +40,27 @@ class BotWaveClient:
 
     def __init__(self):
         # connection state
-        self.client_id = None
-        self.http_client = None
-        self.proto = None
-        self.registered = False
-        self.running = False
-        self.ws_client = None
+        self.client_id: str | Any = None
+        self.http_client: BWHTTPFileClient | Any = None
+        self.proto: ProtoManager | Any = None
+        self.registered: bool = False
+        self.running: bool = False
+        self.ws_client: BWWebSocketClient | Any = None
 
         # broadcast state
-        self.broadcast_start_time = None
-        self.broadcasting = False
-        self.current_file = None
-        self.feed_task = None
-        self.piwave = None
-        self.stream_active = False
-        self.stream_task = None
+        self.broadcast_start_time: int | None = None
+        self.broadcasting: bool = False
+        self.current_file: str | None = None
+        self.feed_task: Any = None
+        self.piwave: PiWave | Any = None
+        self.stream_active: bool = False
+        self.stream_task: Any = None
 
         # helpers
-        self.alsa = Alsa()
-        self.piwave_monitor = PWM()
-        self.registry = Registry(self)
-        self.tips = TipEngine(is_server=False)
+        self.alsa: Alsa = Alsa()
+        self.piwave_monitor: PWM = PWM()
+        self.registry: Registry = Registry(self)
+        self.tips: TipEngine = TipEngine(is_server=False)
 
     async def handle_message(self, message: str):
         Log.debug(message)
@@ -81,7 +86,7 @@ class BotWaveClient:
 
 
 # startup helpers
-def set_prio(key, cli_value, default, immutable=False):
+def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
     if cli_value is not None:
         Env.set(key, str(cli_value), immutable=immutable)
 
@@ -105,7 +110,7 @@ def check_updates():
         else:
             Log.success("You are using the latest version")
 
-    except Exception as e:
+    except Exception:
         Log.warning("Unable to check for updates (continuing anyway)")
 
 # entry point
