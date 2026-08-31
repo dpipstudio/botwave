@@ -24,53 +24,57 @@ Before starting BotWave, you can configure it with flags. Here are the supported
 
 ### Server
 ```bash
-bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap | --no-start-asap] [--skip-checks | --no-skip-checks] [--rc RC] [--talk | --no-talk] [--config CONFIG] [--daemon | --no-daemon]
+bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK] [--handlers-dir HANDLERS_DIR] [--start-asap | --no-start-asap] [--skip-checks | --no-skip-checks] [--rc RC] [--talk | --no-talk] [--config CONFIG] [--daemon | --no-daemon] [-v]
 ```
 
-| Argument       | Default   | Description                                        |
-|--|--|--|
-| `--host`       | 0.0.0.0   | Host address to bind the server to                 |
-| `--port`       | 9938      | Port for the command/control channel               |
-| `--fport`      | 9921      | Port for the file transfer server                  |
-| `--pk`         | None      | Passkey for client authentication                  |
-| `--rc`         | None      | Enable remote shell access on this port            |
-| `--start-asap` | False     | Start broadcasts immediately (may cause desync)    |
-| `--skip-checks`| False     | Skip update checks                                 |
-| `--talk`       | False     | Show debug logs                                    |
-| `--daemon`     | False     | Run in non-interactive daemon mode                 |
-| `--config`     | None      | Path to a config file to load into environment     |
+| Argument          | Default   | Description                                        |
+|-------------------|-----------|----------------------------------------------------|
+| `--host`          | 0.0.0.0   | Host address to bind the server to                 |
+| `--port`          | 9938      | Port for the command/control channel               |
+| `--fport`         | 9921      | Port for the file transfer server                  |
+| `--pk`            | None      | Passkey for client authentication                  |
+| `--rc`            | None      | Enable remote shell access on this port            |
+| `--start-asap`    | False     | Start broadcasts immediately (may cause desync)    |
+| `--skip-checks`   | False     | Skip update checks                                 |
+| `--talk`          | False     | Show debug logs                                    |
+| `--daemon`        | False     | Run in non-interactive daemon mode                 |
+| `--config`        | None      | Path to a config file to load into environment     |
+| `-v`, `--version` | False     | Display version information                        |
+
 
 ### Client
 ```bash
-sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [server_host]
+sudo bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT] [--upload-dir UPLOAD_DIR] [--pk PK] [--skip-checks | --no-skip-checks] [--talk | --no-talk] [--config CONFIG] [-v] [server_host]
 ```
 
-| Argument        | Default                  | Description                                       |
-|--|--|-|
-| `server_host`   | (prompted)               | Hostname or IP of the BotWave server              |
-| `--port`        | 9938                     | Port for the server connection                    |
-| `--fport`       | 9921                     | Port for file transfers                           |
-| `--upload-dir`  | /opt/BotWave/uploads     | Directory to store received files                 |
-| `--pk`          | None                     | Passkey for server authentication                 |
-| `--skip-checks` | False                    | Skip system requirements checks                   |
-| `--talk`        | False                    | Show debug logs                            |
-| `--config`      | None                     | Path to a config file to load into environment    |
+| Argument          | Default                  | Description                                       |
+|-------------------|--------------------------|---------------------------------------------------|
+| `server_host`     | (prompted)               | Hostname or IP of the BotWave server              |
+| `--port`          | 9938                     | Port for the server connection                    |
+| `--fport`         | 9921                     | Port for file transfers                           |
+| `--upload-dir`    | /opt/BotWave/uploads     | Directory to store received files                 |
+| `--pk`            | None                     | Passkey for server authentication                 |
+| `--skip-checks`   | False                    | Skip system requirements checks                   |
+| `--talk`          | False                    | Show debug logs                                   |
+| `--config`        | None                     | Path to a config file to load into environment    |
+| `-v`, `--version` | False                    | Display version information                       |
 
 ### Local client
 ```bash
-sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks | --no-skip-checks] [--daemon | --no-daemon] [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG]
+sudo bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR] [--skip-checks | --no-skip-checks] [--daemon | --no-daemon] [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG] [-v]
 ```
 
-| Argument         | Default                  | Description                                     |
-|--|--|--|
-| `--upload-dir`   | /opt/BotWave/uploads     | Directory containing broadcastable files        |
-| `--handlers-dir` | /opt/BotWave/handlers    | Directory containing handler files              |
-| `--skip-checks`  | False                    | Skip system requirements checks                 |
-| `--daemon`       | False                    | Run in non-interactive daemon mode              |
-| `--rc`           | None                     | Enable remote shell access on this port         |
-| `--pk`           | None                     | Passkey for WebSocket authentication            |
-| `--talk`         | False                    | Show debug logs                          |
-| `--config`       | None                     | Path to a config file to load into environment  |
+| Argument          | Default                  | Description                                     |
+|-------------------|--------------------------|-------------------------------------------------|
+| `--upload-dir`    | /opt/BotWave/uploads     | Directory containing broadcastable files        |
+| `--handlers-dir`  | /opt/BotWave/handlers    | Directory containing handler files              |
+| `--skip-checks`   | False                    | Skip system requirements checks                 |
+| `--daemon`        | False                    | Run in non-interactive daemon mode              |
+| `--rc`            | None                     | Enable remote shell access on this port         |
+| `--pk`            | None                     | Passkey for WebSocket authentication            |
+| `--talk`          | False                    | Show debug logs                                 |
+| `--config`        | None                     | Path to a config file to load into environment  |
+| `-v`, `--version` | False                    | Display version information                     |
 
 
 ## Basic Commands
