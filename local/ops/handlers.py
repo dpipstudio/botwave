@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -15,7 +16,7 @@ class HandlersCliOp(CliOp):
     name = "handlers"
     syntax = "[filename]"
 
-    async def handle(self, file: bool = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, file: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             file = self.parse(cmd_parts)
 
@@ -25,7 +26,7 @@ class HandlersCliOp(CliOp):
         else:
             self.owner.handlers_executor.list_handlers()
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         return cmd_parts[0] if len(cmd_parts) > 0 else None
 
 class HandlersEventsOp(GeneralOp):
@@ -51,7 +52,7 @@ class HandlersEventsOp(GeneralOp):
         "handlers_onwsleave": "onwsleave"
     }
 
-    async def onready(self, dir_path: str = None, context: dict = None):
+    async def onready(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -60,7 +61,7 @@ class HandlersEventsOp(GeneralOp):
 
         await self.owner.handlers_executor.run_handlers("l_onready", dir_path, context)
 
-    async def onexit(self, dir_path: str = None, context: dict = None):
+    async def onexit(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -70,7 +71,7 @@ class HandlersEventsOp(GeneralOp):
         await self.owner.handlers_executor.run_handlers("l_onexit", dir_path, context)
 
 
-    async def onstart(self, dir_path: str = None, context: dict = None):
+    async def onstart(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -80,7 +81,7 @@ class HandlersEventsOp(GeneralOp):
         await self.owner.handlers_executor.run_handlers("l_onstart", dir_path, context)
 
 
-    async def onstop(self, dir_path: str = None, context: dict = None):
+    async def onstop(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -90,7 +91,7 @@ class HandlersEventsOp(GeneralOp):
         await self.owner.handlers_executor.run_handlers("l_onstop", dir_path, context)
 
 
-    async def onwsjoin(self, dir_path: str = None, context: dict = None):
+    async def onwsjoin(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -101,7 +102,7 @@ class HandlersEventsOp(GeneralOp):
         self.owner.rc_clients += 1
 
 
-    async def onwsleave(self, dir_path: str = None, context: dict = None):
+    async def onwsleave(self, dir_path: str = "", context: dict[str, str] = {}):
         if context:
             context.update(self.build_context())
 
@@ -111,7 +112,7 @@ class HandlersEventsOp(GeneralOp):
         await self.owner.handlers_executor.run_handlers("l_onwsleave", dir_path, context)
         self.owner.rc_clients -= 1
 
-    def build_context(self) -> dict:
+    def build_context(self) -> dict[str, str]:
         ctx = {}
 
         try:
@@ -136,6 +137,6 @@ class HandlersEventsOp(GeneralOp):
         return ctx
 
         
-def setup(reg):
+def setup(reg: Any):
     reg.register(HandlersCliOp)
     reg.register(HandlersEventsOp)

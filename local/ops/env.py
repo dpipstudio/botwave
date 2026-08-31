@@ -1,5 +1,6 @@
 import fnmatch
 import os
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -19,7 +20,7 @@ class GetOp(CliOp):
     name = "get"
     syntax = "<keys|glob>"
 
-    async def handle(self, keys: list = None, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(self, keys: list[str] = [], is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             keys = self.parse(cmd_parts)
 
@@ -27,7 +28,7 @@ class GetOp(CliOp):
                 return
 
         env_keys = list(os.environ.keys())
-        expanded_keys = []
+        expanded_keys: list[str] = []
 
         for pattern in keys:
             pattern = pattern.upper()
@@ -54,7 +55,7 @@ class GetOp(CliOp):
             Log.print(f"({key})", style="bright_blue", end=" ")
             Log.print(value, style="orange" if immutable else "white")
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> Any:
         if len(cmd_parts) < 1: 
             Log.error("Usage: get <keys|glob>")
             return None
@@ -76,7 +77,14 @@ class SetOp(CliOp):
     name = "set"
     syntax = "<key> <value> [immutable]"
 
-    async def handle(self, key: str = None, value: str = None, immutable: bool = False, is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(
+        self,
+        key: str = "",
+        value: str = "",
+        immutable: bool = False,
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
+    ):
         if is_cmd:
             key, value, immutable = self.parse(cmd_parts)
 
@@ -93,7 +101,7 @@ class SetOp(CliOp):
         await self.registry.dispatch("get", keys=[key])
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 2:
             Log.error("Usage: set <key> <value> [immutable]")
             return (None, None, None)
@@ -104,6 +112,6 @@ class SetOp(CliOp):
 
         return (key, value, immutable)
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(GetOp)
     reg.register(SetOp)

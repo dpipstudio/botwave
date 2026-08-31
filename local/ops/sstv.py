@@ -1,6 +1,7 @@
 import hashlib
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
@@ -18,7 +19,18 @@ class SSTVOp(CliOp):
     name = "sstv"
     syntax = "<image_path> [mode] [frequency] [loop] [ps] [rt] [pi]"
 
-    async def handle(self, img_path: str = None, mode: str = None, frequency: float = 90.0, loop: bool = False, ps: str = "BotWave", rt: str = "Broadcasting", pi: str = "FFFF", is_cmd: bool = False, cmd_parts: list = []):
+    async def handle(
+        self,
+        img_path: str = "",
+        mode: str = "",
+        frequency: float = 90.0,
+        loop: bool = False,
+        ps: str = "BotWave",
+        rt: str = "Broadcasting",
+        pi: str = "FFFF",
+        is_cmd: bool = False,
+        cmd_parts: list[str] = []
+        ):
         if is_cmd:
             img_path, mode, frequency, loop, ps, rt, pi = self.parse(cmd_parts)
 
@@ -57,7 +69,7 @@ class SSTVOp(CliOp):
             Log.error("Failed to generate SSTV")
 
 
-    def parse(self, cmd_parts):
+    def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
         if len(cmd_parts) < 1:
             Log.error("Usage: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None, None)
@@ -73,7 +85,7 @@ class SSTVOp(CliOp):
 
         return (img_path, mode, frequency, loop, ps, rt, pi)
 
-    def cache(self, img_path, mode):
+    def cache(self, img_path: str, mode: str):
         # cache key includes mtime so editing the image busts the cache automatically
         abs_path = Path(img_path).resolve()
         mtime = abs_path.stat().st_mtime
@@ -85,5 +97,5 @@ class SSTVOp(CliOp):
 
         return str(cache_dir / f"{digest}.wav")
 
-def setup(reg):
+def setup(reg: Any):
     reg.register(SSTVOp)
