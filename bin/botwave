@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# resolve the BotWave dir
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+BW_DIR="$(dirname "$(dirname "$SCRIPT_PATH")")"
+SERVER_DIR="$BW_DIR/server"
+CLIENT_DIR="$BW_DIR/client"
+# local is installed along client, no need to check
+[ -d $SERVER_DIR ] && has_server=true || has_server=false
+[ -d $CLIENT_DIR ] && has_client=true || has_client=false
+
+# codeblock helper
+BG_GRAY=$'\x1b[48;5;236m'
+BRIGHT_WHITE=$'\x1b[97m'
+RESET=$'\x1b[0m'
+
+codeblock() {
+    local pad=2
+    local content
+    content="$(cat)"
+    local max_w=0 line len
+
+    while IFS= read -r line; do
+        len=${#line}
+        (( len > max_w )) && max_w=$len
+
+    done <<< "$content"
+
+    local full=$(( max_w + pad * 2 ))
+
+    echo
+    printf '%s%*s%s\n' "$BG_GRAY" "$full" "" "$RESET"
+
+    while IFS= read -r line; do
+      len=${#line}
+      printf '%s%*s%s%*s%s\n' \
+        "$BG_GRAY" "$pad" "" \
+        "$BRIGHT_WHITE$line" \
+        "$(( max_w - len + pad ))" "" \
+        "$RESET"
+
+    done <<< "$content"
+
+    printf '%s%*s%s\n' "$BG_GRAY" "$full" "" "$RESET"
+}
+
+if ! ($has_server || $has_client); then
+    echo "BotWave doesn't seem to be installed. Please install it first:"
+    codeblock <<< "curl -sSL botwave.dpip.lol/install | sudo bash"
+    exit 1
+fi
+
+cat << EOF
+BotWave: Getting Started
+========================
+
+Thanks for installing BotWave! This command only prints basic
+information to know when using it for the first time.
+EOF
+
+if $has_client && ! $has_server; then
+    cat << EOF
+
+You have the Client component installed on this machine, which gives
+you two ways to run it:
+
+  - bw-local   runs standalone on this Pi, no server needed.
+               This is the simplest setup and the recommended
+               starting point if this is your only Pi.
+
+  - bw-client  connects to a bw-server running elsewhere, so it can
+               be controlled remotely as part of a multi-Pi setup.
+
+If you're just getting started, go with the local client:
+EOF
+    codeblock <<< "sudo bw-local"
+
+    cat << EOF
+Once inside, type 'help' for the full command list. A typical
+first session looks like this:
+EOF
+    codeblock << 'EOF'
+dl https://cdn.douxx.tech/files/ss.wav   # grab a file from a URL
+start ss.wav 88                          # broadcast it at 88 MHz
+stop                                     # stop broadcasting
+exit                                     # clean shutdown
+EOF
+
+    cat << EOF
+If you already have (or plan to set up) a bw-server elsewhere on
+your network, use bw-client instead:
+EOF
+    codeblock <<< "sudo bw-client [server_host]"
+fi
+
+if $has_server && ! $has_client; then
+    cat << EOF
+
+You have the Server component installed on this machine. The server
+is meant to control one or more Client Pis remotely over the network,
+it doesn't broadcast by itself.
+
+Start it with:
+EOF
+    codeblock <<< "sudo bw-server"
+
+    cat << EOF
+You'll also need at least one other machine with the client
+component installed. Once both are installed, connect from the
+server with 'bw-client [server_host]' and control it from here.
+EOF
+fi
+
+if $has_client && $has_server; then
+    cat << EOF
+
+Both the Client and Server components are installed on this machine.
+That's usually intentional if you want this box to act as a
+transmitter itself and also control other Pis on the network.
+
+Start whichever you need:
+EOF
+    codeblock << 'EOF'
+sudo bw-local     # broadcast standalone, right here
+sudo bw-client    # connect this Pi to a bw-server (maybe this one)
+sudo bw-server    # run this machine as a server for other Pis
+EOF
+fi
+
+cat << EOF
+
+Hardware reminder: connect a wire or antenna to GPIO 4 (pin 7) to
+broadcast. Even a short bare wire noticeably improves range.
+
+For more detail: https://github.com/dpipstudio/botwave/wiki
+EOF
