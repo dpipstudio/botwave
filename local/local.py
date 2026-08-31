@@ -9,12 +9,13 @@
 
 import argparse
 import asyncio
-from pathlib import Path
-from prompt_toolkit.formatted_text import ANSI
-from prompt_toolkit.patch_stdout import patch_stdout
 import re
 import shlex
 import sys
+from pathlib import Path
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.patch_stdout import patch_stdout
+from typing import Any
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -60,7 +61,7 @@ class BotWaveLocal:
 
         # remote control
         self.rc_clients = 0
-        self.ws_handler = None
+        self.ws_handler: WSCMDH | None = None
 
         # runtime / misc
         self.last_argv = []
@@ -111,8 +112,8 @@ class BotWaveLocal:
                 if self.custom_commands.exists(cmd):
                     
                     await self.handlers_executor.execute_handler(
-                        Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd",
-                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # This has to be the worst line of code I ever wrote
+                        str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore | This has to be the worst line of code I ever wrote
                         silent=True
                         )
 
@@ -130,7 +131,7 @@ class BotWaveLocal:
             Log.clear_transaction_id()
 
 # startup helpers
-def set_prio(key, cli_value, default, immutable=False):
+def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
     if cli_value is not None:
         Env.set(key, str(cli_value), immutable=immutable)
 
@@ -150,7 +151,7 @@ def check_updates():
         else:
             Log.success("You are using the latest version")
 
-    except Exception as e:
+    except Exception:
         Log.warning("Unable to check for updates (continuing anyway)")
 
 # Entry point
