@@ -1,13 +1,13 @@
 # AGENTS.md
 
-Last reviewed: 10/07/2026
+Last reviewed: 31/07/2026
 
 Instructions for AI coding agents (Claude Code, Cursor, Copilot, Codex, etc.) working in this repo.
 
 ## What this project is
 
 BotWave broadcasts audio over FM radio using Raspberry Pi devices (via GPIO 4 / pin 7), either as a
-standalone device (`local`) or as a server managing multiple Pi clients (`server` + `client`). Python 3.9+, no build step, no test suite, see "Testing" below before assuming otherwise.
+standalone device (`local`) or as a server managing multiple Pi clients (`server` + `client`). Python 3.10+, no build step, no test suite, see "Testing" below before assuming otherwise.
 
 ## Repo layout
 

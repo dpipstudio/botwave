@@ -86,12 +86,12 @@ BotWave lets you broadcast audio over FM radio using Raspberry Pi devices. It su
 > All requirements can be installed automatically via the installer, see below.
 
 ### Server
-- Python >= 3.9
+- Python >= 3.10
 
 ### Client
 - Raspberry Pi (models 2, 3, 4, or Zero. **Pi 5 and Pico are not supported**)
 - Root access
-- Python >= 3.9
+- Python >= 3.10
 - [bw_custom](https://github.com/dpipstudio/bw_custom)
 - (Wire or antenna connected to GPIO 4 / pin 7)
 
