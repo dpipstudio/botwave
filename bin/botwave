@@ -122,7 +122,7 @@ Start whichever you need:
 EOF
     codeblock << 'EOF'
 sudo bw-local     # broadcast standalone, right here
-sudo bw-client    # connect this Pi to a bw-server (maybe this one)
+sudo bw-client    # connect this machine to a bw-server
 sudo bw-server    # run this machine as a server for other Pis
 EOF
 fi
