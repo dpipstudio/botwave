@@ -1,10 +1,9 @@
 import asyncio
 import ssl
-import websockets
 from typing import Any, Awaitable, Callable
 from websockets.exceptions import ConnectionClosed
-from websockets.legacy.client import WebSocketClientProtocol
-from websockets.legacy.server import WebSocketServerProtocol
+from websockets.asyncio.client import ClientConnection, connect
+from websockets.asyncio.server import ServerConnection, serve
 
 from shared.env import Env
 from shared.logger import Log
@@ -20,9 +19,9 @@ class BWWebSocketServer:
         self.on_disconnect = on_disconnect_callback
         
         # client_id -> ws
-        self.clients: dict[str, WebSocketServerProtocol] = {}
+        self.clients: dict[str, ServerConnection] = {}
         
-        self.pending_clients: dict[WebSocketServerProtocol, dict[Any, Any]] = {}
+        self.pending_clients: dict[ServerConnection, dict[Any, Any]] = {}
         
         self.server = None
         self.running = False
@@ -37,7 +36,7 @@ class BWWebSocketServer:
     
     async def start(self):
         self.running = True
-        self.server = await websockets.serve( # pyright: ignore
+        self.server = await serve(
             self._handle_client,
             self.host,
             self.port,
@@ -53,7 +52,7 @@ class BWWebSocketServer:
             self.server.close()
             await self.server.wait_closed()
     
-    async def _handle_client(self, websocket: WebSocketServerProtocol, path: str):
+    async def _handle_client(self, websocket: ServerConnection):
         client_id = None
         
         try:
@@ -95,7 +94,7 @@ class BWWebSocketServer:
                 del self.clients[client_id]
                 await self.on_disconnect(client_id)
     
-    def register_client(self, websocket: WebSocketServerProtocol, client_id: str):
+    def register_client(self, websocket: ServerConnection, client_id: str):
         if websocket in self.pending_clients:
             self.pending_clients[websocket]['client_id'] = client_id
     
@@ -126,7 +125,7 @@ class BWWebSocketClient:
         self.ssl_context = ssl_context
         self.on_message = on_message_callback
         
-        self.ws: WebSocketClientProtocol | None = None
+        self.ws: ClientConnection | None = None
         self.connected = False
         self.running = False
         
@@ -145,7 +144,7 @@ class BWWebSocketClient:
 
         try:
             uri = f"wss://{self.host}:{self.port}"
-            self.ws = await websockets.connect( # pyright: ignore
+            self.ws = await connect(
                 uri,
                 ssl=self.ssl_context,
                 ping_interval=PING_INTERVAL,
