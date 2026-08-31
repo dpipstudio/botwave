@@ -141,6 +141,7 @@
       "commit": "889e5c5899a698ec8afb87c69b600cc699726e1d"
     }
   ],
+  "min_python_version": "3.10",
   "client": {
     "files": [
       "client/client.py",
