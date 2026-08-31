@@ -43,8 +43,8 @@ class HandlerExecutor:
                 else:
                     os.environ[k] = v
     
-    async def run_handlers(self, prefix: str, dir_path: str | None = None, context: dict[str, str] = {}):
-        if dir_path is None:
+    async def run_handlers(self, prefix: str, dir_path: str = "", context: dict[str, str] = {}):
+        if not dir_path:
             dir_path = self.handlers_dir
         
         if not Path(dir_path).is_dir():
@@ -59,8 +59,8 @@ class HandlerExecutor:
                 if filename.endswith(".hdl") or silent:
                     await self.execute_handler(file_path, ctx=context, silent=silent)
     
-    def list_handlers(self, dir_path: str | None = None):
-        if dir_path is None:
+    def list_handlers(self, dir_path: str = ""):
+        if not dir_path:
             dir_path = self.handlers_dir
         
         if not Path(dir_path).is_dir():
@@ -81,8 +81,8 @@ class HandlerExecutor:
         except Exception as e:
             Log.error(f"Error listing handlers: {e}")
     
-    def list_handler_commands(self, filename: str, dir_path: str | None = None):
-        if dir_path is None:
+    def list_handler_commands(self, filename: str, dir_path: str = ""):
+        if not dir_path:
             dir_path = self.handlers_dir
         
         file_path = os.path.join(dir_path, filename)
