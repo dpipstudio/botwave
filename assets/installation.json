@@ -141,6 +141,7 @@
       "commit": "889e5c5899a698ec8afb87c69b600cc699726e1d"
     }
   ],
+  "min_python_version": "3.10",
   "client": {
     "files": [
       "client/client.py",
@@ -248,7 +249,7 @@
       "shared/ws_cmd.py"
     ],
     "requirements": [
-      "websockets==11.0.3",
+      "websockets==13.1",
       "dlogger==1.0.5",
       "aiofiles==0.8.0",
       "aiohttp",

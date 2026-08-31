@@ -3,7 +3,7 @@ import asyncio
 import contextvars
 import re
 from typing import Any
-from websockets.legacy.client import WebSocketClientProtocol
+from websockets.asyncio.server import ServerConnection
 
 from shared.env import Env
 
@@ -54,7 +54,7 @@ class Logger(DLogger):
         'environ': 'rgb(224,107,61)'
     }
 
-    ws_clients: set[WebSocketClientProtocol] = set()
+    ws_clients: set[ServerConnection] = set()
     ws_loop = None
 
     def __init__(self):
@@ -126,7 +126,7 @@ class Logger(DLogger):
     def clear_transaction_id(self):
         self.transaction_id.set(None)
 
-    def set_remote_cmd(self, socket: WebSocketClientProtocol):
+    def set_remote_cmd(self, socket: ServerConnection):
         self.remote_cmd_socket.set(socket)
 
     def clear_remote_cmd(self):

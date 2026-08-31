@@ -366,6 +366,25 @@ detect_local_repo() {
     done
 }
 
+# needs to the installation.json stuff
+validate_python_version() {
+    local install_json="$1"
+    local min_version=$(echo "$install_json" | jq -r ".min_python_version")
+    local current_version=$(python3 --version 2>&1 | awk '{print $2}')
+
+    local cur_major=$(echo "$current_version" | cut -d. -f1)
+    local cur_minor=$(echo "$current_version" | cut -d. -f2)
+    local req_major=$(echo "$min_version" | cut -d. -f1)
+    local req_minor=$(echo "$min_version" | cut -d. -f2)
+
+    if (( cur_major < req_major )) || { (( cur_major == req_major )) && (( cur_minor < req_minor )); }; then
+        log ERROR "Python $current_version found, but $min_version or newer is required"
+        exit 1
+    fi
+
+    log INFO "Python OK: $current_version (>= $min_version required)"
+}
+
 # version managment
 
 # Resolves what to install and how to fetch it. Prints two lines:
@@ -831,6 +850,7 @@ main() {
 
     # Fetch configuration and install
     local install_json=$(fetch_installation_config)
+    validate_python_version "$install_json"
     install_components "$mode" "$install_json" "$target_kind" "$target_ref"
 
     # Finalize

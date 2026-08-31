@@ -6,7 +6,7 @@ BotWave Server is a program designed to manage multiple BotWave clients, allowin
 
 ## Requirements
 
-- Python >= 3.9
+- Python >= 3.10
 
 ## Installation
 

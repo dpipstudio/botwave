@@ -1,10 +1,9 @@
 import asyncio
 import threading
 import re
-import websockets
 from typing import Awaitable, Callable
 from websockets.exceptions import ConnectionClosed
-from websockets.legacy.client import WebSocketClientProtocol
+from websockets.asyncio.server import ServerConnection, serve
 
 
 from shared.env import Env
@@ -17,7 +16,7 @@ class WSCMDH: # WebSocket Command Handler
         
         self.command_executor = command_executor
         self.registry = registry
-        self.ws_clients: set[WebSocketClientProtocol] = set()
+        self.ws_clients: set[ServerConnection] = set()
         self.ws_loop: asyncio.AbstractEventLoop | None = None
         
     @property
@@ -58,11 +57,11 @@ class WSCMDH: # WebSocket Command Handler
         self.ws_loop.run_until_complete(self._serve())
     
     async def _serve(self):
-        async with websockets.serve(self._handle_client, self.host, self.port): # pyright: ignore
+        async with serve(self._handle_client, self.host, self.port):
             Log.server(f"Remote CLI server started on ws://{self.host}:{self.port}")
             await asyncio.Future()  # run forever
     
-    async def _handle_client(self, websocket: WebSocketClientProtocol):
+    async def _handle_client(self, websocket: ServerConnection):
         ip = websocket.remote_address[0] or "unknown"
 
         try:
@@ -107,11 +106,11 @@ class WSCMDH: # WebSocket Command Handler
             
             await self.registry.dispatch("handlers_onwsleave", context={"REMOTE_CLIENT_IP": ip})
 
-    async def _close_client(self, websocket: WebSocketClientProtocol):
+    async def _close_client(self, websocket: ServerConnection):
         await websocket.close()
         await websocket.wait_closed()
     
-    async def _inject_command(self, message: str, websocket: WebSocketClientProtocol, ip: str):
+    async def _inject_command(self, message: str, websocket: ServerConnection, ip: str):
         cmd = re.sub(r'\s*transaction_id=[^\s]+', '', message).strip()
         Log.print(cmd, 'bright_green', icon=ip)
         

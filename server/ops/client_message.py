@@ -1,5 +1,5 @@
 from typing import Any
-from websockets.legacy.client import WebSocketClientProtocol
+from websockets.asyncio.server import ServerConnection
 
 from shared.logger import Log
 from shared.ops import GeneralOp
@@ -20,7 +20,7 @@ class ClientMsgOp(GeneralOp):
         Commands.END: "end"
     }
 
-    async def success(self, client_id: str, parsed: ParsedCommand, websocket: WebSocketClientProtocol):
+    async def success(self, client_id: str, parsed: ParsedCommand, websocket: ServerConnection):
         """
         Commands.OK: shows a success message
         """
@@ -29,7 +29,7 @@ class ClientMsgOp(GeneralOp):
         Log.success(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
 
 
-    async def error(self, client_id: str, parsed: ParsedCommand, websocket: WebSocketClientProtocol):
+    async def error(self, client_id: str, parsed: ParsedCommand, websocket: ServerConnection):
         """
         Commands.ERROR: shows an error message
         """
@@ -38,7 +38,7 @@ class ClientMsgOp(GeneralOp):
         Log.error(f"{self.owner.clients[client_id].get_display_name()}: {msg}")
 
 
-    async def end(self, client_id: str, parsed: ParsedCommand, websocket: WebSocketClientProtocol):
+    async def end(self, client_id: str, parsed: ParsedCommand, websocket: ServerConnection):
         """
         Commands.END: show a broadcast end message
         or error if 'message' is provided

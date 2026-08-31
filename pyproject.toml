@@ -16,7 +16,7 @@ dev = [
     "psutil==7.2.2",
     "pyalsaaudio==0.11.0",
     "pyright",
-    "websockets==11.0.3",
+    "websockets==13.1",
     "pysstv",
     "numpy",
     "pillow"

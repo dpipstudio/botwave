@@ -18,7 +18,7 @@ from pathlib import Path
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.patch_stdout import patch_stdout
 from typing import Any, TYPE_CHECKING
-from websockets.legacy.client import WebSocketClientProtocol
+from websockets.asyncio.server import ServerConnection
 
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -99,7 +99,7 @@ class BotWaveServer:
 
         return valid_targets
 
-    async def handle_message(self, client_id: str | None, message: str, websocket: WebSocketClientProtocol):
+    async def handle_message(self, client_id: str | None, message: str, websocket: ServerConnection):
         try:
             Log.debug(f"{client_id}: {message}")
 
@@ -207,7 +207,7 @@ class BotWaveServer:
             Log.end()
             Log.clear_transaction_id()
 
-    async def client_connect(self, client_id: str, websocket: WebSocketClientProtocol):
+    async def client_connect(self, client_id: str, websocket: ServerConnection):
         return
 
     async def client_disconnect(self, client_id: str):
