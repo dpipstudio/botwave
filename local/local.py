@@ -13,6 +13,7 @@ import re
 import shlex
 import sys
 from pathlib import Path
+from piwave import PiWave
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.patch_stdout import patch_stdout
 from typing import Any
@@ -45,27 +46,27 @@ class BotWaveLocal:
 
     def __init__(self):
         # broadcast state
-        self.broadcast_start_time = None
-        self.broadcasting = False
-        self.current_file = None
-        self.piwave = None
-        self.piwave_monitor = PWM()
+        self.broadcast_start_time: int | None = None
+        self.broadcasting: bool = False
+        self.current_file: str | None = None
+        self.piwave: PiWave | Any = None
+        self.piwave_monitor: PWM = PWM()
 
         # core systems
-        self.alsa = Alsa()
-        self.custom_commands = CCMD(is_server=False)
-        self.handlers_executor = HandlerExecutor(self.cmd_exec)
-        self.queue = Queue(client_instance=self, is_local=True)
-        self.registry = Registry(self)
-        self.tips = TipEngine(is_server=False)
+        self.alsa: Alsa = Alsa()
+        self.custom_commands: CCMD = CCMD(is_server=False)
+        self.handlers_executor: HandlerExecutor = HandlerExecutor(self.cmd_exec)
+        self.queue: Queue = Queue(client_instance=self, is_local=True)
+        self.registry: Registry = Registry(self)
+        self.tips: TipEngine = TipEngine(is_server=False)
 
         # remote control
-        self.rc_clients = 0
-        self.ws_handler: WSCMDH | None = None
+        self.rc_clients: int = 0
+        self.ws_handler: WSCMDH | Any = None
 
         # runtime / misc
-        self.last_argv = []
-        self.running = False
+        self.last_argv: list[str] = []
+        self.running: bool = False
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
         try:
