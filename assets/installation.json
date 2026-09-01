@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.6-jagera",
+      "commit": "aa90201315afd636be8f03166ec886735a54447f"
+    },
+    {
       "codename": "v1.2.5-rhus",
       "commit": "c020135dead758da1fa061e8e912abe82a27e89d"
     },
