@@ -14,6 +14,18 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.6-jagera ---=
+### What Changed
+- **`botwave` shell command**: A new `botwave` command is now installed alongside the other binaries. Running it prints a quick getting-started guide based on what's installed on the machine (server and/or client), including example commands to get going. The installer now points you to it after a successful install.
+- **`-v`/`--version` flag**: `bw-server`, `bw-client`, and `bw-local` now support `-v`/`--version` to print version and protocol info and exit.
+- **Fixed bugs**: Fixed bugs introduced by [v1.2.0-mora](https://github.com/dpipstudio/botwave/releases/tag/v1.2.0-mora) and [v1.2.5-rhus](https://github.com/dpipstudio/botwave/releases/tag/v1.2.5-rhus) causing crashes on older python versions.
+
+### Removals
+> [!CAUTION]
+> Following up on the deprecation warning in [v1.2.0-mora](https://github.com/dpipstudio/botwave/releases/tag/v1.2.0-mora), the `rm` command no longer accepts `all` as an argument (use `rm *.wav` instead), and the `update` command no longer accepts `latest` as a version (leave the version empty instead).
+
+=--- END ---=
+
 =--- v1.2.5-rhus ---=
 ### What Changed
 - **Python 3.10 required**: The minimum supported Python version is now `3.10` (was `3.9`). `install.sh` now checks your Python version against `assets/installation.json` and refuses to install if it's too old.
