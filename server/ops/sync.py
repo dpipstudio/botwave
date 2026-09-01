@@ -135,7 +135,7 @@ class SyncOp(CliOp):
                     size=0
                 )
                 
-                Log.client(f"  [{len(results["downloaded"]) + 1}/{len(files)}] Downloading {filename}...")
+                Log.client(f"  [{len(results['downloaded']) + 1}/{len(files)}] Downloading {filename}...")
 
                 if not await self.wait_for_completion(temp_path):
                     Log.error(f"  {filename} - file never unlocked")

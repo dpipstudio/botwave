@@ -85,7 +85,7 @@ class StatusOp(CliOp):
             Log.print(f"RC Port           : {rmt}", "white")
             Log.print(f"RC Clients        : {self.owner.rc_clients}", "white")
 
-        Log.print(f"Passkey           : {'yes' if Env.get("PASSKEY") else 'no'}", "white")
+        Log.print(f"Passkey           : {'yes' if Env.get('PASSKEY') else 'no'}", "white")
 
 
     def parse(self, cmd_parts: list[str]) -> Any:
