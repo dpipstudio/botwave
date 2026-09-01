@@ -32,11 +32,6 @@ class RemoveOp(CliOp):
                 Log.warning("No client(s) found matching the query")
                 return
 
-            if file == "all":
-                Log.warning("'rm all' is deprecated, use 'rm *' instead. This will be removed in a future release.")
-                file = "*.wav" # old behavior only deleted .wav files
-
-
         results: dict[str, list[str]] = {'deleted': [], 'failed': []}
 
         Log.info(f"Removing '{file}' from {len(targets)} client(s)...")

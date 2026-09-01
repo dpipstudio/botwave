@@ -37,12 +37,6 @@ class UpdateOp(CliOp):
                 Log.warning("No client(s) found matching the query")
                 return
 
-            if version == "latest":
-                Log.warning(f"'update {targets} latest' is deprecated and will be removed in a future release.")
-                Log.warning(f"Please omit the version to update to the latest release.")
-
-                version = ""
-
         args = ''
 
         if version:
