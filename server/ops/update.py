@@ -56,6 +56,7 @@ class UpdateOp(CliOp):
             client = self.owner.clients[client_id]
 
             try:
+                print(version)
                 response = await client.proto.send(
                     Commands.UPDATE,
                     version=version,
@@ -81,9 +82,9 @@ class UpdateOp(CliOp):
             return (None, None)
 
         targets = cmd_parts[0]
-        reason = cmd_parts[1] if len(cmd_parts) > 1 else None
+        version = cmd_parts[1] if len(cmd_parts) > 1 else ""
 
-        return (targets, reason)
+        return (targets, version)
 
 def setup(reg: Any):
     reg.register(UpdateOp)
