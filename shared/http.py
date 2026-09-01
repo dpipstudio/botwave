@@ -63,7 +63,7 @@ class BWHTTPFileServer:
         }
         return token
     
-    def create_stream_token(self, audio_generator: Generator[Any], rate: int = 48000, channels: int = 2) -> str:
+    def create_stream_token(self, audio_generator: Generator[Any, None, None], rate: int = 48000, channels: int = 2) -> str:
         token = uuid.uuid4().hex
         self.stream_tokens[token] = {
             'generator': audio_generator,
@@ -267,7 +267,7 @@ class BWHTTPFileServer:
         
         return response
     
-    async def _async_generator_wrapper(self, sync_generator: Generator[Any], loop: asyncio.AbstractEventLoop) -> AsyncGenerator[Any, None]:
+    async def _async_generator_wrapper(self, sync_generator: Generator[Any, None, None], loop: asyncio.AbstractEventLoop) -> AsyncGenerator[Any, None]:
         import concurrent.futures
         
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
