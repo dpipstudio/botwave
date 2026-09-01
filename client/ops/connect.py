@@ -45,7 +45,7 @@ class ConnectOp(GeneralOp):
     }
 
     async def connect(self):
-        Log.client(f"Connecting to wss://{Env.get("SERVER_HOST")}:{Env.get("SERVER_PORT")}...")
+        Log.client(f"Connecting to wss://{Env.get('SERVER_HOST')}:{Env.get('SERVER_PORT')}...")
 
         ssl_context = self.create_ssl_context()
 
