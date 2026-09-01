@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.7-ilex",
+      "commit": "e251819adf38dfc51b9142d56ab68af4282b3cce"
+    },
+    {
       "codename": "v1.2.6-jagera",
       "commit": "aa90201315afd636be8f03166ec886735a54447f"
     },
