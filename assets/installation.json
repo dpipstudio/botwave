@@ -263,6 +263,7 @@
       "prompt_toolkit==3.0.52"
     ],
     "binaries": [
+      "bin/botwave",
       "bin/bw-autorun",
       "bin/bw-nandl",
       "bin/bw-update"
