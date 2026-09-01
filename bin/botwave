@@ -128,9 +128,5 @@ EOF
 fi
 
 cat << EOF
-
-Hardware reminder: connect a wire or antenna to GPIO 4 (pin 7) to
-broadcast. Even a short bare wire noticeably improves range.
-
 For more detail: https://github.com/dpipstudio/botwave/wiki
 EOF
