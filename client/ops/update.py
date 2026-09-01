@@ -1,4 +1,6 @@
 import asyncio
+import re
+import shlex
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -23,14 +25,35 @@ class UpdateOp(GeneralOp):
     commands = {Commands.UPDATE: "update"}
 
     async def update(self, parsed: ParsedCommand):
-        update_args = parsed['kwargs'].get('args', '')
+        version = parsed['kwargs'].get('version', '').strip()
+
+        command = ["bw-update"]
+
+        if version:
+            try:
+                tokens = shlex.split(version)
+
+            except ValueError:
+                tokens = version.split()
+
+            if len(tokens) != 1 or not re.match(r'^v\d+\.\d+\.\d+', tokens[0]):
+                Log.error(f"Invalid update version: {version}")
+
+                await self.owner.proto.reply(
+                    parsed,
+                    Commands.ERROR,
+                    message="Invalid update version"
+                )
+                return
+
+            command += [version]
 
         Log.update("Update requested by server")
-        Log.update(f"Running bw-update {update_args}".strip())
+        Log.update(f"Running {' '.join(command)}".strip())
 
         try:
-            proc = await asyncio.create_subprocess_shell(
-                f"bw-update {update_args}".strip(),
+            proc = await asyncio.create_subprocess_exec(
+                *command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT
             )
