@@ -134,7 +134,8 @@ Or, alternatively, you can install BotWave manually following our guide at [`Adv
 <details>
 <summary><code>Installer options</code></summary>
 <hr>
-<pre>
+  
+```
 Usage: curl -sSL https://botwave.dpip.lol/install | sudo bash [-s -- [MODE] [OPTIONS]]
 
 Modes:
@@ -144,11 +145,12 @@ Modes:
 
 Options:
   -l, --latest        Install from the latest commit (even if unreleased)
-  -t, --to &lt;version&gt;  Install a specific release version
-  -b, --branch &lt;name&gt; Install from a specific branch (default: main)
+  -t, --to <version>  Install a specific release version
+  -b, --branch <name> Install from a specific branch (default: main)
   --[no-]alsa         Setup ALSA loopback card
   -h, --help          Show this help message
-</pre>
+```
+
 <p>Adding <code>-s -- &lt;server, client or both&gt; --alsa</code> at the end of the command skips the interactive menu and goes straight to installation.</p>
 <p>Note that all this is optional and not needed for basic installation.</p>
 <hr>
@@ -175,7 +177,8 @@ sudo bw-local
 <details>
 <summary><code>Local client options</code></summary>
 <hr>
-<pre>
+
+```
 usage: bw-local [-h] [--upload-dir UPLOAD_DIR] [--handlers-dir HANDLERS_DIR]
                 [--skip-checks | --no-skip-checks] [--daemon | --no-daemon]
                 [--rc RC] [--pk PK] [--talk | --no-talk] [--config CONFIG]
@@ -198,7 +201,8 @@ options:
   --talk, --no-talk     Show debug logs
   --config CONFIG       Path to a config file to load into environment
   -v, --version         Display version information
-</pre>
+```
+
 <hr>
 </details>
 
@@ -273,7 +277,8 @@ bw-server
 <details>
 <summary><code>Server options</code></summary>
 <hr>
-<pre>
+
+```
 usage: bw-server [-h] [--host HOST] [--port PORT] [--fport FPORT] [--pk PK]
                  [--handlers-dir HANDLERS_DIR]
                  [--start-asap | --no-start-asap]
@@ -301,7 +306,8 @@ options:
   --daemon, --no-daemon
                         Run in non-interactive daemon mode
   -v, --version         Display version information
-</pre>
+```
+
 <hr>
 </details>
 
@@ -318,7 +324,8 @@ sudo bw-client 192.168.1.10    # replace with your server's IP
 <details>
 <summary><code>Client options</code></summary>
 <hr>
-<pre>
+
+```
 usage: bw-client [-h] [--port PORT] [--fhost FHOST] [--fport FPORT]
                  [--upload-dir UPLOAD_DIR] [--pk PK]
                  [--skip-checks | --no-skip-checks] [--talk | --no-talk]
@@ -344,7 +351,8 @@ options:
   --talk, --no-talk     Show debug logs
   --config CONFIG       Path to a config file to load into environment
   -v, --version         Display version information
-</pre>
+```
+
 <hr>
 </details>
 
@@ -454,7 +462,8 @@ sudo bw-update
 <details>
 <summary><code>Updater options</code></summary>
 <hr>
-<pre>
+
+```
 Usage: bw-update [OPTIONS]
 
 Options:
@@ -467,7 +476,8 @@ Examples:
   bash                    # Update to latest release
   bash --latest           # Update to latest commit
   bash --to v1.0.0-oak
-</pre>
+```
+
 <hr>
 </details>
 
