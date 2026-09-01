@@ -25,7 +25,7 @@ class UpdateOp(GeneralOp):
     commands = {Commands.UPDATE: "update"}
 
     async def update(self, parsed: ParsedCommand):
-        version = parsed['kwargs'].get('version', '').strip()
+        version = parsed['kwargs'].get('version', '').strip() or ""
 
         command = ["bw-update"]
 
@@ -46,7 +46,7 @@ class UpdateOp(GeneralOp):
                 )
                 return
 
-            command += [version]
+            command += ["--to", version]
 
         Log.update("Update requested by server")
         Log.update(f"Running {' '.join(command)}".strip())
