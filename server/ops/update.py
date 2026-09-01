@@ -37,15 +37,10 @@ class UpdateOp(CliOp):
                 Log.warning("No client(s) found matching the query")
                 return
 
-        args = ''
-
         if version:
             version = version.lower().strip()
 
-            if re.match(r'^v\d+\.\d+\.\d+', version):
-                args = f"--to {version}"
-
-            else:
+            if not re.match(r'^v\d+\.\d+\.\d+', version):
                 Log.error(f"Invalid version: '{version}'. Use  a version like 'v1.0.0-oak'")
                 return
 
@@ -63,7 +58,7 @@ class UpdateOp(CliOp):
             try:
                 response = await client.proto.send(
                     Commands.UPDATE,
-                    args=args,
+                    version=version,
                     timeout=300.0
                 )
                 results['updated'].append(client_id)
