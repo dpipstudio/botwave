@@ -1,4 +1,6 @@
 import asyncio
+import re
+import shlex
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -23,16 +25,48 @@ class UpdateOp(GeneralOp):
     commands = {Commands.UPDATE: "update"}
 
     async def update(self, parsed: ParsedCommand):
-        update_args = parsed['kwargs'].get('args', '')
+        update_args = parsed['kwargs'].get('args', '').strip()
+
+        # SECURITY: Defense in depth on the client side.
+        # Server may construct "--to vX.Y.Z" (or just ""). Reject anything else
+        # to prevent shell injection (C-1: RCE as root).
+        cmd_args = ["bw-update"]
+        if update_args:
+            try:
+                tokens = shlex.split(update_args)
+            except ValueError:
+                tokens = update_args.split()
+
+            if len(tokens) != 2 or tokens[0] != "--to":
+                Log.error(f"Invalid update args shape: {update_args!r}")
+                await self.owner.proto.reply(
+                    parsed,
+                    Commands.ERROR,
+                    message="Invalid update args",
+                )
+                return
+
+            version = tokens[1]
+            if not re.match(r"^v\d+\.\d+\.\d+$", version):
+                Log.error(f"Invalid update version: {version!r}")
+                await self.owner.proto.reply(
+                    parsed,
+                    Commands.ERROR,
+                    message="Invalid update version",
+                )
+                return
+
+            cmd_args += ["--to", version]
 
         Log.update("Update requested by server")
-        Log.update(f"Running bw-update {update_args}".strip())
+        Log.update(f"Running {' '.join(cmd_args)}")
 
         try:
-            proc = await asyncio.create_subprocess_shell(
-                f"bw-update {update_args}".strip(),
+            # NO SHELL: pass argv directly. Argument injection impossible.
+            proc = await asyncio.create_subprocess_exec(
+                *cmd_args,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT
+                stderr=asyncio.subprocess.STDOUT,
             )
             stdout, _ = await proc.communicate()
 
