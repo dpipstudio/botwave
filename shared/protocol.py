@@ -3,7 +3,7 @@ import shlex
 import time
 from typing import Any, TypedDict
 
-PROTOCOL_VERSION = "2.1.3"
+PROTOCOL_VERSION = "2.1.4"
 
 
 class Commands:
