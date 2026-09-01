@@ -4,8 +4,8 @@ from websockets.asyncio.server import ServerConnection
 
 from shared.env import Env
 from shared.logger import Log
-from shared.protocol import Commands, ProtocolParser, PROTOCOL_VERSION
-from shared.protomanager import ParsedCommand, ProtoManager
+from shared.protocol import Commands, ProtocolParser, ParsedCommand, PROTOCOL_VERSION
+from shared.protomanager import ProtoManager
 from shared.ops import GeneralOp
 from shared.version import versions_compatible
 

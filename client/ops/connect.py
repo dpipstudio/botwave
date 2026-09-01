@@ -9,8 +9,8 @@ from shared.env import Env
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
 from shared.ops import GeneralOp
-from shared.protocol import Commands, PROTOCOL_VERSION
-from shared.protomanager import ParsedCommand, ProtoManager
+from shared.protocol import Commands, ParsedCommand, PROTOCOL_VERSION
+from shared.protomanager import ProtoManager
 from shared.registry import UpperException
 from shared.socket import BWWebSocketClient
 from shared.version import get_release_version

@@ -9,8 +9,7 @@ from shared.converter import Converter, SUPPORTED_EXTENSIONS
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
-from shared.protocol import Commands, PROTOCOL_VERSION
-from shared.protomanager import ParsedCommand
+from shared.protocol import Commands, ParsedCommand, PROTOCOL_VERSION
 from shared.security import PathValidator, SecurityError
 
 class DownloadOp(GeneralOp):

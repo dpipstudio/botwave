@@ -6,8 +6,7 @@ from typing import Any
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
-from shared.protocol import Commands
-from shared.protomanager import ParsedCommand
+from shared.protocol import Commands, ParsedCommand
 
 class ListFilesOp(GeneralOp):
     """

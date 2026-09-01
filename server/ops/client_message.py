@@ -3,8 +3,7 @@ from websockets.asyncio.server import ServerConnection
 
 from shared.logger import Log
 from shared.ops import GeneralOp
-from shared.protocol import Commands
-from shared.protomanager import ParsedCommand
+from shared.protocol import Commands, ParsedCommand
 
 class ClientMsgOp(GeneralOp):
     """
