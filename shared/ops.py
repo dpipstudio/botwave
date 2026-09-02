@@ -16,6 +16,7 @@ class CliOp:
     short_help: str = ""
     long_help: str = ""
     examples: list[str] = []
+    env_vars: dict[str, tuple[str, str]] = {}
 
     def __init__(self, owner: Any, registry: "Registry"):
         self.owner = owner
