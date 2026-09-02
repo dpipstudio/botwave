@@ -13,6 +13,8 @@ class GeneralOp:
 class CliOp:
     name: str = ""
     syntax: str = ""
+    short_help: str = ""
+    long_help: str = ""
 
     def __init__(self, owner: Any, registry: "Registry"):
         self.owner = owner
