@@ -37,7 +37,7 @@ Other positional arguments:
 [destination]: the name of the final .wav file
 """
     examples = [
-        "dl https://example.com/audio.mp3"
+        "dl https://example.com/audio.mp3",
         "dl https://example.com/file.wav myfile.wav"
     ]
     env_vars = {
