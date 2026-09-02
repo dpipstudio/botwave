@@ -13,6 +13,13 @@ class StatusOp(CliOp):
     """
 
     name = "status"
+    short_help = "Show current broadcast and remote status"
+    long_help = """\
+Prints the current broadcast status + information.
+If the remote CLI is enabled, also show information about it."""
+    examples = [
+        "status"
+    ]
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if self.owner.broadcasting and self.owner.current_file:

@@ -10,6 +10,11 @@ class StopOp(CliOp):
     """
 
     name = "stop"
+    short_help = "Stop the current broadcast"
+    long_help = short_help
+    examples = [
+        "stop"
+    ]
 
     async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

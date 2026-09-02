@@ -18,6 +18,40 @@ class SSTVOp(CliOp):
 
     name = "sstv"
     syntax = "<image_path> [mode] [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Convert an image into SSTV audio and broadcast it"
+    long_help = """\
+Convert an <image> into SSTV audio and broadcast it.
+Without [mode] specified, select automatically the best mode
+available.
+
+Available modes: MartinM1, MartinM2, ScottieS1, ScottieS2,
+ScottieDX, Robot36, PasokonP3, PasokonP5, PasokonP7, PD90,
+PD120, PD160, PD180, PD240, PD290, WraaseSC2120, WraaseSC2180,
+Robot8BW, Robot24BW
+
+Generated .wav files are available into '/tmp/bw_sstv/'.
+
+Other positional arguments:
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "sstv image.png"
+        "sstv image.png Robot36 96.9 true 'BotWave'"
+    ]
+    env_vars = {
+        "SSTV_SAMPLE_RATE": ("48000", "The sample rate to generate the .wav file with"),
+        "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
+        "BACKEND_BYPASS_CACHE": ("false", "If the backend manager should discard its cached backend path"),
+        "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
+        "SSTV_DEFAULT_MODE": ("auto", "The default SSTV mode"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
 
     async def handle(
         self,

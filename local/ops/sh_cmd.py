@@ -15,6 +15,18 @@ class ShellOp(CliOp):
 
     name = "<"
     syntax = "<command>"
+    short_help = "Run a shell command on the host machine"
+    long_help = """\
+Run a shell <command> on the host machine and print
+its output.
+"""
+    examples = [
+        "< df -h"
+        "< ls {UPLOAD_DIR}"
+    ]
+    env_vars = {
+        "CMD_INTERPRETER": ("", "The command interpreter to use to execute the given command")
+    }
 
     async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
@@ -67,6 +79,18 @@ class PipeOp(CliOp):
 
     name = "|"
     syntax = "<command>"
+    short_help = "Run a shell command and pipe each output line as a BotWave command"
+    long_help = """\
+Run a shell <command> and pipe each output line as a BotWave command.
+"""
+    examples = [
+        "| echo 'start hello.wav'",
+        "| bash /opt/BotWave/scripts/script.sh"
+    ]
+    env_vars = {
+        "CMD_INTERPRETER": ("", "The command interpreter to use to execute the given command")
+    }
+
 
     async def handle(self, command: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

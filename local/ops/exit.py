@@ -11,6 +11,13 @@ class ExitOp(CliOp):
     """
 
     name = "exit"
+    short_help = "Shutdown and exit the local client"
+    long_help = """\
+Cleanly shuts down and exits the local client.
+"""
+    examples = [
+        "exit"
+    ]
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         self.owner.running = False

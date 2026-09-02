@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -25,7 +26,27 @@ class DownloadOp(CliOp):
     """
 
     name = "dl"
-    syntax  = "<url> [destination]"
+    syntax = "<url> [destination]"
+    short_help = "Download an audio file from a URL"
+    long_help = """\
+Download an audio file from the given <url>.
+The file will automatically be converted to
+.wav if it is a supported format.
+
+Other positional arguments:
+[destination]: the name of the final .wav file
+"""
+    examples = [
+        "dl https://example.com/audio.mp3"
+        "dl https://example.com/file.wav myfile.wav"
+    ]
+    env_vars = {
+        "DOWNLOAD_UA": (
+            f"BotWaveDownloads/{PROTOCOL_VERSION} (+https://github.com/dpipstudio/botwave/)",
+            "The user-agent used when making the web request"
+            ),
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to store the file into"),
+    }
 
     async def handle(
         self,

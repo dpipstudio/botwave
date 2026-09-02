@@ -6,6 +6,7 @@ from piwave.backends import backend_classes
 from typing import Any
 
 from shared.bw_custom import BWCustom
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -24,7 +25,28 @@ class StartOp(CliOp):
     """
 
     name = "start"
-    syntax = "<file> [freq] [loop] [ps] [rt] [pi]"
+    syntax = "<file> [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Start broadcasting a WAV file"
+    long_help = """\
+Start broadcasting a wav file from the upload
+directory on [frequency].
+
+Other positional arguments:
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    env_vars = {
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to retrieve the file from"),
+        "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
+        "BACKEND_BYPASS_CACHE": ("false", "If the backend manager should discard its cached backend path"),
+        "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
 
     async def handle(
         self,
