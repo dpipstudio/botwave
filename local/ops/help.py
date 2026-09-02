@@ -1,143 +1,154 @@
-from typing import Any
+import re
+from typing import Any, Callable
 
 from shared.logger import Log
 from shared.ops import CliOp
 
+class CommandInfo:
+    name: str
+    is_custom: bool
+    required_syntax: str
+    full_syntax: str
+    short_help: str
+    long_help: str
+    full_help: Callable[..., None]
+
 class HelpOp(CliOp):
+    """
+    The 'help' command OP.
+    Lists every command and its syntax.
+    Also handles custom commands.
+    """
+
     name = "help"
+    syntax = "[commands]"
+    short_help = "Displays general or specific help"
+    long_help = """\
+Without arguments, lists every available command with a
+short description.
 
-    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
-        """
-        The 'help' command OP.
-        Lists every command and its syntax (currently hardcoded, 
-        would be nice to have a dynamic system in the future).
+If one or more [commands] are given, shows the full help
+for each one: its syntax, a detailed description, examples
+and any related environment variables.
 
-        Also displays custom commands and their eventual help
-        if any
-        """
+Custom commands (.cmd files) are included in both views.
+"""
+    examples = [
+        "help",
+        "help start",
+        "help start live my_customcmd"
+    ]
+    env_vars = {}
 
+    async def handle(self, commands: list[str] = [], is_cmd: bool = False, cmd_parts: list[str] = []):
+        if is_cmd:
+            commands = self.parse(cmd_parts)
+
+        all_commands = [
+            self.get_cmd_info(cmd)
+            for cmd in self.registry.get_instances().values()
+            if isinstance(cmd, CliOp)
+        ]
+
+        all_commands += [
+            self.get_ccmd_info(ccmd)
+            for ccmd in self.owner.custom_commands.get_all()
+        ]
+
+        if commands:
+            for index, command in enumerate(commands, start=1):
+                if command in [cmd.name for cmd in all_commands]:
+                    cmd_info = next((cmd for cmd in all_commands if cmd.name == command))
+
+                    Log.print("›", "bright_green", end=" ")
+                    Log.print(
+                        f"{cmd_info.name if not cmd_info.is_custom else ''} {cmd_info.full_syntax}".strip(),
+                        "yellow",
+                        end="\n\n"
+                        )
+
+                    cmd_info.full_help()
+                
+                else:
+                    Log.warning(f"Command '{command}' not found")
+
+                if index != len(commands):
+                    Log.print("\n---------------------------------", "green", end="\n\n")
+
+            return
+
+        self.show_help(all_commands)
+
+    def parse(self, cmd_parts: list[str]):
+        return cmd_parts
+
+    def get_cmd_info(self, cmd_op: CliOp) -> CommandInfo:
+        cmd_info = CommandInfo()
+        cmd_info.name = cmd_op.name
+        cmd_info.is_custom = False
+        cmd_info.full_syntax = cmd_op.syntax
+        cmd_info.short_help = cmd_op.short_help
+        cmd_info.long_help = cmd_op.long_help
+
+        # only keep stuff inside '<>'
+        syntax = cmd_op.syntax
+        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', syntax))
+
+        def full_help():
+            Log.print(cmd_op.long_help, "white", end="")
+
+            if len(cmd_op.examples) != 0:
+                Log.print("")
+                Log.print("Examples:" if len(cmd_op.examples) > 1 else "Example:", "white")
+
+                for example in cmd_op.examples:
+                    Log.print(f"  - {Log.COLORS.get('cyan')}{example}", "white")
+
+            if len(cmd_op.env_vars) != 0:
+                Log.print("")
+                Log.print(f"Environment variables:", "white")
+
+                for name, (default, usage) in cmd_op.env_vars.items():
+                    Log.print(f"  - {name} ({default}): {usage}", "white")
+
+        cmd_info.full_help = full_help
+
+        return cmd_info
+
+    def get_ccmd_info(self, custom_command: dict[Any, Any]) -> CommandInfo:
+        cmd_info = CommandInfo()
+        cmd_info.name = custom_command["name"]
+        cmd_info.is_custom = True
+
+        help = custom_command["help"]
+        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', help[0])) if len(help) > 1 else ""
+        cmd_info.full_syntax = help[0] if len(help) > 1 else ""
+        cmd_info.short_help = help[1] if len(help) > 2 else f"The {cmd_info.name} custom command"
+        cmd_info.long_help = '\n'.join(help)
+
+        def full_help():
+            Log.print(cmd_info.long_help, "white")
+
+        cmd_info.full_help = full_help
+
+        return cmd_info
+
+    def show_help(self, commands: list[CommandInfo]):
         Log.header("BotWave Local Client - Help")
         Log.section("Available Commands")
 
-        Log.print("start <file> [frequency] [loop] [ps] [rt] [pi]", "bright_green")
-        Log.print("  Start broadcasting a WAV file", "white")
-        Log.print("  Example:", "white")
-        Log.print("    start broadcast.wav 100.5 true MyRadio \"My Radio Text\" FFFF", "cyan")
-        Log.print("")
+        self.list_commands(commands)
 
-        Log.print("stop", "bright_green")
-        Log.print("  Stop the current broadcast", "white")
-        Log.print("  Example:", "white")
-        Log.print("    stop", "cyan")
-        Log.print("")
+        Log.print("\nUse 'help [command]' to see specific help about a command", "white")
 
-        Log.print("live [freq] [ps] [rt] [pi]", "bright_green")
-        Log.print("  Start a live audio broadcast", "white")
-        Log.print("  Example:", "white")
-        Log.print("    live", "cyan")
-        Log.print("")
+    def list_commands(self, commands: list[CommandInfo]):
 
-        Log.print("queue [+|-|*|!|?]", "bright_green")
-        Log.print("  Manage broadcast queue", "white")
-        Log.print("  Use 'queue ?' for detailed help", "white")
-        Log.print("")
+        longest_cmd = max(len(f"{cmd.name} {cmd.required_syntax}") for cmd in commands)
+        padding = longest_cmd + 4
 
-        Log.print("sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
-        Log.print("  Convert an image into a SSTV WAV file, and then broadcast it", "white")
-        Log.print("  Generated WAVs are cached, so re-running with the same image/mode won't regenerate", "white")
-        Log.print("  Example:", "white")
-        Log.print("    sstv /path/to/mycat.png Robot36 90 false PsPs Cutie FFFF", "cyan")
-        Log.print("")
+        for cmd in commands:
+            Log.print(f"{cmd.name} {cmd.required_syntax}".ljust(padding) + cmd.short_help, "white")
 
-        Log.print("morse <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]", "bright_green")
-        Log.print("  Convert text to Morse code WAV and broadcast it", "white")
-        Log.print("  Examples:", "white")
-        Log.print("    morse \"CQ CQ DE BOTWAVE\" 18 90 false BOTWAVE MORSE", "cyan")
-        Log.print("    morse message.txt", "cyan")
-        Log.print("")
-
-        Log.print("lf", "bright_green")
-        Log.print("  List files in the upload directory", "white")
-        Log.print("")
-
-        Log.print("rm <filename|glob>", "bright_green")
-        Log.print("  Remove a file", "white")
-        Log.print("  Example:", "white")
-        Log.print("    rm broadcast.wav", "cyan")
-        Log.print("    rm *.wav", "cyan")
-        Log.print("")
-
-        Log.print("upload <file|folder>", "bright_green")
-        Log.print("  Upload a file or folder to the upload directory", "white")
-        Log.print("  Examples:", "white")
-        Log.print("    upload broadcast.wav", "cyan")
-        Log.print("    upload /home/bw/lib", "cyan")
-        Log.print("")
-
-        Log.print("dl <url> [destination]", "bright_green")
-        Log.print("  Download a WAV file from a URL", "white")
-        Log.print("  Example:", "white")
-        Log.print("    download http://example.com/file.wav myfile.wav", "cyan")
-        Log.print("")
-
-        Log.print("handlers [filename]", "bright_green")
-        Log.print("  List all handlers or commands in a specific handler file", "white")
-        Log.print("  Example:", "white")
-        Log.print("    handlers", "cyan")
-        Log.print("")
-
-        Log.print("< <command>", "bright_green")
-        Log.print("  Run a shell command on the main OS", "white")
-        Log.print("  Example:", "white")
-        Log.print("    < df -h", "cyan")
-        Log.print("")
-
-        Log.print("| <command>", "bright_green")
-        Log.print("  Run a shell command and pipe each output line as a BotWave command", "white")
-        Log.print("  Example:", "white")
-        Log.print("    | cat commands.txt", "cyan")
-        Log.print("")
-
-        Log.print("get <keys|glob>", "bright_green")
-        Log.print("  Get one or more environment variable(s)", "white")
-        Log.print("  Use '*' to list all environment variables", "white")
-        Log.print("  Examples:", "white")
-        Log.print("    get PORT", "cyan")
-        Log.print("    get PORT HOST REMOTE_CMD_PORT", "cyan")
-        Log.print("    get *", "cyan")
-        Log.print("")
-
-        Log.print("set <key> <value> [immutable]", "bright_green")
-        Log.print("  Set an environment variable", "white")
-        Log.print("  If immutable is 'true', the value cannot be changed without re-setting it as immutable. Editing those values is not recommended.", "white")
-        Log.print("  Examples:", "white")
-        Log.print("    set PROMPT_TEXT \"._.\"", "cyan")
-        Log.print("    set PASSKEY mykey true", "cyan")
-        Log.print("")
-
-        Log.print("status", "bright_green")
-        Log.print("  Show current broadcast and remote status", "white")
-        Log.print("")
-
-        Log.print("exit", "bright_green")
-        Log.print("  Exit the application", "white")
-        Log.print("  Example:", "white")
-        Log.print("    exit", "cyan")
-
-        Log.print("help", "bright_green")
-        Log.print("  Display this help message", "white")
-        Log.print("  Example:", "white")
-        Log.print("    help", "cyan")
-        Log.print("")
-
-        custom_commands = self.owner.custom_commands.get_all()
-
-        if custom_commands:
-            Log.section("Custom Commands")
-
-            for command in custom_commands:
-                for line in command["help"]:
-                    Log.print(line, style="yellow")
 
 def setup(reg: Any):
     reg.register(HelpOp)
