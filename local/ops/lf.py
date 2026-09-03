@@ -13,6 +13,7 @@ class ListFilesOp(CliOp):
     """
 
     name = "lf"
+    syntax = ""
     short_help = "List files in the upload directory"
     long_help = short_help
     examples = [

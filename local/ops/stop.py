@@ -10,6 +10,7 @@ class StopOp(CliOp):
     """
 
     name = "stop"
+    syntax = ""
     short_help = "Stop the current broadcast"
     long_help = short_help
     examples = [

@@ -13,6 +13,7 @@ class StatusOp(CliOp):
     """
 
     name = "status"
+    syntax = ""
     short_help = "Show current broadcast and remote status"
     long_help = """\
 Prints the current broadcast status + information.

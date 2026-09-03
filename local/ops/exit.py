@@ -11,6 +11,7 @@ class ExitOp(CliOp):
     """
 
     name = "exit"
+    syntax = ""
     short_help = "Shutdown and exit the local client"
     long_help = """\
 Cleanly shuts down and exits the local client.
