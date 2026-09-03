@@ -121,9 +121,9 @@ Custom commands (.cmd files) are included in both views.
         cmd_info.is_custom = True
 
         help = custom_command["help"]
-        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', help[0])) if len(help) > 1 else ""
-        cmd_info.full_syntax = help[0] if len(help) > 1 else ""
-        cmd_info.short_help = help[1] if len(help) > 2 else f"The {cmd_info.name} custom command"
+        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', help[0])) if len(help) > 0 else ""
+        cmd_info.full_syntax = help[0] if len(help) > 0 else ""
+        cmd_info.short_help = help[1] if len(help) > 1 else f"The {cmd_info.name} custom command"
         cmd_info.long_help = '\n'.join(help)
 
         def full_help():
