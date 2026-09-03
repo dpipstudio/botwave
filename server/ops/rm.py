@@ -12,6 +12,16 @@ class RemoveOp(CliOp):
 
     name = "rm"
     syntax = "<targets> <filename|glob>"
+    short_help = "Remove a file from client(s)"
+    long_help = """\
+Remove the given <filename> from the upload directory of
+<targets>. If a <glob> is passed, remove all matching files.
+"""
+    examples = [
+        "rm all broadcast.wav",
+        "rm all *"
+    ]
+    env_vars = {}
 
     async def handle(
             self,

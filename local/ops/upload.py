@@ -17,6 +17,19 @@ class UploadOp(CliOp):
 
     name = "upload"
     syntax = "<file|dir>"
+    short_help = "Upload a file or folder to the upload directory"
+    long_help = """\
+Upload a <file> or <directory> content to the
+uploads directory. Converts the files to .wav if
+it is in a supported format.
+"""
+    examples = [
+        "upload myfile.mp3",
+        "upload Music/"
+    ]
+    env_vars = {
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to store the file(s) into"),
+    }
 
     async def handle(self, target: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

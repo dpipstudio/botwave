@@ -24,6 +24,19 @@ class UploadOp(CliOp):
 
     name = "upload"
     syntax = "<targets> <file|folder>"
+    short_help = "Upload a WAV file or a folder's files to client(s)"
+    long_help = """\
+Upload a <file> or every supported file in a <folder> to
+<targets>. Converts files to .wav if they're in a supported
+format.
+"""
+    examples = [
+        "upload all broadcast.wav",
+        "upload pi1,pi2 /home/bw/lib"
+    ]
+    env_vars = {
+        "MAX_UPLOAD_SIZE": ("524288000", "The maximum accepted file size in bytes (default 500 MB)")
+    }
 
     async def handle(
             self,

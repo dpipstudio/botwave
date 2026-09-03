@@ -20,6 +20,36 @@ class LiveOp(CliOp):
 
     name = "live"
     syntax = "[frequency] [ps] [rt] [pi]"
+    short_help = "Start a live audio broadcast"
+    long_help = f"""\
+Starts a live audio broadcast on the given [frequency].
+To send audio to it, make sure your output is set to the
+ALSA loopback card "plughw:{Env.get('ALSA_CARD', 'BotWave')},0".
+
+Other positional arguments:
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "live",
+        "live 96.9 'BotWave'"
+    ]
+    env_vars = {
+        "ALSA_INTERFACE": ("hw", "The ALSA interface"), 
+        "ALSA_CARD": ("BotWave", "The ALSA card name"), 
+        "ALSA_DEVICE": ("1", "The ALSA device"), 
+        "ALSA_RATE": ("48000", "The ALSA rate to expect"), 
+        "ALSA_CHANNELS": ("2", "The ALSA channels to expect"), 
+        "ALSA_PERIODSIZE": ("2", "The ALSA period size to expect"), 
+        "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
+        "BACKEND_BYPASS_CACHE": ("false", "If the backend manager should discard its cached backend path"),
+        "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
 
     async def handle(
         self,

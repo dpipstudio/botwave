@@ -17,6 +17,28 @@ class StartOp(CliOp):
 
     name = "start"
     syntax = "<targets> <file> [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Start broadcasting on client(s)"
+    long_help = """\
+Start broadcasting <file> from the upload directory on
+<targets>, on the given [frequency].
+
+Other positional arguments:
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "start all myfile.wav"
+        "start all myfile.wav 96.9 true 'BotWave'"
+    ]
+    env_vars = {
+        "WAIT_START": ("true", "If the broadcast should be delayed by len(clients) * 5 for better syncing"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("<filename>", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
 
     async def handle(
         self,

@@ -13,6 +13,15 @@ class ListFilesOp(CliOp):
 
     name = "lf"
     syntax = "<targets>"
+    short_help = "List broadcastable files on client(s)"
+    long_help = """\
+List the files present in the upload folder of the given
+<targets>.
+"""
+    examples = [
+        "lf all"
+    ]
+    env_vars = {}
 
     async def handle(
         self,

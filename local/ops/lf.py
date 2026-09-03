@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -12,6 +13,15 @@ class ListFilesOp(CliOp):
     """
 
     name = "lf"
+    syntax = ""
+    short_help = "List files in the upload directory"
+    long_help = short_help
+    examples = [
+        "lf"
+    ]
+    env_vars = {
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory path")
+    }
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         target_dir = Path(Env.get("UPLOAD_DIR"))

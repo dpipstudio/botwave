@@ -9,12 +9,23 @@ from shared.protocol import PROTOCOL_VERSION
 class HandlersCliOp(CliOp):
     """
     The 'handlers' command OP. Lists current handlers if no
-    argument provided, or displays the content of an handler file
-    if the file exists. Overall just a HanderExecutor wrapper.
+    argument provided, or displays the content of a handler file
+    if the file exists. Overall just a HandlerExecutor wrapper.
     """
 
     name = "handlers"
     syntax = "[filename]"
+    short_help = "List all handlers or commands in a specific handler file"
+    long_help = """\
+Lists all handlers (.hdl and .shdl) and custom commands
+(.cmd) files in the handlers directory.
+If a [filename] is provided, displays the content of that file.
+"""
+    examples = [
+        "handlers",
+        "handlers hello.cmd"
+    ]
+    env_vars = {}
 
     async def handle(self, file: bool = False, is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

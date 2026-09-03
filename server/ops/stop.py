@@ -12,6 +12,15 @@ class StopOp(CliOp):
 
     name = "stop"
     syntax = "<targets>"
+    short_help = "Stop broadcasting on client(s)"
+    long_help = """\
+Stop the current broadcast on the given <targets>, and
+stop the local ALSA recorder.
+"""
+    examples = [
+        "stop all"
+    ]
+    env_vars = {}
 
     async def handle(
         self,

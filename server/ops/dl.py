@@ -17,6 +17,17 @@ class DownloadOp(CliOp):
 
     name = "dl"
     syntax = "<targets> <url> [destination]"
+    short_help = "Request client(s) to download a file from a URL"
+    long_help = """\
+Request the given <targets> to download a file from <url>.
+The destination filename is deducted from the <url> if
+[destination] is not provided.
+"""
+    examples = [
+        "dl all https://example.com/audio.mp3",
+        "dl pi1,pi2 https://example.com/file.wav myfile.wav"
+    ]
+    env_vars = {}
 
     async def handle(
         self,

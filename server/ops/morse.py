@@ -22,7 +22,36 @@ class MorseOp(CliOp):
 
     name = "morse"
     syntax = "<targets> <text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Convert text to Morse code and broadcast it on client(s)"
+    long_help = """\
+Convert text to Morse code, upload the resulting WAV to
+<targets>, and broadcast it.
+If the first argument is a <file>, read its content and
+convert it. If not, use the <text> itself.
 
+Generated .wav files are available into '/tmp/bw_morse/'.
+
+Other positional arguments:
+[wpm]: Words per minute to generate
+[frequency]: The frequency to broadcast to
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "morse all \"CQ CQ DE BOTWAVE\" 18 90 false BOTWAVE MORSE",
+        "morse pi1 message.txt"
+    ]
+    env_vars = {
+        "MORSE_FREQUENCY": ("700", "The audio frequency to generate the morse tone with"),
+        "MORSE_SAMPLE_RATE": ("48000", "The sample rate to generate the .wav file with"),
+        "DEFAULT_MORSE_WPM": ("20", "The default morse words per minute"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("Morse", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
     async def handle(
         self,
         targets: list[str] = [],

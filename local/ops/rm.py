@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -14,6 +15,19 @@ class RmOp(CliOp):
 
     name = "rm"
     syntax = "<filename|glob>"
+    short_help = "Remove a file from the upload directory"
+    long_help = """\
+Remove the given <filename> from the upload directory.
+If a <glob> is passed, remove all the matching files.
+"""
+    examples = [
+        "rm myfile.wav",
+        "rm *.wav"
+    ]
+    env_vars = {
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to delete the file from"),
+
+    }
 
     async def handle(self, target: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

@@ -18,6 +18,38 @@ class MorseOp(CliOp):
 
     name = "morse"
     syntax = "<text|file> [wpm] [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Convert text to morse code and broadcast it"
+    long_help = """\
+Convert text to morse code and broadcast it.
+If the first argument is a <file>, read its content and
+convert it. If not, use the <text> itself.
+
+Generated .wav files are available into '/tmp/bw_morse/'.
+
+Other positional arguments:
+[wpm]: Words per minute to generate
+[frequency]: The frequency to broadcast to.
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "morse file.txt",
+        "morse 'Hello, world!' 20 96.9 true 'BotWave'"
+    ]
+    env_vars = {
+        "MORSE_FREQUENCY": ("700", "The audio frequency to generate the morse tone with"),
+        "MORSE_SAMPLE_RATE": ("48000", "The sample rate to generate the .wav file with"),
+        "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
+        "BACKEND_BYPASS_CACHE": ("false", "If the backend manager should discard its cached backend path"),
+        "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
+        "DEFAULT_MORSE_WPM": ("20", "The default morse words per minute"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("Morse", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
 
     async def handle(
         self,
