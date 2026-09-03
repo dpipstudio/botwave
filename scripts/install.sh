@@ -860,7 +860,7 @@ main() {
     cd "$START_PWD"
     log INFO ""
     log INFO "Run 'botwave' in your terminal for a quick introduction :)"
-    echo "Installation completed, exiting " # avoid blocking
+    echo "Installation completed, exiting!" # avoid blocking
     exit 0
 }
 

@@ -71,7 +71,7 @@ Other positional arguments:
 
         if not self.owner.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
-            Log.alsa("Did you setup the ALSA loopback card correctly ?")
+            Log.alsa("Did you setup the ALSA loopback card correctly?")
             return
                 
         if not self.owner.alsa.start():

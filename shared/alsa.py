@@ -83,7 +83,7 @@ class Alsa:
         
         except alsaaudio.ALSAAudioError:
             Log.alsa(f"ALSA Error: Could not open {self.device_name}.")
-            Log.alsa("Has the loopback device been set up correctly ?")
+            Log.alsa("Has the loopback device been set up correctly?")
             return False
 
     def _read_loop(self):

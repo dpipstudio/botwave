@@ -22,5 +22,5 @@ def check():
             return # good
 
     # bad
-    Log.error("BotWave integrity check failed. Did we lose our cat ?")
+    Log.error("BotWave integrity check failed. Did we lose our cat?")
     sys.exit(1)

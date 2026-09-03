@@ -652,7 +652,7 @@ main() {
     log INFO "Log file: $LOG_FILE"
 
     cd "$START_PWD"
-    echo "Update completed, exiting !" # avoid blocking
+    echo "Update completed, exiting!" # avoid blocking
     exit 0
 }
 
