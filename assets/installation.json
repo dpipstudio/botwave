@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.8-nymania",
+      "commit": "e5bae21f0a56fde9b53f5ce47389e0f22f463244"
+    },
+    {
       "codename": "v1.2.7-ilex",
       "commit": "e251819adf38dfc51b9142d56ab68af4282b3cce"
     },
