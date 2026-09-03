@@ -505,6 +505,7 @@ Got a question or an issue?
 ## Mentions
 **BotWave mentions**: Here are some posts/websites that talk about BotWave. Thanks to their creators!
 <div align="center">
+<a href="https://eutech.directory/" target="_blank"><img src="assets/readme_assets/badge_eutech_directory.svg" alt="eutech.directory"/></a>
 <a href="https://awesome-selfhosted.net/" target="_blank"><img src="assets/readme_assets/badge_awesome.svg" alt="awesome-selfhosted"/></a>
 <a href="https://nightrunners.eu/projects/botwave" target="_blank"><img src="assets/readme_assets/badge_nightrunners.svg" alt="nigthrunners"/></a>
 <a href="https://tom-doerr.github.io/repo_posts/" target="_blank"><img src="assets/readme_assets/badge_repository_showcase.svg" alt="tom-doerr"/></a>
