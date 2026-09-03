@@ -62,7 +62,7 @@ Custom commands (.cmd files) are included in both views.
 
                     Log.print("›", "bright_green", end=" ")
                     Log.print(
-                        f"{cmd_info.name if not cmd_info.is_custom else ''} {cmd_info.full_syntax}".strip(),
+                        f"{cmd_info.name if not cmd_info.is_custom else ''} {cmd_info.full_syntax or cmd_info.name}".strip(),
                         "yellow",
                         end="\n\n"
                         )
