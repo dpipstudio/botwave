@@ -20,6 +20,7 @@ If the remote CLI is enabled, also show information about it."""
     examples = [
         "status"
     ]
+    env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if self.owner.broadcasting and self.owner.current_file:

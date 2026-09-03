@@ -22,7 +22,7 @@ class HelpOp(CliOp):
 
     name = "help"
     syntax = "[commands]"
-    short_help = "Displays general or specific help"
+    short_help = "Show general or command-specific help"
     long_help = """\
 Without arguments, lists every available command with a
 short description.

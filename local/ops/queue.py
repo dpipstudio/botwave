@@ -11,13 +11,14 @@ class QueueOp(CliOp):
     syntax = "[+|-|*|!|?]"
     short_help = "Manage the broadcast queue"
     long_help = """\
-Broadcast the broadcast queue.
-Use 'queue ?' for detailed help.
+Manage the broadcast queue.
+Use 'queue ?' for detailed help on the available operators.
 """
     examples = [
-        "queue ?"
+        "queue ?",
         "queue +myfile.wav,myfile2.wav"
     ]
+    env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         self.owner.queue.parse(' '.join(cmd_parts))

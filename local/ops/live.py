@@ -23,8 +23,8 @@ class LiveOp(CliOp):
     short_help = "Start a live audio broadcast"
     long_help = f"""\
 Starts a live audio broadcast on the given [frequency].
-To send audio to it, be sure to have the alsa loopback card
-"plughw:{Env.get('ALSA_CARD', 'BotWave')},0'.
+To send audio to it, make sure your output is set to the
+ALSA loopback card "plughw:{Env.get('ALSA_CARD', 'BotWave')},0".
 
 Other positional arguments:
 [ps]: Program Service, max. 8 chars

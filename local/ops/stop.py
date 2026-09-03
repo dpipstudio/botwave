@@ -15,6 +15,7 @@ class StopOp(CliOp):
     examples = [
         "stop"
     ]
+    env_vars = {}
 
     async def handle(self, silent: bool = False, is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:

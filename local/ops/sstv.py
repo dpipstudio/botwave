@@ -21,8 +21,8 @@ class SSTVOp(CliOp):
     short_help = "Convert an image into SSTV audio and broadcast it"
     long_help = """\
 Convert an <image> into SSTV audio and broadcast it.
-Without [mode] specified, select automatically the best mode
-available.
+If [mode] is not specified, automatically selects the best
+mode available.
 
 Available modes: MartinM1, MartinM2, ScottieS1, ScottieS2,
 ScottieDX, Robot36, PasokonP3, PasokonP5, PasokonP7, PD90,
@@ -38,7 +38,7 @@ Other positional arguments:
 [pi]: Program Identifier, 4 hex chars
 """
     examples = [
-        "sstv image.png"
+        "sstv image.png",
         "sstv image.png Robot36 96.9 true 'BotWave'"
     ]
     env_vars = {

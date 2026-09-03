@@ -22,16 +22,17 @@ class GetOp(CliOp):
     short_help = "Get one or more environment variables"
     long_help = """\
 Get one or more environment variables.
-You can specify multiples <keys> at once, or use globbing
-to match a large amount of keys.
+You can specify multiple <keys> at once, or use globbing
+to match a large number of keys.
 Immutable variables are shown in orange.
 """
     examples = [
-        "get PORT"
-        "get PORT HOST REMOTE_CMD_PORT"
-        "get *PORT"
+        "get PORT",
+        "get PORT HOST REMOTE_CMD_PORT",
+        "get *PORT",
         "get *"
     ]
+    env_vars = {}
 
     async def handle(self, keys: list[str] = [], is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
@@ -95,6 +96,11 @@ Set an environment variable (<key>) to <value>.
 If [immutable] is 'true', the value cannot be changed without
 re-setting it as immutable. Editing those values is not recommended.
 """
+    examples = [
+        "set PROMPT_TEXT 'bw $ '",
+        "set PORT 8888 true"
+    ]
+    env_vars = {}
 
     async def handle(
         self,

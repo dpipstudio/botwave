@@ -24,7 +24,7 @@ uploads directory. Converts the files to .wav if
 it is in a supported format.
 """
     examples = [
-        "upload myfile.mp3"
+        "upload myfile.mp3",
         "upload Music/"
     ]
     env_vars = {

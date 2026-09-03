@@ -21,7 +21,7 @@ Run a shell <command> on the host machine and print
 its output.
 """
     examples = [
-        "< df -h"
+        "< df -h",
         "< ls {UPLOAD_DIR}"
     ]
     env_vars = {

@@ -11,7 +11,7 @@ class HandlersCliOp(CliOp):
     """
     The 'handlers' command OP. Lists current handlers if no
     argument provided, or displays the content of an handler file
-    if the file exists. Overall just a HanderExecutor wrapper.
+    if the file exists. Overall just a HandlerExecutor wrapper.
     """
 
     name = "handlers"
@@ -20,13 +20,12 @@ class HandlersCliOp(CliOp):
     long_help = """\
 Lists all handlers (.hdl and .shdl) and custom commands
 (.cmd) files in the handlers directory.
-If a [filename] is provided, displays the content of the file.
+If a [filename] is provided, displays the content of that file.
 """
     examples = [
         "handlers",
         "handlers hello.cmd"
     ]
-
     env_vars = {
         "HANDLERS_DIR": (f"{BW_PATH}/handlers", "The directory handlers are located into")
     }

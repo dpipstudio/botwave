@@ -37,6 +37,10 @@ Other positional arguments:
 [rt]: Radio Text, max 64 chars
 [pi]: Program Identifier, 4 hex chars
 """
+    examples = [
+        "start myfile.wav",
+        "start myfile.wav 96.9 true 'BotWave'"
+    ]
     env_vars = {
         "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to retrieve the file from"),
         "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
