@@ -49,7 +49,7 @@ Other positional arguments:
         "SSTV_DEFAULT_MODE": ("auto", "The default SSTV mode"),
         "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
         "DEFAULT_PS": ("BotWave", "The default program service"),
-        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_RT": ("<image filename>", "The default radio text"),
         "DEFAULT_PI": ("FFFF", "The default program identifier")
     }
 

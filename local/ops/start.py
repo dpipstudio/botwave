@@ -48,7 +48,7 @@ Other positional arguments:
         "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
         "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
         "DEFAULT_PS": ("BotWave", "The default program service"),
-        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_RT": ("<filename>", "The default radio text"),
         "DEFAULT_PI": ("FFFF", "The default program identifier")
     }
 

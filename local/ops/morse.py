@@ -47,7 +47,7 @@ Other positional arguments:
         "DEFAULT_MORSE_WPM": ("20", "The default morse words per minute"),
         "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
         "DEFAULT_PS": ("BotWave", "The default program service"),
-        "DEFAULT_RT": ("Live", "The default radio text"),
+        "DEFAULT_RT": ("Morse", "The default radio text"),
         "DEFAULT_PI": ("FFFF", "The default program identifier")
     }
 
