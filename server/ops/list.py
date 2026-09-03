@@ -10,6 +10,17 @@ class ListOp(CliOp):
     """
 
     name = "list"
+    syntax = ""
+    short_help = "List all connected clients"
+    long_help = """\
+Lists every currently connected client, along with its
+hostname, machine, system, protocol version and connection
+times.
+"""
+    examples = [
+        "list"
+    ]
+    env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if not self.owner.clients:

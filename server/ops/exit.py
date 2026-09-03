@@ -11,6 +11,16 @@ class ExitOp(CliOp):
     """
 
     name = "exit"
+    syntax = ""
+    short_help = "Shutdown and exit the server"
+    long_help = """\
+Kicks every connected client, stops the main and file
+transfer servers, then cleanly shuts down and exits.
+"""
+    examples = [
+        "exit"
+    ]
+    env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if not self.owner.running:

@@ -13,6 +13,23 @@ class StatusOp(CliOp):
 
     name = "status"
     syntax = "[targets]"
+    short_help = "Show server status, and optionally the broadcast status of client(s)"
+    long_help = """\
+Show the server's status: connected client count, ports and
+eventual remote CLI information.
+If [targets] is provided, also shows the broadcast status of
+those clients.
+"""
+    examples = [
+        "status",
+        "status all"
+    ]
+    env_vars = {
+        "PORT": ("9939", "The server port"),
+        "FPORT": ("9921", "The file transfer port"),
+        "PASSKEY": ("", "The authentication passkey"),
+        "REMOTE_CLI_PORT": ("", "The remote CLI port")
+    }
 
     async def handle(
             self,

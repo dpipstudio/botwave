@@ -22,7 +22,38 @@ class SSTVOp(CliOp):
 
     name = "sstv"
     syntax = "<targets> <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]"
+    short_help = "Convert an image into SSTV audio and broadcast it on client(s)"
+    long_help = """\
+Convert an <image_path> into SSTV audio, upload the
+resulting WAV to <targets>, and broadcast it.
+If [mode] is not specified, automatically selects the best
+mode available.
 
+Available modes: MartinM1, MartinM2, ScottieS1, ScottieS2,
+ScottieDX, Robot36, PasokonP3, PasokonP5, PasokonP7, PD90,
+PD120, PD160, PD180, PD240, PD290, WraaseSC2120, WraaseSC2180,
+Robot8BW, Robot24BW
+
+Generated .wav files are available into '/tmp/bw_sstv/'.
+
+Other positional arguments:
+[loop]: If the audio should be looped
+[ps]: Program Service, max. 8 chars
+[rt]: Radio Text, max 64 chars
+[pi]: Program Identifier, 4 hex chars
+"""
+    examples = [
+        "sstv all mycat.png"
+        "sstv all mycat.png Robot36 90 false 'My Cat!' 'PsPs Cutie' FFFF"
+    ]
+    env_vars = {
+        "SSTV_SAMPLE_RATE": ("48000", "The sample rate to generate the .wav file with"),
+        "SSTV_DEFAULT_MODE": ("auto", "The default SSTV mode"),
+        "DEFAULT_FREQ": ("90", "The default frequency to broadcast to"),
+        "DEFAULT_PS": ("BotWave", "The default program service"),
+        "DEFAULT_RT": ("<image filename>", "The default radio text"),
+        "DEFAULT_PI": ("FFFF", "The default program identifier")
+    }
     async def handle(
         self,
         targets: list[str] = [],

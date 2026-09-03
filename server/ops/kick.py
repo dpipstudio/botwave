@@ -14,6 +14,15 @@ class KickOp(CliOp):
 
     name = "kick"
     syntax = "<targets> [reason]"
+    short_help = "Kick client(s) from the server"
+    long_help = """\
+Kick the given <targets> from the server.
+A kicked client can still reconnect afterwards.
+"""
+    examples = [
+        "kick pi1 Maintenance"
+    ]
+    env_vars = {}
 
     async def handle(
         self,

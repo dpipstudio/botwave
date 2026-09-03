@@ -32,6 +32,28 @@ class SyncOp(CliOp):
 
     name = "sync"
     syntax = "<targets|folder> <source_target|source_folder>"
+    short_help = "Synchronize files across clients or to/from local folders"
+    long_help = """\
+Synchronize files between <targets|folder> and
+<source_target|source_folder>. Supports three directions:
+
+  - Local folder to client(s): replaces the target clients'
+    files with the ones in the source folder.
+  - Client to local folder: downloads all files from the
+    source client into the target folder.
+  - Client to client(s): downloads the source client's files
+    to a temporary folder, then uploads them to the targets.
+
+This feature is experimental and may be unstable.
+"""
+    examples = [
+        "sync all pi1",
+        "sync pi2,pi3 music",
+        "sync backup/ pi1"
+    ]
+    env_vars = {
+        "EXTRA_ALLOWED_DIRS": ("", "Colon-separated list of extra directories allowed as sync sources")
+    }
 
     async def handle(
             self,

@@ -17,6 +17,16 @@ class UpdateOp(CliOp):
 
     name = "update"
     syntax = "<targets> [version]"
+    short_help = "Request client(s) to update and restart"
+    long_help = """\
+Request the given <targets> to update and restart.
+Omit [version] to update to the latest release.
+"""
+    examples = [
+        "update all",
+        "update all v1.0.0-oak"
+    ]
+    env_vars = {}
 
     async def handle(
             self,
