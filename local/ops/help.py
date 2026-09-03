@@ -95,21 +95,21 @@ Custom commands (.cmd files) are included in both views.
         cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', syntax))
 
         def full_help():
-            Log.print(cmd_op.long_help, "white", end="")
+            Log.print(cmd_op.long_help, end="")
 
             if len(cmd_op.examples) != 0:
                 Log.print("")
-                Log.print("Examples:" if len(cmd_op.examples) > 1 else "Example:", "white")
+                Log.print("Examples:" if len(cmd_op.examples) > 1 else "Example:")
 
                 for example in cmd_op.examples:
-                    Log.print(f"  - {Log.COLORS.get('cyan')}{example}", "white")
+                    Log.print(f"  - {Log.COLORS.get('cyan')}{example}", "reset")
 
             if len(cmd_op.env_vars) != 0:
                 Log.print("")
-                Log.print(f"Environment variables:", "white")
+                Log.print(f"Environment variables:")
 
                 for name, (default, usage) in cmd_op.env_vars.items():
-                    Log.print(f"  - {name} ({default}): {usage}", "white")
+                    Log.print(f"  - {name} ({default}): {usage}")
 
         cmd_info.full_help = full_help
 
@@ -127,7 +127,7 @@ Custom commands (.cmd files) are included in both views.
         cmd_info.long_help = '\n'.join(help)
 
         def full_help():
-            Log.print(cmd_info.long_help, "white")
+            Log.print(cmd_info.long_help)
 
         cmd_info.full_help = full_help
 
@@ -139,7 +139,7 @@ Custom commands (.cmd files) are included in both views.
 
         self.list_commands(commands)
 
-        Log.print("\nUse 'help [command]' to see specific help about a command", "white")
+        Log.print("\nUse 'help [command]' to see specific help about a command")
 
     def list_commands(self, commands: list[CommandInfo]):
 
@@ -147,7 +147,7 @@ Custom commands (.cmd files) are included in both views.
         padding = longest_cmd + 4
 
         for cmd in commands:
-            Log.print(f"{cmd.name} {cmd.required_syntax}".ljust(padding) + cmd.short_help, "white")
+            Log.print(f"{cmd.name} {cmd.required_syntax}".ljust(padding) + cmd.short_help)
 
 
 def setup(reg: Any):
