@@ -312,7 +312,9 @@ async def main():
         Env.set("WAIT_START", str(True))  
 
     server = BotWaveServer()
-    server.registry.from_dir(Path(__file__).resolve().parent / "ops")
+    server.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # server/ops
+    server.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
+
 
     try:
         # server startup

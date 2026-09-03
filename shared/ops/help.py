@@ -17,7 +17,8 @@ class HelpOp(CliOp):
     """
     The 'help' command OP.
     Lists every command and its syntax.
-    Also handles custom commands.
+    If the command has 'target' in its syntax, show
+    targets help. Also handles custom commands.
     """
 
     name = "help"
@@ -111,6 +112,9 @@ Custom commands (.cmd files) are included in both views.
                 for name, (default, usage) in cmd_op.env_vars.items():
                     Log.print(f"  - {name} ({default}): {usage}")
 
+            if "target" in cmd_info.full_syntax:
+                self.print_targets()
+
         cmd_info.full_help = full_help
 
         return cmd_info
@@ -134,12 +138,30 @@ Custom commands (.cmd files) are included in both views.
         return cmd_info
 
     def show_help(self, commands: list[CommandInfo]):
-        Log.header("BotWave Local Client - Help")
+        is_server = any("target" in cmd.full_syntax for cmd in commands)
+
+        Log.header(f"BotWave {'Server' if is_server else 'Local Client'} - Help")
         Log.section("Available Commands")
 
         self.list_commands(commands)
 
+        if is_server:
+            self.print_targets()
+
         Log.print("\nUse 'help [command]' to see specific help about a command")
+
+    def print_targets(self):
+        Log.print("")
+        
+        Log.print("Targets:")
+        Log.print("  'all'                 All connected clients")
+        Log.print("  client_id             Specific client by ID")
+        Log.print("  hostname              Client by hostname")
+        Log.print("  Comma-separated list  Multiple clients")
+        Log.print("  Examples:")
+        Log.print(f"    - {Log.COLORS.get('cyan')}pi1,pi2", "reset")
+        Log.print(f"    - {Log.COLORS.get('cyan')}all", "reset")
+        Log.print(f"    - {Log.COLORS.get('cyan')}kitchen-pi", "reset")
 
     def list_commands(self, commands: list[CommandInfo]):
 
@@ -148,6 +170,7 @@ Custom commands (.cmd files) are included in both views.
 
         for cmd in commands:
             Log.print(f"{cmd.name} {cmd.required_syntax}".ljust(padding) + cmd.short_help)
+
 
 
 def setup(reg: Any):

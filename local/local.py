@@ -196,7 +196,8 @@ async def main():
         check_updates()
 
     local = BotWaveLocal()
-    local.registry.from_dir(Path(__file__).resolve().parent / "ops")
+    local.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # local/ops
+    local.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
 
     local.running = True #TODO: Check if this running attr is really useful
 

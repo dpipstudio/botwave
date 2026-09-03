@@ -174,11 +174,9 @@
       "local/ops/env.py",
       "local/ops/exit.py",
       "local/ops/handlers.py",
-      "local/ops/help.py",
       "local/ops/lf.py",
       "local/ops/live.py",
       "local/ops/morse.py",
-      "local/ops/queue.py",
       "local/ops/rm.py",
       "local/ops/sh_cmd.py",
       "local/ops/sstv.py",
@@ -205,7 +203,6 @@
       "server/ops/exit.py",
       "server/ops/kick.py",
       "server/ops/live.py",
-      "server/ops/queue.py",
       "server/ops/sh_cmd.py",
       "server/ops/startup.py",
       "server/ops/sync.py",
@@ -218,7 +215,6 @@
       "server/ops/status.py",
       "server/ops/update.py",
       "server/ops/env.py",
-      "server/ops/help.py",
       "server/ops/list.py",
       "server/ops/rm.py",
       "server/ops/start.py",
@@ -258,7 +254,9 @@
       "shared/syscheck.py",
       "shared/tips.py",
       "shared/version.py",
-      "shared/ws_cmd.py"
+      "shared/ws_cmd.py",
+      "shared/ops/help.py",
+      "shared/ops/queue.py"
     ],
     "requirements": [
       "websockets==13.1",
