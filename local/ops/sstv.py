@@ -20,7 +20,7 @@ class SSTVOp(CliOp):
     syntax = "<image_path> [mode] [frequency] [loop] [ps] [rt] [pi]"
     short_help = "Convert an image into SSTV audio and broadcast it"
     long_help = """\
-Convert an <image> into SSTV audio and broadcast it.
+Convert an <image_path> into SSTV audio and broadcast it.
 If [mode] is not specified, automatically selects the best
 mode available.
 
