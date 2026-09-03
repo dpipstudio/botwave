@@ -62,8 +62,11 @@ A kicked client can still reconnect afterwards.
 
             except:
                 pass
-            
-            del self.owner.clients[client_id]
+
+            try:
+                del self.owner.clients[client_id]
+            except:
+                ...
             
             results["kicked"].append(client_id)
             Log.success(f"  {client.get_display_name()}: Kicked - {reason}")
