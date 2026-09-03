@@ -43,7 +43,7 @@ Other positional arguments:
 [pi]: Program Identifier, 4 hex chars
 """
     examples = [
-        "sstv all mycat.png"
+        "sstv all mycat.png",
         "sstv all mycat.png Robot36 90 false 'My Cat!' 'PsPs Cutie' FFFF"
     ]
     env_vars = {
