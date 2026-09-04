@@ -424,16 +424,16 @@ npm i -g bwsc
 Add the `--rc` flag when starting BotWave. A passkey is strongly recommended if exposed to the internet:
 
 ```sh
-bw-server --rc 9939 --pk 1234       # for the server component
+bw-server --rc 9939 --pk MyPass       # for the server component
 
-bw-local --rc 9939 --pk 1234        # for the local client component
+bw-local --rc 9939 --pk MyPass        # for the local client component
 ```
 
 > If you add a passkey to the server, also pass it to connecting clients: `sudo bw-client <server-ip> --pk <passkey>`
 
 #### 3. Connect remotely
 ```sh
-bwsc 192.168.1.10 1234    # replace with your server IP and passkey
+bwsc 192.168.1.10:9939 MyPass    # replace with your server IP and passkey
 ```
 
 #### 4. Manage remotely
