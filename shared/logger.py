@@ -1,7 +1,7 @@
-from dlogger import DLogger
 import asyncio
 import contextvars
 import re
+from dlogger import DLogger
 from typing import Any
 from websockets.asyncio.server import ServerConnection
 
@@ -92,23 +92,29 @@ class Logger(DLogger):
         super().print(message=message, style=style, icon=icon, end=end)
 
         ws_message = f"[{icon}] {message}" if icon else message
+        ws_message = re.sub('|'.join(re.escape(s) for s in self.COLORS.values()), "", ws_message)
         origin_ws = self.remote_cmd_socket.get()
 
         if Env.get_bool("ISOLATE_REMOTE", True) and origin_ws:
             try:
                 if self.ws_loop:
                     asyncio.run_coroutine_threadsafe(origin_ws.send(ws_message), self.ws_loop)
+                    
             except Exception as e:
                 self.warn(f"Error sending to WebSocket client: {e}") # pyright: ignore
+
         else:
             for ws in list(self.ws_clients):
                 try:
                     if self.ws_loop:
                         asyncio.run_coroutine_threadsafe(ws.send(ws_message), self.ws_loop)
+
                 except Exception as e:
                     self.warn(f"Error sending to WebSocket client: {e}") # pyright: ignore
+
                     try:
                         self.ws_clients.discard(ws)
+
                     except Exception:
                         pass
 
