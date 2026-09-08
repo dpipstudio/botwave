@@ -1,5 +1,4 @@
 import os
-import re
 import shlex
 from pathlib import Path
 
@@ -8,7 +7,6 @@ from shared.logger import Log
 
 class CustomCommand:
     path: Path
-    version: int = 0
     name: str = ""
     syntax: str = ""
     short_help: str = ""
@@ -111,8 +109,8 @@ class CCMD:
                 line = line[2:].strip()
                 ccmd.long_help += line + "\n"
 
-        if not (ccmd.name and ccmd.version and ccmd.syntax and ccmd.short_help and ccmd.long_help):
-            raise ValueError("ccmd is declared as v2, but it doesn't provide all the required meta fields")
+        if not (ccmd.name and ccmd.syntax and ccmd.short_help and ccmd.long_help):
+            raise ValueError("ccmd is being parsed as ccmdv2, but it doesn't provide all the required meta fields")
 
     def parse_meta_v2(self, ccmd: CustomCommand, line: str):
         line = line[2:].strip()
@@ -124,13 +122,7 @@ class CCMD:
         command = parts[0]
         value = parts[1]
 
-        if command == "cmdver":
-            if not bool(re.fullmatch(r'v\d+', value)):
-                raise ValueError(f"cmdver requires a valid version as value (vN), got {value}")
-
-            ccmd.version = int(value[1:])
-
-        elif command == "syntax":
+        if command == "syntax":
             ccmd.syntax = value
 
         elif command == "short_help":
