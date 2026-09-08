@@ -109,7 +109,7 @@ class CCMD:
                 line = line[2:].strip()
                 ccmd.long_help += line + "\n"
 
-        if not (ccmd.name and ccmd.syntax and ccmd.short_help and ccmd.long_help):
+        if not (ccmd.name and ccmd.short_help and ccmd.long_help):
             raise ValueError("ccmd is being parsed as ccmdv2, but it doesn't provide all the required meta fields")
 
     def parse_meta_v2(self, ccmd: CustomCommand, line: str):
