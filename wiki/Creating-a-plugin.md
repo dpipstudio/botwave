@@ -1,7 +1,7 @@
 A BotWave plugin is a self-contained extension that adds behavior to a running BotWave instance — new commands, automated reactions to events, or both. Plugins don't modify BotWave itself; they sit alongside it, using the same handler and custom command system that's already built in.
 
 > [!NOTE]
-> This page is aimed at developers. Before reading this, make sure you're comfortable with [Advanced/Creating custom commands](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands) and [Main/Automate your setup](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup).
+> This page is aimed at developers. Before reading this, make sure you're comfortable with [Advanced/Creating custom commands](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands) (v2 syntax) and [Main/Automate your setup](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup).
 
 ## What a plugin actually is
 
@@ -48,10 +48,14 @@ bw_myplugin/
 ### The command
 
 `handlers/mycommand.cmd`:
-```
+```bash
 #!/*/mycommand
-# mycommand <arg1> [arg2]
-#   Does something useful.
+#> syntax "<arg1> [arg2]"
+#> short_help "Does something useful"
+#? A command doing something useful with <arg1> (or not!)
+#?
+#? Other positional arguments:
+#? [arg2]: optional second argument
 
 < bash /opt/BotWave/scripts/myplugin/mycommand.sh
 ```
@@ -74,13 +78,13 @@ Arguments are available as `BW_ARGV{n}` environment variables, 0-indexed, with `
 ### The handlers
 
 `handlers/s_onready_myplugin.shdl`:
-```plaintext
+```bash
 # Runs silently when BotWave is ready.
 < echo "[myplugin] loaded."
 ```
 
 `handlers/s_onexit_myplugin.shdl`:
-```plaintext
+```bash
 # Runs silently when BotWave exits.
 < echo "[myplugin] unloaded."
 ```
