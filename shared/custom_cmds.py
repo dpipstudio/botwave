@@ -1,7 +1,16 @@
 import os
+import shlex
 from pathlib import Path
 
 from shared.env import Env
+from shared.logger import Log
+
+class CustomCommand:
+    path: Path
+    name: str = ""
+    syntax: str = ""
+    short_help: str = ""
+    long_help: str = ""
 
 class CCMD:
     def __init__(self, is_server: bool = True):
@@ -29,8 +38,8 @@ class CCMD:
 
         return first_line == shebang or first_line == wildcard
     
-    def get_all(self) -> list[dict[str, str | list[str]]]:
-        matches: list[dict[str, str | list[str]]] = []
+    def get_all(self) -> list[CustomCommand]:
+        matches: list[CustomCommand] = []
 
         handlers_path = Path(self.handlers_dir)
         for file in handlers_path.rglob("*.cmd"):
@@ -53,23 +62,71 @@ class CCMD:
                     if first_line != shebang and first_line != wildcard:
                         continue
 
-                    # process help lines 
-                    help_lines: list[str] = []
-                    for line in lines[1:]:
-                        line = line.rstrip("\n")
+                    ccmd = CustomCommand()
+                    ccmd.path = full_path
+                    ccmd.name = cmd_name
 
-                        if line.startswith("#"):
-                            # remove '#' and after char
-                            help_lines.append(line[1:])
-                        else:
-                            break
+                    # consider commands with #> and #? as v2
+                    if any((line.startswith("#>") or line.startswith("#?")) for line in lines):
+                        Log.debug(f"ccmd parsing: treating {file} as v2")
+                        self.parse_ccmd_v2(ccmd, lines)
 
-                    matches.append({
-                        "name": cmd_name,
-                        "help": help_lines
-                    })
+                    else:
+                        self.parse_ccmd_v0(ccmd, lines)
 
-            except:
+                    matches.append(ccmd)
+
+            except Exception as e:
+                Log.error(f"Error while parsing subcommand {file}: {e}")
                 continue
 
         return matches
+
+    def parse_ccmd_v0(self, ccmd: CustomCommand, lines: list[str]):
+        help_lines: list[str] = []
+        for line in lines[1:]:
+            line = line.rstrip("\n")
+
+            if line.startswith("#"):
+                # remove '#' and after char
+                help_lines.append(line[1:])
+            else:
+                break
+
+        
+        ccmd.syntax = help_lines[0].lower().replace(ccmd.name, "") if len(help_lines) > 0 else "Unknown syntax"
+        ccmd.short_help = f"The {ccmd.name} custom command"
+        ccmd.long_help = ' '.join(help_lines[1:])
+
+
+    def parse_ccmd_v2(self, ccmd: CustomCommand, lines: list[str]):
+        # parse meta
+        for line in lines:
+            if line.startswith("#>"):
+                self.parse_meta_v2(ccmd, line)
+
+            elif line.startswith("#?"):
+                line = line[2:].strip()
+                ccmd.long_help += line + "\n"
+
+        if not (ccmd.name and ccmd.short_help and ccmd.long_help):
+            raise ValueError("ccmd is being parsed as ccmdv2, but it doesn't provide all the required meta fields")
+
+    def parse_meta_v2(self, ccmd: CustomCommand, line: str):
+        line = line[2:].strip()
+        parts = shlex.split(line)
+
+        if len(parts) != 2:
+            raise ValueError(f"ccmdmeta parsing error: expected '#> keyword \"value\"', got: {line}")
+
+        command = parts[0]
+        value = parts[1]
+
+        if command == "syntax":
+            ccmd.syntax = value
+
+        elif command == "short_help":
+            ccmd.short_help = value
+
+        else:
+            raise ValueError(f"unexpected keyword while parsing ccmdmeta: {command}")

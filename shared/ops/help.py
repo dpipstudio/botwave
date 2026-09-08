@@ -1,12 +1,12 @@
 import re
 from typing import Any, Callable
 
+from shared.custom_cmds import CustomCommand
 from shared.logger import Log
 from shared.ops import CliOp
 
 class CommandInfo:
     name: str
-    is_custom: bool
     required_syntax: str
     full_syntax: str
     short_help: str
@@ -63,7 +63,7 @@ Custom commands (.cmd files) are included in both views.
 
                     Log.print("›", "bright_green", end=" ")
                     Log.print(
-                        f"{cmd_info.name if not cmd_info.is_custom else ''} {cmd_info.full_syntax or cmd_info.name}".strip(),
+                        f"{cmd_info.name} {cmd_info.full_syntax}".strip(),
                         "yellow",
                         end="\n\n"
                         )
@@ -86,7 +86,6 @@ Custom commands (.cmd files) are included in both views.
     def get_cmd_info(self, cmd_op: CliOp) -> CommandInfo:
         cmd_info = CommandInfo()
         cmd_info.name = cmd_op.name
-        cmd_info.is_custom = False
         cmd_info.full_syntax = cmd_op.syntax
         cmd_info.short_help = cmd_op.short_help
         cmd_info.long_help = cmd_op.long_help
@@ -119,19 +118,19 @@ Custom commands (.cmd files) are included in both views.
 
         return cmd_info
 
-    def get_ccmd_info(self, custom_command: dict[Any, Any]) -> CommandInfo:
+    def get_ccmd_info(self, ccmd: CustomCommand) -> CommandInfo:
         cmd_info = CommandInfo()
-        cmd_info.name = custom_command["name"]
-        cmd_info.is_custom = True
-
-        help = custom_command["help"]
-        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', help[0])) if len(help) > 0 else ""
-        cmd_info.full_syntax = help[0].strip() if len(help) > 0 else ""
-        cmd_info.short_help = help[1].strip() if len(help) > 1 else f"The {cmd_info.name} custom command"
-        cmd_info.long_help = '\n'.join(help)
+        cmd_info.name = ccmd.name
+        cmd_info.short_help = ccmd.short_help
+        cmd_info.long_help = ccmd.long_help
+        cmd_info.full_syntax = ccmd.syntax
+        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', ccmd.syntax))
 
         def full_help():
             Log.print(cmd_info.long_help)
+
+            if "target" in cmd_info.full_syntax:
+                self.print_targets()
 
         cmd_info.full_help = full_help
 
