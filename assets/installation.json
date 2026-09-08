@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.9-allexis",
+      "commit": "147df8956f03ce6bbfcbe38d390117dba637cc7b"
+    },
+    {
       "codename": "v1.2.8-nymania",
       "commit": "e5bae21f0a56fde9b53f5ce47389e0f22f463244"
     },
