@@ -14,6 +14,14 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.9-allexis ---=
+### What Changed
+- **Custom command help v2**: A new, stricter format for `.cmd` help text is now supported alongside the old one. Recommended for anything you're distributing as a plugin. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands) for the full format.
+- **Cleaner remote log output**: Log lines sent to remote WebSocket clients (e.g. `bwsc`) no longer include raw color escape codes.
+- **Bug fix**: Broken or malformed `.cmd` files now log the specific parsing error instead of being silently skipped.
+
+=--- END ---=
+
 =--- v1.2.8-nymania ---=
 ### What Changed
 - **Improved `help` command**: Help is now more detailed. Running help [command] [command2] [...] shows full details for one or more specific commands, including a description, examples, and related environment variables. Running `help` alone only shows a list of available commands (including [custom commands](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands))
