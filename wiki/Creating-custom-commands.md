@@ -12,7 +12,7 @@ The **first line** of every custom command file must be a shebang in this format
 #!/<server|local|*>/<command_name>
 ```
 
-- `server` makes the command available in `bw-server`, `local` in `bw-local`. Use * to make it available in both.
+- `server` makes the command available in `bw-server`, `local` in `bw-local`. Use `*` to make it available in both.
 - `<command_name>` is the command's name as typed in the prompt. It must match the filename (without the extension).
 
 BotWave hot-reloads `.cmd` files automatically, re-checking the handlers directory on every command run, so no restart is needed after creating or editing one.
@@ -39,24 +39,20 @@ In this example:
 - The shebang on line 1 registers this as a command named `hello`, available on both the local client and the server (`*`).
 - The `#` block right after it is the **help text**. BotWave reads the first consecutive `#` block and uses it in the `help` command output. This block is optional but strongly recommended.
 - `<` runs its arguments in a shell and prints the output.
-- `{BW_ARGV1}` is replaced at runtime with the first argument passed to the command. `BW_ARGV{n}` variables are 0-indexed, but `BW_ARGV1` is the first *user-supplied* argument, not the command name itself (`BW_ARGV0`).
+- `{BW_ARGV1}` is replaced at runtime with the first argument passed to the command. `BW_ARGV{n}` variables are 0-indexed, so `BW_ARGV1` is the first *user-supplied* argument, not the command name itself (`BW_ARGV0`).
 
 After saving, the command is immediately available:
 
 ```bash
 :3 $ help
 [...]
- Custom Commands ─────────────────
-
- hello <word>
-   Prints "Hello, <word>" with word as the first arg passed
+hello <word>    The hello custom command
 [...]
 
 :3 $ hello world
-
 Hello, world
-:3 $ hello "kitty kitty kitty"
 
+:3 $ hello "kitty kitty kitty"
 Hello, kitty kitty kitty
 ```
 
@@ -66,7 +62,7 @@ Hello, kitty kitty kitty
 One-liners work fine for simple cases, but the moment you need conditionals, loops, or proper error handling, it's cleaner to delegate to a shell script and use the `.cmd` file purely as a *bridge*:
 
 `/opt/BotWave/handlers/hello.cmd`:
-```
+```bash
 #!/*/hello
 # hello <word>
 #   Prints "Hello, <word>" with word as the first arg passed
@@ -90,10 +86,9 @@ Since BotWave exposes `BW_ARGV{n}` as real environment variables, your shell scr
 
 ```bash
 :3 $ hello
-
 Syntax: hello <word>
-:3 $ hello :3
 
+:3 $ hello :3
 Hello, :3
 ```
 
@@ -122,7 +117,7 @@ fi
 ```
 
 `/opt/BotWave/handlers/wl.cmd`:
-```
+```bash
 #!/server/wl
 # wl
 #   Runs the whitelist script
@@ -136,4 +131,53 @@ You can also use it for something as simple as feeding a command list from a fil
 
 ```
 | cat commands.txt
+```
+
+### Help Documentation: v0 vs v2
+Two formats are supported for the `#` block that follows the shebang.
+
+The **v0 format** (shown above) is a loose `#`-prefixed block: the first line becomes the syntax, the rest becomes the long help. It's quick to write and fine for personal, one-off commands.
+
+For anything you're **releasing as a plugin** (see [`For Developers/Creating a plugin`](https://github.com/dpipstudio/botwave/wiki/Creating-a-plugin)) or want to show up cleanly in `help <command>`, use the **v2 format** instead: it enforces a stricter structure so syntax, short help, and long help are parsed unambiguously rather than guessed from line position.
+
+A file is auto-detected as v2 if it contains **any** `#>` or `#?` line, so don't mix formats in the same file.
+
+**v2 syntax:**
+- `#> keyword "value"`: metadata lines. Supported keywords:
+  - `short_help` (**required**): one-line summary, shown in the `help` command list
+  - `syntax` (optional): argument syntax, without the command name. Wrap required args in `<>`, and optional ones in `[]`
+- `#? ...`: help lines, arbitrary content. These become the long help shown by `help <command>`. **At least one `#?` line is required**. A v2 file with only metadata and no `#?` lines will fail to parse.
+
+Let's take the `hello.cmd` built above and update it to match the v2 format:
+```bash
+#!/*/hello
+#> syntax "<word>"
+#> short_help "Displays 'Hello, <word>' in the output"
+
+# lines with a regular # are now treated as regular comments
+# the following lines are shown in 'help hello':
+#? Displays 'Hello, <word>' when executed.
+#?
+#? Examples:
+#?   - hello marc
+#?   - hello "world!" 
+
+< bash /opt/BotWave/scripts/hello.sh
+```
+
+With this new format, the `help` command shows more information:
+```bash
+:3 $ help
+[...]
+hello <word>    Displays 'Hello, <word>' in the output
+[...]
+
+:3 $ help hello
+› hello <word>
+
+Displays 'Hello, <word>' when executed.
+
+Examples:
+  - hello marc
+  - hello "world!"
 ```
