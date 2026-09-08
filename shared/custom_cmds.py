@@ -106,7 +106,7 @@ class CCMD:
                 self.parse_meta_v2(ccmd, line)
 
             elif line.startswith("#?"):
-                line = line[2:].strip()
+                line = line[2:].rstrip()
                 ccmd.long_help += line + "\n"
 
         if not (ccmd.name and ccmd.short_help and ccmd.long_help):
