@@ -117,7 +117,7 @@ class CCMD:
         parts = shlex.split(line)
 
         if len(parts) != 2:
-            raise ValueError(f"ccmdmeta parsing error: expected '#> command \"value\"', got: {line}")
+            raise ValueError(f"ccmdmeta parsing error: expected '#> keyword \"value\"', got: {line}")
 
         command = parts[0]
         value = parts[1]
@@ -129,4 +129,4 @@ class CCMD:
             ccmd.short_help = value
 
         else:
-            raise ValueError(f"unexpected command while parsing ccmdmeta: {command}")
+            raise ValueError(f"unexpected keyword while parsing ccmdmeta: {command}")
