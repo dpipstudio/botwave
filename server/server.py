@@ -38,7 +38,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.socket import BWWebSocketServer
 from shared.tips import TipEngine
-from shared.version import check_for_updates, print_version
+from shared.version import print_version, warn_new_ver
 from shared.ws_cmd import WSCMDH
 
 if TYPE_CHECKING:
@@ -231,26 +231,6 @@ def set_prio(key: str, cli_value: Any | None, default: Any | None, immutable: bo
     elif not Env.get(key, False) and default is not None:
         Env.set(key, str(default), immutable=immutable)
 
-def check_updates():
-    Log.info("Checking for software updates...")
-
-    try:
-        latest_proto_ver, latest_ver = check_for_updates()
-
-        if latest_proto_ver:
-            Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")
-            Log.update("It is recommended updating to the latest version by running 'bw-update' in your shell")
-
-        elif latest_ver:
-            Log.update(f"A newer version of BotWave is available ({latest_ver})")
-            Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
-
-        else:
-            Log.success("You are using the latest version")
-
-    except Exception:
-        Log.warning("Unable to check for updates (continuing anyway)")
-
 def fail_banner():
     style = "bold rgb(200,0,0)"
 
@@ -329,7 +309,7 @@ async def main():
         server.running = True
 
         if not Env.get_bool("SKIP_CHECKS"):
-            check_updates()
+            warn_new_ver()
 
         Log.server("BotWave Server started")
         Log.version(f"Protocol Version: {PROTOCOL_VERSION}")
