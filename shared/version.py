@@ -75,5 +75,25 @@ def check_for_updates() -> tuple[Optional[str], Optional[str]]:
         # don't interrupt startup for client updates, we do not care
         return (None, None)
 
+def warn_new_ver(check_proto: bool = True):
+    Log.info("Checking for software updates...")
+
+    try:
+        latest_proto_ver, latest_ver = check_for_updates()
+
+        if check_proto and latest_proto_ver:
+            Log.update(f"A protocol update is available. Latest version: {latest_proto_ver}")
+            Log.update("It is recommended updating to the latest version by running 'bw-update' in your shell")
+
+        elif latest_ver:
+            Log.update(f"A newer version of BotWave is available ({latest_ver})")
+            Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
+
+        else:
+            Log.success("You are using the latest version")
+
+    except Exception:
+        Log.warning("Unable to check for updates (continuing anyway)")
+
 def print_version(component: str):
     Log.print(f"BotWave {component} {get_release_version() or 'v???'}, protocol {PROTOCOL_VERSION}")
