@@ -35,7 +35,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
-from shared.version import check_for_updates, print_version
+from shared.version import print_version, warn_new_ver
 from shared.ws_cmd import WSCMDH
 
 class BotWaveLocal:
@@ -139,22 +139,6 @@ def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
     elif not Env.get(key, False) and default is not None:
         Env.set(key, str(default), immutable=immutable)
 
-def check_updates():
-    Log.info("Checking for software updates...")
-
-    try:
-        _, latest_ver = check_for_updates()
-
-        if latest_ver:
-            Log.update(f"A newer version of BotWave is available ({latest_ver})")
-            Log.update(f"Update by running 'bw-update --to {latest_ver}' in your shell")
-
-        else:
-            Log.success("You are using the latest version")
-
-    except Exception:
-        Log.warning("Unable to check for updates (continuing anyway)")
-
 # Entry point
 async def main():
     check() # from shared.cat
@@ -193,7 +177,7 @@ async def main():
 
     if not Env.get_bool("SKIP_CHECKS"):
         check_requirements()
-        check_updates()
+        warn_new_ver(check_proto=False)
 
     local = BotWaveLocal()
     local.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # local/ops
