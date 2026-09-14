@@ -72,21 +72,15 @@ class HandlersEventsOp(GeneralOp):
     async def onexit(self, dir_path: str = "", context: dict[str, str] = {}):
         await self.run_by_prefix("l_onexit", context)
 
-
     async def onstart(self, dir_path: str = "", context: dict[str, str] = {}):
         await self.run_by_prefix("l_onstart", context)
-
-
 
     async def onstop(self, dir_path: str = "", context: dict[str, str] = {}):
         await self.run_by_prefix("l_onstop", context)
 
-
-
     async def onwsjoin(self, dir_path: str = "", context: dict[str, str] = {}):
         await self.run_by_prefix("l_onwsjoin", context)
         self.owner.rc_clients += 1
-
 
     async def onwsleave(self, dir_path: str = "", context: dict[str, str] = {}):
         await self.run_by_prefix("l_onwsleave", context)
