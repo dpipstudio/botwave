@@ -263,8 +263,10 @@
       "shared/tips.py",
       "shared/version.py",
       "shared/ws_cmd.py",
+      "shared/ops/handlers.py",
       "shared/ops/help.py",
-      "shared/ops/queue.py"
+      "shared/ops/queue.py",
+      "shared/ops/reload.py"
     ],
     "requirements": [
       "websockets==13.1",
