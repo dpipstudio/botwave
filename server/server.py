@@ -290,7 +290,7 @@ async def main():
     server.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # server/ops
     server.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
     server.custom_commands.register(server.registry)
-
+    server.handlers_executor.register(server.registry)
 
     try:
         # server startup
