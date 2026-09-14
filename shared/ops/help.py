@@ -1,7 +1,6 @@
 import re
 from typing import Any, Callable
 
-from shared.custom_cmds import CustomCommand
 from shared.logger import Log
 from shared.ops import CliOp
 
@@ -49,11 +48,6 @@ Custom commands (.cmd files) are included in both views.
             self.get_cmd_info(cmd)
             for cmd in self.registry.get_instances().values()
             if isinstance(cmd, CliOp)
-        ]
-
-        all_commands += [
-            self.get_ccmd_info(ccmd)
-            for ccmd in self.owner.custom_commands.get_all()
         ]
 
         if commands:
@@ -110,24 +104,6 @@ Custom commands (.cmd files) are included in both views.
 
                 for name, (default, usage) in cmd_op.env_vars.items():
                     Log.print(f"  - {name} ({default}): {usage}")
-
-            if "target" in cmd_info.full_syntax:
-                self.print_targets()
-
-        cmd_info.full_help = full_help
-
-        return cmd_info
-
-    def get_ccmd_info(self, ccmd: CustomCommand) -> CommandInfo:
-        cmd_info = CommandInfo()
-        cmd_info.name = ccmd.name
-        cmd_info.short_help = ccmd.short_help
-        cmd_info.long_help = ccmd.long_help
-        cmd_info.full_syntax = ccmd.syntax
-        cmd_info.required_syntax = ' '.join(re.findall(r'<[^>]*>', ccmd.syntax))
-
-        def full_help():
-            Log.print(cmd_info.long_help)
 
             if "target" in cmd_info.full_syntax:
                 self.print_targets()

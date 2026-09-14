@@ -1,9 +1,12 @@
 import os
 import shlex
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
+from shared.ops import CliOp
+from shared.registry import Registry
 
 class CustomCommand:
     path: Path
@@ -19,24 +22,33 @@ class CCMD:
     @property
     def handlers_dir(self):
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
-    
-    def exists(self, command: str) -> bool:
-        """
-        Checks if a custom command file exists and has the correct shebang
-        """
+
+    def register(self, registry: Registry):
+        if not Path(self.handlers_dir).is_dir():
+            Log.warning(f"{self.handlers_dir} does not exist, skipping custom commands registration")
+            return
         
-        path = os.path.join(self.handlers_dir, f"{command}.cmd")
+        ccmds = self.get_all()
 
-        if not os.path.isfile(path):
-            return False
-        
-        shebang = f"#!/{'server' if self.is_server else 'local'}/{command}"
-        wildcard = f"#!/*/{command}"
+        for ccmd in ccmds:
+            async def handle(self: Any, cmd_parts: list[str] = [], is_cmd: bool = False, ccmd: CustomCommand = ccmd):
+                await self.owner.handlers_executor.execute_handler(
+                    str(ccmd.path),
+                    self.registry.get_instances()["HandlersEventsOp"].build_context(),
+                    silent=True
+                )
 
-        with open(path, 'r') as f:
-            first_line = f.readline().strip()
+            op = type(f"CCMD_{ccmd.name}", (CliOp,), {
+                "handle": handle
+            })
+            op.name = ccmd.name
+            op.syntax = ccmd.syntax
+            op.short_help = ccmd.short_help
+            op.long_help = ccmd.long_help
+            op.examples = []
+            op.env_vars = {}
 
-        return first_line == shebang or first_line == wildcard
+            registry.register(op)
     
     def get_all(self) -> list[CustomCommand]:
         matches: list[CustomCommand] = []

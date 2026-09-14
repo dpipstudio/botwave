@@ -3,42 +3,9 @@ from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
-from shared.ops import CliOp, GeneralOp
+from shared.ops import  GeneralOp
 from shared.protocol import PROTOCOL_VERSION
 
-class HandlersCliOp(CliOp):
-    """
-    The 'handlers' command OP. Lists current handlers if no
-    argument provided, or displays the content of a handler file
-    if the file exists. Overall just a HandlerExecutor wrapper.
-    """
-
-    name = "handlers"
-    syntax = "[filename]"
-    short_help = "List all handlers or commands in a specific handler file"
-    long_help = """\
-Lists all handlers (.hdl and .shdl) and custom commands
-(.cmd) files in the handlers directory.
-If a [filename] is provided, displays the content of that file.
-"""
-    examples = [
-        "handlers",
-        "handlers hello.cmd"
-    ]
-    env_vars = {}
-
-    async def handle(self, file: bool = False, is_cmd: bool = False, cmd_parts: list[str] = []):
-        if is_cmd:
-            file = self.parse(cmd_parts)
-
-        if file:
-            self.owner.handlers_executor.list_handler_commands(file)
-
-        else:
-            self.owner.handlers_executor.list_handlers()
-
-    def parse(self, cmd_parts: list[str]) -> Any:
-        return cmd_parts[0] if len(cmd_parts) > 0 else None
 
 class HandlersEventsOp(GeneralOp):
     """
@@ -67,82 +34,43 @@ class HandlersEventsOp(GeneralOp):
         "handlers_onwsleave": "onwsleave"
     }
 
-    async def onready(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
+    async def onready(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onready", context)
 
-        else:
-            context = self.build_context(client_id)
+    async def onexit(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onexit", context)
 
-        await self.owner.handlers_executor.run_handlers("s_onready", dir_path, context)
+    async def onstart(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onstart", context)
 
-    async def onexit(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
+    async def onstop(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onstop", context)
 
-        else:
-            context = self.build_context(client_id)
+    async def onconnect(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onconnect", context)
 
-        await self.owner.handlers_executor.run_handlers("s_onexit", dir_path, context)
+    async def ondisconnect(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_ondisconnect", context)
 
-
-    async def onstart(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onstart", dir_path, context)
-
-
-    async def onstop(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onstop", dir_path, context)
-
-    async def onconnect(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onconnect", dir_path, context)
-
-    async def ondisconnect(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_ondisconnect", dir_path, context)
-
-    async def onwsjoin(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onwsjoin", dir_path, context)
+    async def onwsjoin(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onwsjoin", context)
         self.owner.rc_clients += 1
 
-
-    async def onwsleave(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onwsleave", dir_path, context)
+    async def onwsleave(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onwsleave", context)
         self.owner.rc_clients -= 1
+
+    async def run_by_prefix(self, prefix: str, context: dict[str, str]):
+            context.update(self.build_context())
+
+            matches = [
+                i.removeprefix("HDL_")
+                for i in self.registry.get_instances().keys()
+                if i.startswith(f"HDL_{prefix}")
+            ]
+
+            for match in sorted(matches):
+                await self.registry.dispatch(match, context=context)
 
     def build_context(self, client_id: str = "") -> dict[str, str]:
         ctx = {}
@@ -188,5 +116,4 @@ class HandlersEventsOp(GeneralOp):
 
         
 def setup(reg: Any):
-    reg.register(HandlersCliOp)
     reg.register(HandlersEventsOp)
