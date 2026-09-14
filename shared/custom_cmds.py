@@ -27,7 +27,7 @@ class CCMD:
         ccmds = self.get_all()
 
         for ccmd in ccmds:
-            async def handle(self: Any, cmd_parts: list[str] = [], is_cmd: bool = False):
+            async def handle(self: Any, cmd_parts: list[str] = [], is_cmd: bool = False, ccmd: CustomCommand = ccmd):
                 await self.owner.handlers_executor.execute_handler(
                     str(ccmd.path),
                     self.registry.get_instances()["HandlersEventsOp"].build_context(),
