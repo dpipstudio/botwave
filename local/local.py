@@ -173,6 +173,7 @@ async def main():
     local.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # local/ops
     local.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
     local.custom_commands.register(local.registry)
+    local.handlers_executor.register(local.registry)
 
     local.running = True #TODO: Check if this running attr is really useful
 
