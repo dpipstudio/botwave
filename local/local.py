@@ -109,17 +109,7 @@ class BotWaveLocal:
             found = await self.registry.dispatch(cmd, is_cmd=True, cmd_parts=cmd_parts)
 
             if not found:
-                            
-                if self.custom_commands.exists(cmd):
-                    
-                    await self.handlers_executor.execute_handler(
-                        str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
-                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore | This has to be the worst line of code I ever wrote
-                        silent=True
-                        )
-
-                else:                
-                    Log.error(f"Unknown command: {cmd}")
+                Log.error(f"Unknown command: {cmd}")
 
         except UpperException:
             raise
@@ -182,6 +172,7 @@ async def main():
     local = BotWaveLocal()
     local.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # local/ops
     local.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
+    local.custom_commands.register(local.registry)
 
     local.running = True #TODO: Check if this running attr is really useful
 
