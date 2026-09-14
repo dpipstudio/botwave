@@ -45,24 +45,6 @@ class CCMD:
             op.env_vars = {}
 
             registry.register(op)
-
-    def exists(self, command: str) -> bool:
-        """
-        Checks if a custom command file exists and has the correct shebang
-        """
-        
-        path = os.path.join(self.handlers_dir, f"{command}.cmd")
-
-        if not os.path.isfile(path):
-            return False
-        
-        shebang = f"#!/{'server' if self.is_server else 'local'}/{command}"
-        wildcard = f"#!/*/{command}"
-
-        with open(path, 'r') as f:
-            first_line = f.readline().strip()
-
-        return first_line == shebang or first_line == wildcard
     
     def get_all(self) -> list[CustomCommand]:
         matches: list[CustomCommand] = []
