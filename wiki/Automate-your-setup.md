@@ -130,8 +130,8 @@ sudo bw-nandl open s_onready.hdl
 You can also list and inspect handlers from within BotWave:
 
 ```bash
-botwave> handlers              # list all handlers
-botwave> handlers s_onready.hdl   # show commands in a specific handler
+botwave › handlers              # list all handlers
+botwave › handlers s_onready.hdl   # show commands in a specific handler
 ```
 
 

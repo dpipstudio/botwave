@@ -97,9 +97,9 @@ If a passkey is set, you'll see `Password: `. Type it and press Enter. On succes
 
 From there, type commands just like you would at the local BotWave prompt:
 ```
-botwave> list
-botwave> start all mysong.wav 88.5 true
-botwave> stop all
+botwave › list
+botwave › start all mysong.wav 88.5 true
+botwave › stop all
 ```
 
 To close the session cleanly, type `exit`. This disconnects you without affecting the running BotWave instance.

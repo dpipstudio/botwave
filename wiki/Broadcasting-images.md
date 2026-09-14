@@ -23,15 +23,15 @@ sudo bw-local
 
 [...]
 
-botwave> < curl -O https://images.dpip.lol/bw-logo.png
+botwave › < curl -O https://images.dpip.lol/bw-logo.png
 ```
 
 Then simply start a broadcast using the SSTV command:
 
 ```bash
-botwave> # command syntax: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]
+botwave › # command syntax: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]
 
-botwave> sstv bw-logo.png
+botwave › sstv bw-logo.png
 ```
 
 <details>
@@ -50,9 +50,9 @@ You can choose an encoding mode using the mode positional argument. All availabl
 If the mode is left empty, BotWave will automatically choose the best mode based on the image you provided.
 
 ```bash
-botwave> # using the "Robot36" mode on 99Mhz
+botwave › # using the "Robot36" mode on 99Mhz
 
-botwave> sstv bw-logo.png Robot36 99
+botwave › sstv bw-logo.png Robot36 99
 ```
 
 <details>

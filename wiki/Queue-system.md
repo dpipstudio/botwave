@@ -84,7 +84,7 @@ queue +song.wav!
 <details>
 <summary><code>Example: Adding files in server mode</code></summary>
 <pre>
-botwave> queue +intro.wav,track1.wav,track2.wav
+botwave › queue +intro.wav,track1.wav,track2.wav
 [QUEUE] Added 3 file(s) to queue
 [QUEUE] Current queue (3 files):
   1. intro.wav
@@ -96,7 +96,7 @@ botwave> queue +intro.wav,track1.wav,track2.wav
 <details>
 <summary><code>Example: Using wildcards</code></summary>
 <pre>
-botwave> queue +music_*
+botwave › queue +music_*
 [QUEUE] Added 5 file(s) to queue
 [QUEUE] Current queue (5 files):
   1. music_acoustic.wav
@@ -124,7 +124,7 @@ Usage is the exact same as the [`add`](#1-adding-files-to-queue-).
 <details>
 <summary><code>Example: Removing files</code></summary>
 <pre>
-botwave> queue -*
+botwave › queue -*
 [QUEUE] Removed 2 file(s) from queue
 [QUEUE] Queue is empty
 </pre>
@@ -166,7 +166,7 @@ queue ?
 <details>
 <summary><code>Example output</code></summary>
 <pre>
-botwave>queue ?
+botwave ›queue ?
 [QUEUE] Queue Commands:
   queue +file                       - Add file to queue
   queue +file1,file2                - Add multiple files
@@ -239,7 +239,7 @@ queue !
 <details>
 <summary><code>Example: Starting queue playback</code></summary>
 <pre>
-botwave> queue !all,88.5,false,MyRadio,"Queue Mix"
+botwave › queue !all,88.5,false,MyRadio,"Queue Mix"
 [QUEUE] Queue playing on all
 [QUEUE] raspberry: Playing [1/5] intro.wav
 [OK]   raspberry (raspberry_192.168.1.96): START command sent

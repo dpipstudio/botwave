@@ -44,15 +44,15 @@ In this example:
 After saving, the command is immediately available:
 
 ```bash
-:3 $ help
+botwave › help
 [...]
 hello <word>    The hello custom command
 [...]
 
-:3 $ hello world
+botwave › hello world
 Hello, world
 
-:3 $ hello "kitty kitty kitty"
+botwave › hello "kitty kitty kitty"
 Hello, kitty kitty kitty
 ```
 
@@ -85,10 +85,10 @@ echo "Hello, $BW_ARGV1"
 Since BotWave exposes `BW_ARGV{n}` as real environment variables, your shell script can access them directly, no special syntax needed there.
 
 ```bash
-:3 $ hello
+botwave › hello
 Syntax: hello <word>
 
-:3 $ hello :3
+botwave › hello :3
 Hello, :3
 ```
 
@@ -167,12 +167,12 @@ Let's take the `hello.cmd` built above and update it to match the v2 format:
 
 With this new format, the `help` command shows more information:
 ```bash
-:3 $ help
+botwave › help
 [...]
 hello <word>    Displays 'Hello, <word>' in the output
 [...]
 
-:3 $ help hello
+botwave › help hello
 › hello <word>
 
 Displays 'Hello, <word>' when executed.

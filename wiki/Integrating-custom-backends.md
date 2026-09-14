@@ -56,7 +56,7 @@ BACKEND_BYPASS_CACHE=true BACKEND_PATH=/opt/BotWave/backends/mybak/mybak TALK=tr
 Once the shell opens, **trigger a broadcast** (any file will do):
 
 ```
-botwave> start myfile.wav
+botwave › start myfile.wav
 ```
 
 That's enough for BotWave to register and cache the new path. From that point on, you can run `sudo bw-local` normally and it will use your backend automatically.

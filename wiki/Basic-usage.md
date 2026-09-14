@@ -91,7 +91,7 @@ Once both are running and connected, you're ready to go. Type `help` at any time
 The `list` command shows all clients currently connected to your server, along with some basic info about each one. It's a good habit to run this first to confirm everything is connected properly.
 
 ```
-botwave> list
+botwave › list
 ```
 
 <details>
@@ -126,7 +126,7 @@ ID: botwave-client_192.168.1.96
 Before broadcasting, you need audio files on your client. The `lf` command shows what's already there.
 
 ```
-botwave> lf all
+botwave › lf all
 ```
 
 <details>
@@ -152,7 +152,7 @@ The `dl` command tells your client to download a file directly from a URL. This 
 BotWave supports most common audio formats (MP3, WAV, FLAC, AAC, OGG, and more). Files are converted automatically if needed.
 
 ```
-botwave> dl all https://cdn.douxx.tech/files/ss.wav
+botwave › dl all https://cdn.douxx.tech/files/ss.wav
 ```
 
 <details>
@@ -173,7 +173,7 @@ Run `lf all` again and you should now see `ss.wav` listed.
 > [!TIP]
 > If you want to upload a file that's already on your server machine instead, use the `upload` command:
 > ```
-> botwave> upload all /home/server/Downloads/mysong.mp3
+> botwave › upload all /home/server/Downloads/mysong.mp3
 > ```
 > Need to transfer a file from your personal computer to the Pi first? Use `scp` from your computer's terminal:
 > ```bash
@@ -187,7 +187,7 @@ Run `lf all` again and you should now see `ss.wav` listed.
 The `start` command tells your client to transmit a file over FM. Think of it as: *"which clients should broadcast what, and how?"*
 
 ```
-botwave> start <targets> <file> [frequency] [loop] [PS] [RT] [PI]
+botwave › start <targets> <file> [frequency] [loop] [PS] [RT] [PI]
 ```
 
 | Argument    | Description |
@@ -205,7 +205,7 @@ botwave> start <targets> <file> [frequency] [loop] [PS] [RT] [PI]
 Let's broadcast `ss.wav` on 88.5 MHz and loop it:
 
 ```
-botwave> start all ss.wav 88.5 true
+botwave › start all ss.wav 88.5 true
 ```
 
 <details>
@@ -235,7 +235,7 @@ If everything worked, tune a radio to 88.5 MHz. You should hear your broadcast!
 ### 5. stop: Stop broadcasting
 
 ```
-botwave> stop all
+botwave › stop all
 ```
 
 <details>
@@ -258,7 +258,7 @@ botwave › stop all
 The `exit` command kicks all connected clients and shuts the server down properly. Always prefer this over just closing the terminal, since it ensures everything disconnects cleanly.
 
 ```
-botwave> exit
+botwave › exit
 ```
 
 <details>

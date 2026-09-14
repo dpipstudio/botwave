@@ -24,12 +24,12 @@ Once your ALSA card is set up, starting a live broadcast is straightforward. In 
 
 **Local Client:**
 ```bash
-botwave> live [frequency] [ps] [rt] [pi]
+botwave › live [frequency] [ps] [rt] [pi]
 ```
 
 **Server:**
 ```bash
-botwave> live <targets> [frequency] [ps] [rt] [pi]
+botwave › live <targets> [frequency] [ps] [rt] [pi]
 ```
 
 | Parameter | Description |
@@ -42,7 +42,7 @@ botwave> live <targets> [frequency] [ps] [rt] [pi]
 
 **Example:**
 ```bash
-botwave> live 88.5 MyRadio "Live Show"
+botwave › live 88.5 MyRadio "Live Show"
 ```
 
 Once the command runs, BotWave is listening on the ALSA loopback card. Now you just need to send audio to it.
