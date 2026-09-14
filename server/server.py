@@ -184,19 +184,8 @@ class BotWaveServer:
 
             found = await self.registry.dispatch(cmd, is_cmd=True, cmd_parts=cmd_parts)
 
-            if not found:
-                            
-                if self.custom_commands.exists(cmd):
-                    
-                    await self.handlers_executor.execute_handler(
-                        str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
-                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore
-                        silent=True
-                    )
-
-
-                else:                
-                    Log.error(f"Unknown command: {cmd}")
+            if not found:            
+                Log.error(f"Unknown command: {cmd}")
 
         except UpperException:
             raise
@@ -300,6 +289,7 @@ async def main():
     server = BotWaveServer()
     server.registry.from_dir(Path(__file__).resolve().parent / "ops")                   # server/ops
     server.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
+    server.custom_commands.register(server.registry)
 
 
     try:
