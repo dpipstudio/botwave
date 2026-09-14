@@ -190,9 +190,10 @@ class BotWaveServer:
                     
                     await self.handlers_executor.execute_handler(
                         str(Path(Env.get("HANDLERS_DIR")) / f"{cmd}.cmd"),
-                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore | This has to be the worst line of code I ever wrote
+                        self.registry.get_instances()["HandlersEventsOp"].build_context(), # pyright: ignore
                         silent=True
-                        )
+                    )
+
 
                 else:                
                     Log.error(f"Unknown command: {cmd}")
