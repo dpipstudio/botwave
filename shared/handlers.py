@@ -18,7 +18,12 @@ class HandlerExecutor:
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
 
     def register(self, registry: Registry):
-        for handler in [f for f in Path(self.handlers_dir).iterdir() if f.suffix in (".hdl", ".shdl")]:
+        handlers_dir = Path(self.handlers_dir)
+        if not handlers_dir.is_dir():
+            Log.warning(f"{handlers_dir} does not exist, skipping handlers registration")
+            return
+
+        for handler in [f for f in handlers_dir.iterdir() if f.suffix in (".hdl", ".shdl")]:
             async def handle(self: Any, context: dict[str, str] = {}, handler: Path = handler):
                 await self.owner.handlers_executor.execute_handler(
                     str(handler),
