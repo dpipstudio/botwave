@@ -90,7 +90,7 @@ class HandlersEventsOp(GeneralOp):
         context.update(self.build_context())
 
         matches = [
-            i.lstrip("HDL_")
+            i.removeprefix("HDL_")
             for i in self.registry.get_instances().keys()
             if i.startswith(f"HDL_{prefix}")
         ]
