@@ -31,7 +31,7 @@ class BotWaveClient:
         self.last_seen = datetime.now()
 
     def get_display_name(self) -> str:
-        hostname = self.machine_info.get('hostname', 'unknown')
+        hostname = self.machine_info.get('hostname')
         return f"{hostname} ({self.client_id})"
 
 class RegisterOp(GeneralOp):
@@ -60,11 +60,21 @@ class RegisterOp(GeneralOp):
 
         kwargs = parsed['kwargs']
 
+        if [k for k in ('hostname', 'machine', 'system', 'release') if k not in kwargs]:
+            Log.warning("Failed registration attempt: missing required data")
+            error = ProtocolParser.build_response(
+                Commands.ERROR,
+                "Missing required fields"
+            )
+            await websocket.send(error)
+            await websocket.close()
+            return
+
         machine_info = {
-            'hostname': kwargs.get('hostname', 'unknown'),
-            'machine': kwargs.get('machine', 'unknown'),
-            'system': kwargs.get('system', 'unknown'),
-            'release': kwargs.get('release', 'unknown')
+            'hostname': kwargs.get('hostname'),
+            'machine': kwargs.get('machine'),
+            'system': kwargs.get('system'),
+            'release': kwargs.get('release')
         }
         
         websocket.reg_data['machine_info'] = machine_info
