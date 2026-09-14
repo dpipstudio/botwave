@@ -1,4 +1,6 @@
 import shlex
+import re
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from prompt_toolkit.document import Document
@@ -55,7 +57,7 @@ class SyntaxSuggester(AutoSuggest):
         if cmd not in self.commands:
             return None
 
-        syntax_parts = self.commands[cmd].split(" ") if self.commands[cmd] else []
+        syntax_parts = self.commands[cmd].strip().split(" ") if self.commands[cmd] else []
         typed_args = parts[1:]
 
         remaining = syntax_parts[len(typed_args) if not in_open_quote else len(typed_args) + 1 :]
@@ -90,10 +92,10 @@ class CommandValidator(Validator):
         if cmd not in self.commands:
             return
 
-        syntax_parts = self.commands[cmd].split(" ") if self.commands[cmd] else []
+        syntax = self.commands[cmd] if self.commands[cmd] else ""
         typed_args = parts[1:]
 
-        required = [p for p in syntax_parts if not p.startswith("[")]
+        required = re.findall(r'<[^>]*>', syntax)
 
         if len(typed_args) < len(required):
             missing = required[len(typed_args):]
