@@ -32,8 +32,8 @@ custom commands and handlers without restarting the process.
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         Log.info("Reloading...")
 
-        self.registry.operations = {}
-        self.registry.instances = {}
+        self.registry.operations.clear()
+        self.registry.instances.clear()
 
         # obscure way to detect if we should load the server or local ops
         ops_dir = Path(inspect.getfile(self.owner.__class__)).parent / "ops"
