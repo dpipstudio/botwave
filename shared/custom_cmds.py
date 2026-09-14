@@ -24,6 +24,10 @@ class CCMD:
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
 
     def register(self, registry: Registry):
+        if not Path(self.handlers_dir).is_dir():
+            Log.warning(f"{self.handlers_dir} does not exist, skipping custom commands registration")
+            return
+        
         ccmds = self.get_all()
 
         for ccmd in ccmds:
