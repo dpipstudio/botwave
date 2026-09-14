@@ -1,9 +1,12 @@
 import os
 import shlex
 from pathlib import Path
+from typing import Any
 
 from shared.env import Env
 from shared.logger import Log
+from shared.ops import CliOp
+from shared.registry import Registry
 
 class CustomCommand:
     path: Path
@@ -19,7 +22,30 @@ class CCMD:
     @property
     def handlers_dir(self):
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
-    
+
+    def register(self, registry: Registry):
+        ccmds = self.get_all()
+
+        for ccmd in ccmds:
+            async def handle(self: Any, cmd_parts: list[str] = [], is_cmd: bool = False):
+                await self.owner.handlers_executor.execute_handler(
+                    str(ccmd.path),
+                    self.registry.get_instances()["HandlersEventsOp"].build_context(),
+                    silent=True
+                )
+
+            op = type(f"CCMD_{ccmd.name}", (CliOp,), {
+                "handle": handle
+            })
+            op.name = ccmd.name
+            op.syntax = ccmd.syntax
+            op.short_help = ccmd.short_help
+            op.long_help = ccmd.long_help
+            op.examples = []
+            op.env_vars = {}
+
+            registry.register(op)
+
     def exists(self, command: str) -> bool:
         """
         Checks if a custom command file exists and has the correct shebang
