@@ -66,65 +66,43 @@ class HandlersEventsOp(GeneralOp):
         "handlers_onwsleave": "onwsleave"
     }
 
-    async def onready(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
-
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onready", dir_path, context)
+    async def onready(self,context: dict[str, str] = {}):
+        await self.run_by_prefix("l_onready", context)
 
     async def onexit(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
-
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onexit", dir_path, context)
+        await self.run_by_prefix("l_onexit", context)
 
 
     async def onstart(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
+        await self.run_by_prefix("l_onstart", context)
 
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onstart", dir_path, context)
 
 
     async def onstop(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
+        await self.run_by_prefix("l_onstop", context)
 
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onstop", dir_path, context)
 
 
     async def onwsjoin(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
-
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onwsjoin", dir_path, context)
+        await self.run_by_prefix("l_onwsjoin", context)
         self.owner.rc_clients += 1
 
 
     async def onwsleave(self, dir_path: str = "", context: dict[str, str] = {}):
-        if context:
-            context.update(self.build_context())
-
-        else:
-            context = self.build_context()
-
-        await self.owner.handlers_executor.run_handlers("l_onwsleave", dir_path, context)
+        await self.run_by_prefix("l_onwsleave", context)
         self.owner.rc_clients -= 1
+
+    async def run_by_prefix(self, prefix: str, context: dict[str, str]):
+        context.update(self.build_context())
+
+        matches = [
+            i.lstrip("HDL_")
+            for i in self.registry.get_instances().keys()
+            if i.startswith(f"HDL_{prefix}")
+        ]
+
+        for match in sorted(matches):
+            await self.registry.dispatch(match, context=context)
 
     def build_context(self) -> dict[str, str]:
         ctx = {}
