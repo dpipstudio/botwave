@@ -1,9 +1,12 @@
 import os
+
 from pathlib import Path
-from typing import Awaitable, Callable
+from typing import Any, Awaitable, Callable
 
 from shared.env import Env
 from shared.logger import Log
+from shared.ops import GeneralOp
+from shared.registry import Registry
 
 class HandlerExecutor:
     
@@ -13,6 +16,22 @@ class HandlerExecutor:
     @property
     def handlers_dir(self) -> str:
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
+
+    def register(self, registry: Registry):
+        for handler in [f for f in Path(self.handlers_dir).iterdir() if f.suffix in (".hdl", ".shdl")]:
+            async def handle(self: Any, context: dict[str, str] = {}, handler: Path = handler):
+                await self.owner.handlers_executor.execute_handler(
+                    str(handler),
+                    context,
+                    True if handler.suffix == ".shdl" else False
+                )
+
+            op = type(f"HDL_{handler.stem}", (GeneralOp,), {
+                "commands": {handler.stem: "handle"},
+                "handle": handle
+            })
+
+            registry.register(op)
     
     async def execute_handler(self, file_path: str, ctx: dict[str, str] = {}, silent: bool = False):
         old_env = {k: os.environ.get(k) for k in ctx}
