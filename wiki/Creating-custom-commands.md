@@ -15,7 +15,7 @@ The **first line** of every custom command file must be a shebang in this format
 - `server` makes the command available in `bw-server`, `local` in `bw-local`. Use `*` to make it available in both.
 - `<command_name>` is the command's name as typed in the prompt. It must match the filename (without the extension).
 
-BotWave hot-reloads `.cmd` files automatically, re-checking the handlers directory on every command run, so no restart is needed after creating or editing one.
+BotWave loads every custom command on startup. They can also be loaded during runtime using the `reload` command.
 
 ### Creating Your First Custom Command
 > In this part, we'll assume you have a Linux machine with BotWave server installed.

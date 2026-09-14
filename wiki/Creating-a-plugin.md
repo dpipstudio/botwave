@@ -13,7 +13,7 @@ There's no special plugin API, no registration step, no manifest file. A plugin 
 
 An `install.sh` copies everything into place. An `uninstall.sh` removes it. That's the full surface area.
 
-BotWave picks up `.cmd` files on every command run (hot-reload), and loads `.hdl`/`.shdl` files at startup and on relevant events. Your plugin is active as soon as its files are in the right directories.
+BotWave loads `.cmd` and `.hdl`/`.shdl` files once, at startup, into its registry. Dropping your plugin's files into the handlers directory doesn't activate it right away, you need to run `reload` in BotWave (or restart the process) afterwards for the new commands and handlers to be picked up.
 
 ## Template repo
 
