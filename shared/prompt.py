@@ -8,9 +8,10 @@ from prompt_toolkit.history import FileHistory, InMemoryHistory
 from prompt_toolkit.validation import Validator, ValidationError
 from typing import Any
 
+COMMANDS: dict[str, str] = {}
+
 class SyntaxSuggester(AutoSuggest):
-    def __init__(self, commands: dict[str, str]):
-        self.commands = commands
+    def __init__(self):
         super().__init__()
 
     def get_suggestion(self, _, document: Document):
@@ -25,8 +26,8 @@ class SyntaxSuggester(AutoSuggest):
         
         # no space yet = still typing the command name itself
         curr_text = text.lstrip()
-        if " " not in curr_text and curr_text not in self.commands:
-            matches = [name for name in self.commands if name.startswith(text)]
+        if " " not in curr_text and curr_text not in COMMANDS:
+            matches = [name for name in COMMANDS if name.startswith(text)]
             if not matches:
                 return None
             
@@ -54,10 +55,10 @@ class SyntaxSuggester(AutoSuggest):
             return None
 
         cmd = parts[0]
-        if cmd not in self.commands:
+        if cmd not in COMMANDS:
             return None
 
-        syntax_parts = self.commands[cmd].strip().split(" ") if self.commands[cmd] else []
+        syntax_parts = COMMANDS[cmd].strip().split(" ") if COMMANDS[cmd] else []
         typed_args = parts[1:]
 
         remaining = syntax_parts[len(typed_args) if not in_open_quote else len(typed_args) + 1 :]
@@ -68,8 +69,7 @@ class SyntaxSuggester(AutoSuggest):
         return Suggestion(" " + " ".join(remaining))
 
 class CommandValidator(Validator):
-    def __init__(self, commands: dict[str, str]):
-        self.commands = commands
+    def __init__(self):
         super().__init__()
 
     def validate(self, document: Document):
@@ -89,10 +89,10 @@ class CommandValidator(Validator):
 
         cmd = parts[0]
 
-        if cmd not in self.commands:
+        if cmd not in COMMANDS:
             return
 
-        syntax = self.commands[cmd] if self.commands[cmd] else ""
+        syntax = COMMANDS[cmd] if COMMANDS[cmd] else ""
         typed_args = parts[1:]
 
         required = re.findall(r'<[^>]*>', syntax)
@@ -106,7 +106,9 @@ class CommandValidator(Validator):
 
 
 def get_prompt(commands: dict[str, str], history_path: str) -> PromptSession[Any]:
-
+    COMMANDS.clear()
+    COMMANDS.update(commands)
+    
     try:
         # test if the file is  readable and writable
         with open(history_path, "a+b"):
@@ -119,8 +121,8 @@ def get_prompt(commands: dict[str, str], history_path: str) -> PromptSession[Any
         history = InMemoryHistory()
 
     return PromptSession(
-        auto_suggest=SyntaxSuggester(commands=commands),
-        validator=CommandValidator(commands=commands),
+        auto_suggest=SyntaxSuggester(),
+        validator=CommandValidator(),
         validate_while_typing=False,
         history=history
     )
