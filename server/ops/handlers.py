@@ -67,82 +67,43 @@ class HandlersEventsOp(GeneralOp):
         "handlers_onwsleave": "onwsleave"
     }
 
-    async def onready(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
+    async def onready(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onready", context)
 
-        else:
-            context = self.build_context(client_id)
+    async def onexit(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onexit", context)
 
-        await self.owner.handlers_executor.run_handlers("s_onready", dir_path, context)
+    async def onstart(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onstart", context)
 
-    async def onexit(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
+    async def onstop(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onstop", context)
 
-        else:
-            context = self.build_context(client_id)
+    async def onconnect(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onconnect", context)
 
-        await self.owner.handlers_executor.run_handlers("s_onexit", dir_path, context)
+    async def ondisconnect(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_ondisconnect", context)
 
-
-    async def onstart(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onstart", dir_path, context)
-
-
-    async def onstop(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onstop", dir_path, context)
-
-    async def onconnect(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onconnect", dir_path, context)
-
-    async def ondisconnect(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_ondisconnect", dir_path, context)
-
-    async def onwsjoin(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onwsjoin", dir_path, context)
+    async def onwsjoin(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onwsjoin", context)
         self.owner.rc_clients += 1
 
-
-    async def onwsleave(self, dir_path: str = "", context: dict[str, str] = {}, client_id: str = ""):
-        if context:
-            context.update(self.build_context(client_id))
-
-        else:
-            context = self.build_context(client_id)
-
-        await self.owner.handlers_executor.run_handlers("s_onwsleave", dir_path, context)
+    async def onwsleave(self, context: dict[str, str] = {}, client_id: str = ""):
+        await self.run_by_prefix("s_onwsleave", context)
         self.owner.rc_clients -= 1
+
+    async def run_by_prefix(self, prefix: str, context: dict[str, str]):
+            context.update(self.build_context())
+
+            matches = [
+                i.removeprefix("HDL_")
+                for i in self.registry.get_instances().keys()
+                if i.startswith(f"HDL_{prefix}")
+            ]
+
+            for match in sorted(matches):
+                await self.registry.dispatch(match, context=context)
 
     def build_context(self, client_id: str = "") -> dict[str, str]:
         ctx = {}
