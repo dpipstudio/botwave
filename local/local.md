@@ -56,24 +56,24 @@ Once the client is running, you can use the following commands:
 
 | Command | Usage | Description |
 | :--- | :--- | :--- |
-| `start` | `botwave> start <file> [frequency] [loop] [ps] [rt] [pi]` | Start broadcasting a WAV file. |
-| `stop` | `botwave> stop` | Stop the current broadcast. |
-| `live` | `botwave> live [frequency] [ps] [rt] [pi]` | Start a live broadcast. |
-| `queue` | `botwave> queue ?` | Manages the queue. |
-| `sstv` | `botwave> sstv <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
-| `morse` | `botwave> morse <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
-| `lf` | `botwave> lf` | List files in the upload directory. |
-| `rm` | `botwave> rm <filename\|glob>` | Remove one or more files from the upload directory. |
-| `upload` | `botwave> upload <file\|folder>` | Upload a file to the upload directory. |
-| `dl` | `botwave> dl <url> [destination]` | Download a file from an external URL. |
-| `handlers` | `botwave> handlers [filename]` | List all handlers or commands in a specific handler file. |
-| `<` | `botwave> < <command>` | Run a shell command on the main OS. |
-| `\|` | `botwave> \| <command>` | Run a shell command and pipe each output line as a BotWave command. |
-| `get` | `botwave> get <keys\|*>` | Get one or more environment variable(s). |
-| `set` | `botwave> set <key> <value> [immutable]` | Set an environment variable. |
-| `status` | `botwave> status` | Show current broadcast and remote status. |
-| `help` | `botwave> help` | Display the help message. |
-| `exit` | `botwave> exit` | Exit the application. |
+| `start` | `botwave › start <file> [frequency] [loop] [ps] [rt] [pi]` | Start broadcasting a WAV file. |
+| `stop` | `botwave › stop` | Stop the current broadcast. |
+| `live` | `botwave › live [frequency] [ps] [rt] [pi]` | Start a live broadcast. |
+| `queue` | `botwave › queue ?` | Manages the queue. |
+| `sstv` | `botwave › sstv <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
+| `morse` | `botwave › morse <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
+| `lf` | `botwave › lf` | List files in the upload directory. |
+| `rm` | `botwave › rm <filename\|glob>` | Remove one or more files from the upload directory. |
+| `upload` | `botwave › upload <file\|folder>` | Upload a file to the upload directory. |
+| `dl` | `botwave › dl <url> [destination]` | Download a file from an external URL. |
+| `handlers` | `botwave › handlers [filename]` | List all handlers or commands in a specific handler file. |
+| `<` | `botwave › < <command>` | Run a shell command on the main OS. |
+| `\|` | `botwave › \| <command>` | Run a shell command and pipe each output line as a BotWave command. |
+| `get` | `botwave › get <keys\|*>` | Get one or more environment variable(s). |
+| `set` | `botwave › set <key> <value> [immutable]` | Set an environment variable. |
+| `status` | `botwave › status` | Show current broadcast and remote status. |
+| `help` | `botwave › help` | Display the help message. |
+| `exit` | `botwave › exit` | Exit the application. |
 
 > [!WARNING]
 > `sstv` and `morse` command modules are not installed by default. Install them with `[sudo /opt/BotWave/venv/bin/]pip install pysstv numpy pillow`

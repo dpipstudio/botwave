@@ -228,7 +228,7 @@ You have two options to get files onto your Pi:
 
 **Option A: Download a file from a URL:**
 ```sh
-botwave> dl https://cdn.douxx.tech/files/ss.wav
+botwave › dl https://cdn.douxx.tech/files/ss.wav
 ```
 
 **Option B: Upload a file already on the Pi's filesystem:**
@@ -241,24 +241,24 @@ botwave> dl https://cdn.douxx.tech/files/ss.wav
 > Then inside BotWave:
 
 ```sh
-botwave> upload /home/pi/mysong.mp3        # a single file
+botwave › upload /home/pi/mysong.mp3        # a single file
 
-botwave> upload /home/pi/music/            # every supported file in a folder
+botwave › upload /home/pi/music/            # every supported file in a folder
 ```
 
 #### 4. Starting a broadcast
 ```sh
-botwave> start ss.wav 88    # broadcasts ss.wav at 88 MHz
+botwave › start ss.wav 88    # broadcasts ss.wav at 88 MHz
 ```
 
 #### 5. Stopping a broadcast
 ```sh
-botwave> stop
+botwave › stop
 ```
 
 #### 6. Exiting properly
 ```sh
-botwave> exit    # cleans up and exits
+botwave › exit    # cleans up and exits
 ```
 
 ---
@@ -384,29 +384,29 @@ BotWave supports most common audio formats (MP3, WAV, FLAC, AAC, OGG, and more).
 
 **Option A: Upload a file stored on the server machine:**
 ```sh
-botwave> upload all /home/server/Downloads/ss.wav       # a single file
+botwave › upload all /home/server/Downloads/ss.wav       # a single file
 
-botwave> upload all /home/server/Downloads/bw_files/    # every supported file in a folder
+botwave › upload all /home/server/Downloads/bw_files/    # every supported file in a folder
 ```
 
 **Option B: Have the client download from a URL directly:**
 ```sh
-botwave> dl all https://cdn.douxx.tech/files/ss.wav
+botwave › dl all https://cdn.douxx.tech/files/ss.wav
 ```
 
 #### 4. Starting a broadcast
 ```sh
-botwave> start all ss.wav 88    # broadcasts ss.wav at 88 MHz to all clients
+botwave › start all ss.wav 88    # broadcasts ss.wav at 88 MHz to all clients
 ```
 
 #### 5. Stopping a broadcast
 ```sh
-botwave> stop all
+botwave › stop all
 ```
 
 #### 6. Exiting properly
 ```sh
-botwave> exit    # kicks all clients and shuts down the server cleanly
+botwave › exit    # kicks all clients and shuts down the server cleanly
 ```
 
 ---
@@ -441,7 +441,7 @@ You'll now have access to the full server or local client CLI remotely.
 Note that the `<`, `|`, and `exit` commands are not available via remote shell.
 
 ```sh
-botwave> help
+botwave › help
 ```
 
 ## Advanced Usage

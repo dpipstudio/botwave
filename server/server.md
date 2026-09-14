@@ -58,28 +58,28 @@ targets: Specifies the target clients. Can be 'all', a client ID, a hostname, or
 
 | Command | Usage | Description |
 | :--- | :--- | :--- |
-| `start` | `botwave> start <targets> <file> [freq] [loop] [ps] [rt] [pi]` | Starts broadcasting on specified client(s). |
-| `stop` | `botwave> stop <targets>` | Stops broadcasting on specified client(s). |
-| `live` | `botwave> live <targets> [frequency] [ps] [rt] [pi]` | Start a live broadcast to client(s). |
-| `queue` | `botwave> queue ?` | Manages the queue. |
-| `sstv` | `botwave> sstv <targets> <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
-| `morse` | `botwave> morse <targets> <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
-| `list` | `botwave> list` | Lists all connected clients. |
-| `upload` | `botwave> upload <targets> <path/of/file.wav\|path/of/folder/>` | Upload a file or a folder's files to specified client(s) (Experimental). |
-| `sync` | `botwave> sync <targets\|path/of/folder/> <source_target\|path/of/folder/>` | Synchronize files across systems from a source (Experimental). |
-| `dl` | `botwave> dl <targets> <url>` | Downloads a file from an external URL. |
-| `lf` | `botwave> lf <targets>` | Lists broadcastable files on clients. |
-| `rm` | `botwave> rm <targets> <filename\|all>` | Removes a file from client(s). |
-| `kick` | `botwave> kick <targets> [reason]` | Kicks specified client(s) from the server. |
-| `update` | `botwave> update <targets> [latest\|<version>]` | Request client(s) to update and restart. |
-| `handlers` | `botwave> handlers [filename]` | List all handlers or commands in a specific handler file. |
-| `<` | `botwave> < <command>` | Run a shell command on the main OS. |
-| `\|` | `botwave> \| <command>` | Run a shell command and pipe each output line as a BotWave command. |
-| `get` | `botwave> get <keys\|*>` | Get one or more environment variable(s). |
-| `set` | `botwave> set <key> <value> [immutable]` | Set an environment variable. |
-| `status` | `botwave> status [targets]` | Show server status, and optionally the broadcast status of client(s). |
-| `exit` | `botwave> exit` | Stops and exits the BotWave server. |
-| `help` | `botwave> help` | Shows the help. |
+| `start` | `botwave › start <targets> <file> [freq] [loop] [ps] [rt] [pi]` | Starts broadcasting on specified client(s). |
+| `stop` | `botwave › stop <targets>` | Stops broadcasting on specified client(s). |
+| `live` | `botwave › live <targets> [frequency] [ps] [rt] [pi]` | Start a live broadcast to client(s). |
+| `queue` | `botwave › queue ?` | Manages the queue. |
+| `sstv` | `botwave › sstv <targets> <image path> [mode] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting an image converted to SSTV (requires `pysstv`, `numpy`, `pillow`). |
+| `morse` | `botwave › morse <targets> <text\|file path> [wpm] [freq] [loop] [ps] [rt] [pi]` | Start broadcasting text converted to Morse code. |
+| `list` | `botwave › list` | Lists all connected clients. |
+| `upload` | `botwave › upload <targets> <path/of/file.wav\|path/of/folder/>` | Upload a file or a folder's files to specified client(s) (Experimental). |
+| `sync` | `botwave › sync <targets\|path/of/folder/> <source_target\|path/of/folder/>` | Synchronize files across systems from a source (Experimental). |
+| `dl` | `botwave › dl <targets> <url>` | Downloads a file from an external URL. |
+| `lf` | `botwave › lf <targets>` | Lists broadcastable files on clients. |
+| `rm` | `botwave › rm <targets> <filename\|all>` | Removes a file from client(s). |
+| `kick` | `botwave › kick <targets> [reason]` | Kicks specified client(s) from the server. |
+| `update` | `botwave › update <targets> [latest\|<version>]` | Request client(s) to update and restart. |
+| `handlers` | `botwave › handlers [filename]` | List all handlers or commands in a specific handler file. |
+| `<` | `botwave › < <command>` | Run a shell command on the main OS. |
+| `\|` | `botwave › \| <command>` | Run a shell command and pipe each output line as a BotWave command. |
+| `get` | `botwave › get <keys\|*>` | Get one or more environment variable(s). |
+| `set` | `botwave › set <key> <value> [immutable]` | Set an environment variable. |
+| `status` | `botwave › status [targets]` | Show server status, and optionally the broadcast status of client(s). |
+| `exit` | `botwave › exit` | Stops and exits the BotWave server. |
+| `help` | `botwave › help` | Shows the help. |
 
 > [!WARNING]
 > 1. `upload`/`sync` command support is experimental. Your client / server connection may crash or act strangely.
