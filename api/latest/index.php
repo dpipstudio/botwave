@@ -21,7 +21,12 @@ if (isset($_GET['pwd'])) {
         exit;
     }
 
-    file_put_contents(LATEST_FILE, $proto . "\n" . $release . "\n", LOCK_EX);
+    $publisher_note = "";
+    if (file_exists("publisher_note.txt")) {
+        $publisher_note = file_get_contents("publisher_note.txt");
+    }
+
+    file_put_contents(LATEST_FILE, $proto . "\n" . $release . "\n" . $publisher_note, LOCK_EX);
 
     echo "updated\n";
     exit;
