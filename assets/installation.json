@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.10-malus",
+      "commit": "ff601ba05d55de2ae5fa9ef48c9f85036b50f560"
+    },
+    {
       "codename": "v1.2.9-allexis",
       "commit": "147df8956f03ce6bbfcbe38d390117dba637cc7b"
     },
