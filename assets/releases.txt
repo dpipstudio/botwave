@@ -14,6 +14,19 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.10-malus ---=
+### What Changed
+- **Manual `reload` required for commands/handlers**: `.cmd` custom commands and `.hdl`/`.shdl` handlers are no longer hot-reloaded automatically. They're now loaded once at startup, meaning faster response time but slightly more memory usage. A new `reload` command lets you refresh commands, custom commands, and handlers on the fly without restarting.
+- **Stricter client registration**: The server now rejects a client's registration outright if it doesn't send all expected identifying info (hostname, machine, system, release), instead of silently filling in "unknown" placeholders.
+- **Minor changes**: Minor documentation changes and bug fixes have been applied.
+- **Update checks API change**: Slightly different response from [`api/latest`](https://botwave.dpip.lol/api/latest).
+
+### Removals
+> [!WARNING]
+> Hot-reloading of `.cmd` and `.hdl`/`.shdl` files has been removed. If you rely on adding/editing plugin files while BotWave is running, run `reload` afterward (or restart) to pick up the changes.
+
+=--- END ---=
+
 =--- v1.2.9-allexis ---=
 ### What Changed
 - **Custom command help v2**: A new, stricter format for `.cmd` help text is now supported alongside the old one. Recommended for anything you're distributing as a plugin. See [the wiki](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands) for the full format.
