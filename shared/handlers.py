@@ -24,21 +24,30 @@ class HandlerExecutor:
             return
 
         for handler in [f for f in handlers_dir.iterdir() if f.suffix in (".hdl", ".shdl")]:
-            async def handle(self: Any, context: dict[str, str] = {}, handler: Path = handler):
-                await self.owner.handlers_executor.execute_handler(
-                    str(handler),
-                    context,
-                    True if handler.suffix == ".shdl" else False
-                )
+            try:
+                with open(handler, "r", encoding="utf-8") as f:
+                    content = f.readlines()
 
-            op = type(f"HDL_{handler.stem}", (GeneralOp,), {
-                "commands": {handler.stem: "handle"},
-                "handle": handle
-            })
+                async def handle(self: Any, handler: Path = handler, content: list[str] = content, context: dict[str, str] = {}):
+                    await self.owner.handlers_executor.execute_handler(
+                        str(handler),
+                        context,
+                        True if handler.suffix == ".shdl" else False,
+                        lines=content
+                    )
 
-            registry.register(op)
-    
-    async def execute_handler(self, file_path: str, ctx: dict[str, str] = {}, silent: bool = False):
+                op = type(f"HDL_{handler.stem}", (GeneralOp,), {
+                    "commands": {handler.stem: "handle"},
+                    "handle": handle
+                })
+
+                registry.register(op)
+
+            except Exception as e:
+                Log.warning(f"Failed to load '{handler}': {e}")
+
+
+    async def execute_handler(self, file_path: str, ctx: dict[str, str] = {}, silent: bool = False, lines: list[str] = []):
         old_env = {k: os.environ.get(k) for k in ctx}
 
         try:
@@ -47,15 +56,14 @@ class HandlerExecutor:
             if not silent:
                 Log.handler(f"Running handler on {file_path}")
 
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
+            if lines:
+                for line in lines:
+                    await self.exec_line(line, silent)
 
-                    if line and line[0] != "#":
-                        if not silent:
-                            Log.handler(f"Executing command: {line}")
-
-                        await self.command_executor(line)
+            else:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        await self.exec_line(line, silent)
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
@@ -66,6 +74,15 @@ class HandlerExecutor:
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
+
+    async def exec_line(self, line: str, silent: bool = False):
+        line = line.strip()
+
+        if line and line[0] != "#":
+            if not silent:
+                Log.handler(f"Executing command: {line}")
+
+            await self.command_executor(line)
     
     def list_handlers(self, dir_path: str = ""):
         if not dir_path:
