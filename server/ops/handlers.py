@@ -35,33 +35,33 @@ class HandlersEventsOp(GeneralOp):
     }
 
     async def onready(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onready", context)
+        await self.run_by_prefix("s_onready", context, client_id)
 
     async def onexit(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onexit", context)
+        await self.run_by_prefix("s_onexit", context, client_id)
 
     async def onstart(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onstart", context)
+        await self.run_by_prefix("s_onstart", context, client_id)
 
     async def onstop(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onstop", context)
+        await self.run_by_prefix("s_onstop", context, client_id)
 
     async def onconnect(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onconnect", context)
+        await self.run_by_prefix("s_onconnect", context, client_id)
 
     async def ondisconnect(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_ondisconnect", context)
+        await self.run_by_prefix("s_ondisconnect", context, client_id)
 
     async def onwsjoin(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onwsjoin", context)
+        await self.run_by_prefix("s_onwsjoin", context, client_id)
         self.owner.rc_clients += 1
 
     async def onwsleave(self, context: dict[str, str] = {}, client_id: str = ""):
-        await self.run_by_prefix("s_onwsleave", context)
+        await self.run_by_prefix("s_onwsleave", context, client_id)
         self.owner.rc_clients -= 1
 
-    async def run_by_prefix(self, prefix: str, context: dict[str, str]):
-            context.update(self.build_context())
+    async def run_by_prefix(self, prefix: str, context: dict[str, str], client_id: str):
+            context.update(self.build_context(client_id))
 
             matches = [
                 i.removeprefix("HDL_")
