@@ -5,10 +5,32 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from prompt_toolkit.document import Document
 from prompt_toolkit.history import FileHistory, InMemoryHistory
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.validation import Validator, ValidationError
 from typing import Any
 
 COMMANDS: dict[str, str] = {}
+
+# for autofill keybinds, only fill them for command names, not syntax
+kb = KeyBindings()
+
+@kb.add("tab")
+@kb.add("right")
+@kb.add("c-e")
+@kb.add("escape", "f")
+def handle_completion(event: KeyPressEvent):
+    buffer = event.current_buffer
+    suggestion = buffer.suggestion
+
+    # only fill command names
+    if suggestion and not isinstance(suggestion, SyntaxHint) and buffer.document.is_cursor_at_the_end:
+        buffer.insert_text(suggestion.text)
+
+    else:
+        buffer.cursor_right()
+
+class SyntaxHint(Suggestion):
+    pass
 
 class SyntaxSuggester(AutoSuggest):
     def __init__(self):
@@ -66,7 +88,7 @@ class SyntaxSuggester(AutoSuggest):
         if not remaining:
             return None
 
-        return Suggestion(" " + " ".join(remaining))
+        return SyntaxHint(" " + " ".join(remaining))
 
 class CommandValidator(Validator):
     def __init__(self):
@@ -123,6 +145,7 @@ def get_prompt(commands: dict[str, str], history_path: str) -> PromptSession[Any
     return PromptSession(
         auto_suggest=SyntaxSuggester(),
         validator=CommandValidator(),
+        key_bindings=kb,
         validate_while_typing=False,
         history=history
     )
