@@ -503,8 +503,9 @@ Got a question or an issue?
 
 
 ## Mentions
-**BotWave mentions**: Here are some posts/websites that talk about BotWave. Thanks to their creators!
 <div align="center">
+<p><b>BotWave mentions</b>: Here are some posts/websites that talk about BotWave. Thanks to their creators!</p>
+
 <a href="https://zendot.org/en/posts/dpipstudio-botwave/" target="_blank"><img src="assets/readme_assets/badge_zendot.svg" alt="zendot.org"/></a>
 <a href="https://sheets.works/data-viz/self-hosted/" target="_blank"><img src="assets/readme_assets/badge_sheets_works.svg" alt="sheets.works"/></a>
 <a href="https://eutech.directory/" target="_blank"><img src="assets/readme_assets/badge_eutech_directory.svg" alt="eutech.directory"/></a>
