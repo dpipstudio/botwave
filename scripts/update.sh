@@ -33,7 +33,7 @@ readonly INSTALL_DIR="/opt/BotWave"
 readonly BIN_DIR="$INSTALL_DIR/bin"
 readonly BACKENDS_DIR="$INSTALL_DIR/backends"
 readonly SYMLINK_DIR="/usr/local/bin"
-readonly TMP_DIR="/tmp/bw_update"
+readonly TMP_DIR="/tmp/botwave/bw_update"
 readonly LOG_FILE="$TMP_DIR/update_$(date +%s).log"
 
 # filled by fetch_source_tarball() once the tarball has been extracted
