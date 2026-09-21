@@ -1,8 +1,8 @@
 import ssl
-import tempfile
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_TMP
 from shared.http import BWHTTPFileServer
 from shared.logger import Log
 from shared.ops import GeneralOp
@@ -15,7 +15,7 @@ class StartupOp(GeneralOp):
     The server internal startup sequence.
     
     Creates the TLS certificates and keys (self-signed)
-    if they don't exist already (in /tmp/bw_certs/)
+    if they don't exist already (in /tmp/botwave/)
     and setups a SSL context with them.
 
     Then starts the websocket and http server.
@@ -26,10 +26,9 @@ class StartupOp(GeneralOp):
     async def startup(self):
         try:
             # tls certs (for https and wss)
-            bw_certs = Path(tempfile.gettempdir()) / "bw_certs"
-            bw_certs.mkdir(exist_ok=True)
-            cert_path = bw_certs / "bw.crt"
-            key_path = bw_certs / "bw.key"
+            tmp_dir = Path(BW_TMP)
+            cert_path = tmp_dir / "bw.crt"
+            key_path = tmp_dir / "bw.key"
 
             try:
                 # reuse existing certs if readable
@@ -73,6 +72,7 @@ class StartupOp(GeneralOp):
     def save_cert_to(self, cert_pem: str, key_pem: str, cert_path: Path, key_path: Path):
         cert_path.write_text(cert_pem)
         key_path.write_text(key_pem)
+        key_path.chmod(0o600)
 
 def setup(reg: Any):
     reg.register(StartupOp)
