@@ -1,10 +1,10 @@
 import errno
 import os
 import psutil
-import tempfile
 import threading
 import time
 
+from shared.dirutils import BW_TMP
 from shared.env import Env
 from shared.logger import Log
 
@@ -12,7 +12,7 @@ class TipEngine:
     def __init__(self, is_server: bool = True):
         self.is_broadcasting = False
         
-        self.__lockfile = os.path.join(tempfile.gettempdir(), f"botwave_{'server' if is_server else 'client'}.pid")
+        self.__lockfile = os.path.join(BW_TMP, f"botwave_{'server' if is_server else 'client'}.pid")
         self.__monitor_thread = None
         self.__monitor_stop = threading.Event()
         self.__is_server = is_server
