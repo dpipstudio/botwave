@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
+from shared.dirutils import BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import GeneralOp
@@ -68,7 +69,7 @@ class DownloadOp(GeneralOp):
                 await loop.run_in_executor(None, self.download, url, filepath)
 
             elif ext in SUPPORTED_EXTENSIONS:
-                with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
+                with tempfile.NamedTemporaryFile(delete=False, dir=BW_TMP, suffix="." + ext) as tmp:
                     tmp_path = tmp.name
 
                 try:

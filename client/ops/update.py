@@ -1,10 +1,10 @@
 import asyncio
 import re
 import shlex
-import tempfile
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_TMP
 from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.protocol import Commands, ParsedCommand
@@ -84,7 +84,7 @@ class UpdateOp(GeneralOp):
             return
 
         try:
-            Path.touch(Path(tempfile.gettempdir()) / ".bw_updated")
+            Path.touch(Path(BW_TMP) / ".bw_updated")
 
         except Exception:
             pass
