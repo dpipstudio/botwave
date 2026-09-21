@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.converter import Converter, SUPPORTED_EXTENSIONS
-from shared.dirutils import BW_PATH
+from shared.dirutils import BW_PATH, BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -103,7 +103,7 @@ format.
                     Log.error(f"Unsupported file type: .{ext}")
                 return False
 
-            tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+            tmp = tempfile.NamedTemporaryFile(suffix=".wav", dir=BW_TMP, delete=False)
             tmp.close()
 
             try:

@@ -1,10 +1,10 @@
 import asyncio
 import platform
 import ssl
-import tempfile
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_TMP
 from shared.env import Env
 from shared.http import BWHTTPFileClient
 from shared.logger import Log
@@ -108,7 +108,7 @@ class ConnectOp(GeneralOp):
 
         Log.success(f"Registered as: {self.owner.client_id}")
 
-        update_flag = Path(tempfile.gettempdir()) / ".bw_updated"
+        update_flag = Path(BW_TMP) / ".bw_updated"
 
         if update_flag.is_file():
             new_version = get_release_version()

@@ -7,7 +7,7 @@ from typing import Any
 
 from ops.register import BotWaveClient
 from shared.converter import SUPPORTED_EXTENSIONS
-from shared.dirutils import BW_PATH
+from shared.dirutils import BW_PATH, BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -246,7 +246,7 @@ This feature is experimental and may be unstable.
             Log.error("Source and target is the same client")
             return
 
-        tmp_dir = tempfile.mkdtemp(prefix="bw_sync")
+        tmp_dir = tempfile.mkdtemp(prefix="bw_sync", dir=BW_TMP)
 
         await self.client_to_local(tmp_dir, source)
         await self.local_to_client(target, tmp_dir)

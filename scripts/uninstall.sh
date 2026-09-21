@@ -30,7 +30,7 @@ readonly YEL='\033[1;33m'
 readonly NC='\033[0m'
 readonly INSTALL_DIR="/opt/BotWave"
 readonly SYMLINK_DIR="/usr/local/bin"
-readonly TMP_DIR="/tmp/bw_uninstall"
+readonly TMP_DIR="/tmp/botwave/bw_uninstall"
 readonly LOG_FILE="$TMP_DIR/uninstall_$(date +%s).log"
 
 readonly SERVICES=("bw-client" "bw-server" "bw-local")

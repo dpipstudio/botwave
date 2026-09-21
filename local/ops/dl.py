@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from shared.converter import Converter, ConvertError, SUPPORTED_EXTENSIONS
-from shared.dirutils import BW_PATH
+from shared.dirutils import BW_PATH, BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -97,7 +97,7 @@ Other positional arguments:
             if ext in SUPPORTED_EXTENSIONS:
                 Log.file(f"Downloading {ext.upper()} file and converting to WAV...")
 
-                with tempfile.NamedTemporaryFile(delete=False, suffix="." + ext) as tmp:
+                with tempfile.NamedTemporaryFile(delete=False, dir=BW_TMP, suffix="." + ext) as tmp:
                     tmp_path = tmp.name
 
                 opener = urllib.request.build_opener()
