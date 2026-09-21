@@ -45,7 +45,8 @@ body:
       description: The hardware on which you encountered this issue, if applicable
       placeholder: Raspberry Pi 4
   - type: textarea
-    id: context
+    id: logs
     attributes:
-      label: Additional context
-      description: Add any other context about the problem here.
+      label: Log capture
+      description: Copy and paste any relevant log output in the field below. **Please capture the log output with `--talk` enabled.** This will be automatically formatted into code, so no need for backticks. **Remove any sensitive information before submitting!**
+      render: shell
