@@ -1,8 +1,8 @@
 import hashlib
-import tempfile
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
@@ -29,7 +29,7 @@ ScottieDX, Robot36, PasokonP3, PasokonP5, PasokonP7, PD90,
 PD120, PD160, PD180, PD240, PD290, WraaseSC2120, WraaseSC2180,
 Robot8BW, Robot24BW
 
-Generated .wav files are available into '/tmp/bw_sstv/'.
+Generated .wav files are available into '/tmp/botwave/bw_sstv/'.
 
 Other positional arguments:
 [loop]: If the audio should be looped
@@ -126,7 +126,7 @@ Other positional arguments:
         key = f"{abs_path}|{mode or 'auto'}|{mtime}"
         digest = hashlib.sha256(key.encode()).hexdigest()[:16]
 
-        cache_dir = Path(tempfile.gettempdir()) / "bw_sstv"
+        cache_dir = Path(BW_TMP) / "bw_sstv"
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         return str(cache_dir / f"{digest}.wav")

@@ -1,8 +1,8 @@
 import hashlib
-import tempfile
 from pathlib import Path
 from typing import Any
 
+from shared.dirutils import BW_TMP
 from shared.env import Env
 from shared.logger import Log
 from shared.morser import text_to_morse
@@ -24,7 +24,7 @@ Convert text to morse code and broadcast it.
 If the first argument is a <file>, read its content and
 convert it. If not, use the <text> itself.
 
-Generated .wav files are available into '/tmp/bw_morse/'.
+Generated .wav files are available into '/tmp/botwave/bw_morse/'.
 
 Other positional arguments:
 [wpm]: Words per minute to generate
@@ -117,7 +117,7 @@ Other positional arguments:
         key = f"{text}|{freq}|{rate}"
         digest = hashlib.sha256(key.encode()).hexdigest()[:16]
 
-        cache_dir = Path(tempfile.gettempdir()) / "bw_morse"
+        cache_dir = Path(BW_TMP) / "bw_morse"
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         return str(cache_dir / f"{digest}.wav")
