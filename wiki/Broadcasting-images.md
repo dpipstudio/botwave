@@ -30,20 +30,11 @@ Then simply start a broadcast using the SSTV command:
 
 ```bash
 botwave › # command syntax: sstv <image_path> [mode] [frequency] [loop] [ps] [rt] [pi]
-
 botwave › sstv bw-logo.png
-```
-
-<details>
-<summary><code>Example output</code></summary>
-<pre>
-botwave › sstv bw-logo.png
-
 [SSTV] Generating SSTV WAV from bw-logo.png using mode auto...
-[SSTV] SSTV wav created /tmp/bw_sstv/e17b2314c436391d.wav (mode: PD160)
-[OK] Started broadcasting /tmp/bw_sstv/e17b2314c436391d.wav on 90MHz
-</pre>
-</details>
+[SSTV] SSTV wav created /tmp/botwave/bw_sstv/79193160a088ed10.wav (mode: PD160)
+[OK] Started broadcasting /tmp/botwave/bw_sstv/79193160a088ed10.wav on 90MHz
+```
 
 You can choose an encoding mode using the mode positional argument. All available modes can be found [here](https://github.com/dnet/pysstv).
 
@@ -51,20 +42,11 @@ If the mode is left empty, BotWave will automatically choose the best mode based
 
 ```bash
 botwave › # using the "Robot36" mode on 99Mhz
-
 botwave › sstv bw-logo.png Robot36 99
-```
-
-<details>
-<summary><code>Example output</code></summary>
-<pre>
-botwave › sstv bw-logo.png Robot36 99
-
 [SSTV] Generating SSTV WAV from bw-logo.png using mode Robot36...
-[SSTV] SSTV wav created /tmp/bw_sstv/5ed86d7d2921e0d9.wav (mode: Robot36)
-[OK] Started broadcasting /tmp/bw_sstv/5ed86d7d2921e0d9.wav on 99.0MHz
-</pre>
-</details>
+[SSTV] SSTV wav created /tmp/botwave/bw_sstv/0d97b7d07378290b.wav (mode: Robot36)
+[OK] Started broadcasting /tmp/botwave/bw_sstv/0d97b7d07378290b.wav on 99.0MHz
+```
 
 ### Decoding the image
 To decode the image, you can use a tool like [Robot36](https://github.com/xdsopl/robot36/), available on the Google Play Store. Simply tune a radio to the broadcast frequency and start the app to decode the image.
