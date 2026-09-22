@@ -1,4 +1,4 @@
-import os
+import tempfile
 import time
 from pathlib import Path
 from piwave import PiWave
@@ -10,6 +10,7 @@ from shared.dirutils import BW_PATH
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
+from shared.security import PathValidator, SecurityError
 
 class StartOp(CliOp):
     """
@@ -42,7 +43,8 @@ Other positional arguments:
         "start myfile.wav 96.9 true 'BotWave'"
     ]
     env_vars = {
-        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to retrieve the file from"),
+        "UPLOAD_DIR": (f"{BW_PATH}/uploads", "The upload directory to retrieve the file from if not an absolute path"),
+        "EXTRA_ALLOWED_DIRS": ("", "Colon-separated list of extra directories allowed as file sources"),
         "BACKEND_PATH": ("bw_custom", "The path to the broadcast backend"),
         "BACKEND_BYPASS_CACHE": ("false", "If the backend manager should discard its cached backend path"),
         "SKIP_CHECKS": ("false", "If the backend manager should skip its own system requirements checks"),
@@ -69,7 +71,24 @@ Other positional arguments:
             if not file:
                 return
 
-        if not os.path.exists(file):
+        try:
+            extra = Env.get("EXTRA_ALLOWED_DIRS", "")
+            extra_dirs = [d for d in extra.split(":") if d.strip()]
+
+            allowed_dirs: list[Any] = [
+                tempfile.gettempdir(),
+                BW_PATH,
+                Path.home(),
+                *extra_dirs
+            ]
+
+            file = PathValidator.validate_read(file, allowed_dirs)
+
+        except SecurityError as e:
+            Log.error(str(e))
+            return
+
+        if not Path(file).is_file():
             Log.error(f"File {file} not found")
             return
         
@@ -139,7 +158,7 @@ Other positional arguments:
             Log.error("Usage: start <file> [frequency] [loop] [ps] [rt] [pi]")
             return (None, None, None, None, None, None)
         
-        file = os.path.join(Env.get("UPLOAD_DIR"), cmd_parts[0])
+        file = Path(Env.get("UPLOAD_DIR")) / cmd_parts[0]
         frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[2].lower() == 'true' if len(cmd_parts) > 2 else False
         ps = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_PS", "BotWave")
