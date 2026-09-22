@@ -147,7 +147,7 @@ Here is a full list of every supported variable, organized by component.
 | `WAIT_START` | bool | `true` | no | Tries to synchronize broadcasts. Set to `false` via `--start-asap`. |
 | `DAEMON` | bool | `false` | yes | Run the process in daemon mode. |
 | `SKIP_CHECKS` | bool | `false` | no | Skip the different startup checks. |
-| `EXTRA_ALLOWED_DIRS` | str | The process PWD | no | `:`-separated extra directories allowed for file reads. |
+| `EXTRA_ALLOWED_DIRS` | str | *(none)* | no | `:`-separated extra directories allowed for file reads. Always-allow directories are `/tmp`, `/opt/BotWave`, and the users home directory. |
 | `HANDLERS_DIR` | str | `/opt/BotWave/handlers/` | no | Directory where `.hdl` and `.shdl` handler files are loaded from. |
 | `ALLOW_PROTO_MISMATCH` | bool | `false` | no | Skip strict protocol version matching between client and server. |
 | `DEFAULT_FREQ` | int | `90` | no | Default FM broadcast frequency in MHz. |
@@ -215,6 +215,7 @@ Here is a full list of every supported variable, organized by component.
 | `TALK` | bool | `false` | no | Enable verbose/debug output. |
 | `UPLOAD_DIR` | str | `/opt/BotWave/uploads/` | no | Directory for local file operations. |
 | `HANDLERS_DIR` | str | `/opt/BotWave/handlers/` | no | Directory where `.hdl` and `.shdl` handler files are loaded from. |
+| `EXTRA_ALLOWED_DIRS` | str | *(none)* | no | `:`-separated extra directories allowed for file reads. Always-allow directories are `/tmp`, `/opt/BotWave`, and the users home directory. |
 | `DEFAULT_FREQ` | int | `90` | no | Default FM broadcast frequency in MHz. |
 | `DEFAULT_PI` | str | `FFFF` | no | Default RDS Programme Identifier code. |
 | `DEFAULT_PS` | str | `BotWave` | no | Default RDS Programme Service name (max 8 characters). |
