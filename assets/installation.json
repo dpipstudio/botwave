@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.11-bixa",
+      "commit": "08cbfbedc4b709b1e67ce822a3fbc0c81d90c990"
+    },
+    {
       "codename": "v1.2.10-malus",
       "commit": "ff601ba05d55de2ae5fa9ef48c9f85036b50f560"
     },
