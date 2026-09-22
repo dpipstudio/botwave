@@ -241,14 +241,14 @@ botwave › dl https://cdn.douxx.tech/files/ss.wav
 > Then inside BotWave:
 
 ```sh
-botwave › upload /home/pi/mysong.mp3        # a single file
+botwave › upload /home/pi/mysong.mp3  # a single file
 
-botwave › upload /home/pi/music/            # every supported file in a folder
+botwave › upload /home/pi/music/      # every supported file in a folder
 ```
 
 #### 4. Starting a broadcast
 ```sh
-botwave › start ss.wav 88    # broadcasts ss.wav at 88 MHz
+botwave › start ss.wav 88  # broadcasts ss.wav at 88 MHz
 ```
 
 #### 5. Stopping a broadcast
@@ -258,7 +258,7 @@ botwave › stop
 
 #### 6. Exiting properly
 ```sh
-botwave › exit    # cleans up and exits
+botwave › exit  # cleans up and exits
 ```
 
 ---
@@ -316,7 +316,7 @@ Then, on the Raspberry Pi, connect it to the server:
 > If you don't know your server's IP address, run `< hostname -I` in the BotWave shell.
 
 ```sh
-sudo bw-client 192.168.1.10    # replace with your server's IP
+sudo bw-client 192.168.1.10  # replace with your server's IP
 ```
 
 > `sudo` is required to access Raspberry Pi hardware.
@@ -384,9 +384,9 @@ BotWave supports most common audio formats (MP3, WAV, FLAC, AAC, OGG, and more).
 
 **Option A: Upload a file stored on the server machine:**
 ```sh
-botwave › upload all /home/server/Downloads/ss.wav       # a single file
+botwave › upload all /home/server/Downloads/ss.wav     # a single file
 
-botwave › upload all /home/server/Downloads/bw_files/    # every supported file in a folder
+botwave › upload all /home/server/Downloads/bw_files/  # every supported file in a folder
 ```
 
 **Option B: Have the client download from a URL directly:**
@@ -396,7 +396,7 @@ botwave › dl all https://cdn.douxx.tech/files/ss.wav
 
 #### 4. Starting a broadcast
 ```sh
-botwave › start all ss.wav 88    # broadcasts ss.wav at 88 MHz to all clients
+botwave › start all ss.wav 88  # broadcasts ss.wav at 88 MHz with all clients
 ```
 
 #### 5. Stopping a broadcast
@@ -406,7 +406,7 @@ botwave › stop all
 
 #### 6. Exiting properly
 ```sh
-botwave › exit    # kicks all clients and shuts down the server cleanly
+botwave › exit  # kicks all clients and shuts down the server cleanly
 ```
 
 ---
@@ -424,16 +424,16 @@ npm i -g bwsc
 Add the `--rc` flag when starting BotWave. A passkey is strongly recommended if exposed to the internet:
 
 ```sh
-bw-server --rc 9939 --pk MyPass       # for the server component
+bw-server --rc 9939 --pk MyPass  # for the server component
 
-bw-local --rc 9939 --pk MyPass        # for the local client component
+bw-local --rc 9939 --pk MyPass   # for the local client component
 ```
 
 > If you add a passkey to the server, also pass it to connecting clients: `sudo bw-client <server-ip> --pk <passkey>`
 
 #### 3. Connect remotely
 ```sh
-bwsc 192.168.1.10:9939 MyPass    # replace with your server IP and passkey
+bwsc 192.168.1.10:9939 MyPass  # replace with your server IP and passkey
 ```
 
 #### 4. Manage remotely
