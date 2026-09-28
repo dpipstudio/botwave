@@ -278,7 +278,7 @@
     ],
     "requirements": [
       "websockets==13.1",
-      "dlogger==1.0.5",
+      "dlogger==1.0.6",
       "aiofiles==0.8.0",
       "aiohttp",
       "morse-talk==0.2",
