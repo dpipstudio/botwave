@@ -2,7 +2,7 @@ import re
 from typing import Any, Callable
 
 from shared.logger import Log
-from shared.ops import CliOp
+from shared.ops import AliasOp, CliOp
 
 class CommandInfo:
     name: str
@@ -44,23 +44,50 @@ Custom commands (.cmd files) are included in both views.
         if is_cmd:
             commands = self.parse(cmd_parts)
 
-        all_commands = [
-            self.get_cmd_info(cmd)
-            for cmd in self.registry.get_instances().values()
-            if isinstance(cmd, CliOp)
-        ]
+        reg_instances = self.registry.get_instances().values()
+
+        all_commands = sorted(
+            [
+                self.get_cmd_info(cmd)
+                for cmd in reg_instances
+                if isinstance(cmd, CliOp) and not isinstance(cmd, AliasOp)
+            ],
+            key=lambda cmd: cmd.name
+        )
+
+        alias_map = {
+            alias.name: alias.original_name
+            for alias in reg_instances
+            if isinstance(alias, AliasOp)
+        }
 
         if commands:
+            commands = list(dict.fromkeys(alias_map.get(command, command) for command in commands))
+            
             for index, command in enumerate(commands, start=1):
                 if command in [cmd.name for cmd in all_commands]:
                     cmd_info = next((cmd for cmd in all_commands if cmd.name == command))
 
+                    aliases = [
+                        alias
+                        for alias in self.registry.get_instances().values()
+                        if isinstance(alias, AliasOp) and alias.original_name == command
+                    ]
+
                     Log.print("›", "bright_green", end=" ")
                     Log.print(
                         f"{cmd_info.name} {cmd_info.full_syntax}".strip(),
-                        "yellow",
-                        end="\n\n"
+                        "yellow"
                         )
+
+                    for alias in aliases:
+                        Log.print("›", "bright_green", end=" ")
+                        Log.print(
+                            f"{alias.name} {alias.syntax}".strip(),
+                            "cyan"
+                            ) 
+
+                    Log.print("")
 
                     cmd_info.full_help()
                 
