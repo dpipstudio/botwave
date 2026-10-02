@@ -41,7 +41,7 @@ class WSCMDH: # WebSocket Command Handler
         if blocked_env:
             return [cmd for cmd in blocked_env.split(",") if cmd.strip()]
 
-        return ['get', 'set', '<', '|'] # defaults
+        return ['alias', 'get', 'set', '<', '|'] # defaults
 
     def start(self):
         

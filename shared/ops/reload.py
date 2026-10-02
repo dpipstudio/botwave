@@ -44,6 +44,7 @@ custom commands and handlers without restarting the process.
 
         self.owner.custom_commands.register(self.registry)
         self.owner.handlers_executor.register(self.registry)
+        self.owner.aliases.register(self.registry)
 
         prompt.COMMANDS.clear()
         prompt.COMMANDS.update({op.name: op.syntax for op in self.registry.get_instances().values() if isinstance(op, CliOp)})

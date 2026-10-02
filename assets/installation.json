@@ -247,6 +247,7 @@
   "always": {
     "files": [
       "autorun/autorun.py",
+      "shared/aliases.py",
       "shared/alsa.py",
       "shared/cat.py",
       "shared/cat.jpg",
@@ -271,6 +272,7 @@
       "shared/tips.py",
       "shared/version.py",
       "shared/ws_cmd.py",
+      "shared/ops/alias.py",
       "shared/ops/handlers.py",
       "shared/ops/help.py",
       "shared/ops/queue.py",

@@ -1,3 +1,4 @@
+import shlex
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -25,3 +26,11 @@ class CliOp:
     @property
     def commands(self) -> dict[str, str]:
         return {self.name: "handle"}
+
+class AliasOp(CliOp):
+    original_name: str = ""
+    command: str = ""
+
+    async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
+        parts = shlex.split(self.command) + cmd_parts
+        await self.registry.dispatch(parts[0].lower(), is_cmd=True, cmd_parts=parts[1:])
