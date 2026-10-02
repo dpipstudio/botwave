@@ -21,6 +21,7 @@ from typing import Any
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+from shared.aliases import Aliases
 from shared.alsa import Alsa
 from shared.cat import check
 from shared.custom_cmds import CCMD
@@ -53,6 +54,7 @@ class BotWaveLocal:
         self.piwave_monitor: PWM = PWM()
 
         # core systems
+        self.aliases: Aliases = Aliases(is_server=False)
         self.alsa: Alsa = Alsa()
         self.custom_commands: CCMD = CCMD(is_server=False)
         self.handlers_executor: HandlerExecutor = HandlerExecutor(self.cmd_exec)
@@ -174,6 +176,7 @@ async def main():
     local.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
     local.custom_commands.register(local.registry)
     local.handlers_executor.register(local.registry)
+    local.aliases.register(local.registry)
 
     local.running = True #TODO: Check if this running attr is really useful
 
