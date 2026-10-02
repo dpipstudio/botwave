@@ -14,6 +14,22 @@ class AliasCmdOp(CliOp):
     syntax = "<command> [value]"
     short_help = "Manage command aliases"
     long_help = """\
+Creates, shows, lists and removes command aliases. An alias
+is a shortcut name that runs a registered command, and any
+extra arguments typed after it are appended to that command.
+
+With a [value], creates the alias <command> so it runs
+[value]. Without one, shows what the alias <command>
+represents.
+
+'alias list' shows every alias with the command it runs and
+the syntax still missing after the arguments it already
+provides. 'alias rm <name>' removes an alias.
+
+Aliases are saved to a file and loaded at startup. They can
+only run registered commands, can't reuse the name of an
+existing command, and can't point to themselves. The names
+'list' and 'rm' are reserved.
 """
     examples = [
         "alias smf",
@@ -84,7 +100,10 @@ class AliasCmdOp(CliOp):
         return (name, value)
 
     def list_aliases(self):
-        Log.info("Aliases:", end="\n\n")
+        if not self.owner.aliases.aliases:
+            Log.warning("No aliases are registered yet.")
+            Log.warning(f"Create a new one with 'alias <alias_name> <value>'")
+            return
 
         for alias in [a for a in self.registry.get_instances().values() if isinstance(a, AliasOp)]:
             Log.print(f"{alias.name}: {alias.original_name}", "yellow")
