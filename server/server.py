@@ -23,6 +23,7 @@ from websockets.asyncio.server import ServerConnection
 # using this to access to the shared dir files
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+from shared.aliases import Aliases
 from shared.alsa import Alsa
 from shared.cat import check
 from shared.custom_cmds import CCMD
@@ -59,6 +60,7 @@ class BotWaveServer:
         self.ws_server: BWWebSocketServer | Any = None
 
         # core components & state
+        self.aliases: Aliases = Aliases(is_server=True)
         self.alsa: Alsa = Alsa()
         self.custom_commands: CCMD = CCMD(is_server=True)
         self.queue: Queue = Queue(self)
@@ -291,6 +293,7 @@ async def main():
     server.registry.from_dir(Path(__file__).resolve().parent.parent / "shared" / "ops") # shared/ops
     server.custom_commands.register(server.registry)
     server.handlers_executor.register(server.registry)
+    server.aliases.register(server.registry)
 
     try:
         # server startup
