@@ -86,6 +86,10 @@ existing command, and can't point to themselves. The names
             Log.error("An alias can't point to itself")
             return
 
+        if "=" in name:
+            Log.error("An alias can't have '=' in its name")
+            return
+
         self.owner.aliases.set(name, value)
         Log.success(f"Set alias '{name}' to represent '{value}'")
 
