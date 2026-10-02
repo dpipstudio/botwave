@@ -51,7 +51,7 @@ class Aliases:
                 Log.debug(f"Loaded {len(aliases)} aliases")
 
         except Exception as e:
-            Log.warning(f"Failed to load aliases: {e}")
+            Log.debug(f"Failed to load aliases: {e}")
 
         return aliases
 
