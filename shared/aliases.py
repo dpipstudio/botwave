@@ -4,6 +4,7 @@ from pathlib import Path
 from shared.dirutils import BW_PATH
 from shared.logger import Log
 from shared.ops import AliasOp, CliOp
+from shared.prompt import COMMANDS
 from shared.registry import Registry
 
 class Aliases:
@@ -65,6 +66,8 @@ class Aliases:
 
         op = self.__build_op(name, value)
         self.registry.register(op)
+
+        COMMANDS.update({ op.name: op.syntax })
 
     def __parse(self, line: str) -> tuple[str | None, str | None]:
         """
