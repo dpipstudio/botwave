@@ -13,7 +13,10 @@ class Aliases:
         self.aliasfile = Path(BW_PATH) / f"{'s' if is_server else 'l'}_aliases"
 
         # the file might not exist yet
-        self.aliasfile.touch()
+        try:
+            self.aliasfile.touch()
+        except Exception as e:
+            Log.debug(f"Failed to create {self.aliasfile.name}: {e}")
 
         # for quick lookup
         self.aliases: dict[str, str] = {}
