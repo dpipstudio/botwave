@@ -11,7 +11,7 @@ class AliasCmdOp(CliOp):
     """
 
     name = "alias"
-    syntax = "<name> [value]"
+    syntax = "<command> [value]"
     short_help = "Manage command aliases"
     long_help = """\
 """
@@ -27,6 +27,18 @@ class AliasCmdOp(CliOp):
 
             if not name:
                 return
+
+        match name:
+            case "list":
+                self.list_aliases()
+                return
+
+            case "rm":
+                self.remove_alias(value)
+                return
+
+            case _:
+                pass
 
         if value:
             self.set_alias(name, value)
@@ -70,6 +82,24 @@ class AliasCmdOp(CliOp):
         value = cmd_parts[1] if len(cmd_parts) > 1 else ""
 
         return (name, value)
+
+    def list_aliases(self):
+        Log.info("Aliases:", end="\n\n")
+
+        for alias in [a for a in self.registry.get_instances().values() if isinstance(a, AliasOp)]:
+            Log.print(f"{alias.name}: {alias.original_name}", "yellow")
+            Log.print(f"  Command: {alias.command}")
+            Log.print(f"  Missing: {alias.syntax if alias.syntax else '/'}")
+            Log.print("")
+
+    def remove_alias(self, name: str):
+        if name not in self.owner.aliases.aliases:
+            Log.warning(f"No alias with the name '{name}' was found")
+            return
+
+        self.owner.aliases.remove(name)
+
+        Log.success(f"Removed '{name}'")
 
 def setup(reg: Any):
     reg.register(AliasCmdOp)

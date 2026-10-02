@@ -69,6 +69,36 @@ class Aliases:
 
         COMMANDS.update({ op.name: op.syntax })
 
+    def remove(self, name: str):
+        """
+        Removes the given alias from the aliasfile and the registry
+        """
+        if name not in self.aliases:
+            return
+
+        if not self.registry:
+            raise RuntimeError("Called Aliases.remove when Aliases.registry is None. Cannot unregister.")
+
+        try:
+            with open(self.aliasfile) as f:
+                lines = f.readlines()
+
+            kept = [line for line in lines if self.__parse(line)[0] != name]
+
+            with open(self.aliasfile, "w") as f:
+                f.writelines(kept)
+
+        except Exception as e:
+            Log.warning(f"Failed to remove alias from file: {e}")
+            return
+
+        del self.aliases[name]
+
+        self.registry.operations.pop(name, None)
+        self.registry.instances.pop(f"ALIAS_{name}", None)
+
+        COMMANDS.pop(name, None)
+
     def __parse(self, line: str) -> tuple[str | None, str | None]:
         """
         Parses a aliasfile line. Expects the line to be formatted
