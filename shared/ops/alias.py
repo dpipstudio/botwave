@@ -32,8 +32,9 @@ existing command, and can't point to themselves. The names
 'list' and 'rm' are reserved.
 """
     examples = [
-        "alias smf",
+        "alias list",
         "alias smf \"start myfile.wav\"",
+        "alias rm smf"
     ]
     env_vars = {}
 
