@@ -30,15 +30,19 @@ class Aliases:
         try:
             with open(self.aliasfile) as f:
                 for line in f:
-                    name, value = self.__parse(line)
+                    try:
+                        name, value = self.__parse(line)
 
-                    if not name or not value:
-                        continue
+                        if not name or not value:
+                            continue
+                        
+                        op = self.__build_op(name, value)
 
-                    op = self.__build_op(name, value)
+                        aliases.append(op)
+                        self.aliases[name] = value
 
-                    aliases.append(op)
-                    self.aliases[name] = value
+                    except Exception as e:
+                        Log.debug(f"Skipping line {line}: {e}")
 
                 Log.debug(f"Loaded {len(aliases)} aliases")
 
