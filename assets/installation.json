@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.12-styrax",
+      "commit": "f9d1c2d622eadc7be41c47fa2164d53ee76b6c41"
+    },
+    {
       "codename": "v1.2.11-bixa",
       "commit": "08cbfbedc4b709b1e67ce822a3fbc0c81d90c990"
     },
