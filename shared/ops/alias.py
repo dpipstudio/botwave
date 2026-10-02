@@ -2,7 +2,7 @@ import shlex
 from typing import Any
 
 from shared.logger import Log
-from shared.ops import CliOp
+from shared.ops import AliasOp, CliOp
 
 class AliasCmdOp(CliOp):
     """
@@ -44,9 +44,18 @@ class AliasCmdOp(CliOp):
     def set_alias(self, name: str, value: str):
         command = shlex.split(value)[0]
 
-        if not self.registry.operations.get(command):
+        if command not in self.registry.operations:
             Log.error(f"'{value}' wants to execute '{command}' that is not a registered command.")
             Log.error("Please only register aliases for known commands")
+            return
+
+        existing = self.registry.instances.get(f"ALIAS_{name}")
+        if name in self.registry.operations and not isinstance(existing, AliasOp):
+            Log.error(f"'{name}' is already a command, pick another name")
+            return
+
+        if name == command:
+            Log.error("An alias can't point to itself")
             return
 
         self.owner.aliases.set(name, value)
