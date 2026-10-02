@@ -14,6 +14,44 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.12-styrax ---=
+### What Changed
+
+#### - Command aliases
+Command aliases are introduced alongside with a new `alias` command.
+Comand aliases are shortcut names for commands you use often. Instead of always writing a long command, you can now create an alias of this command and then use it instead of your command:
+
+```bash
+botwave › alias smf 'start myfile.wav 96.9 false "Hello" "world!"'
+[OK] Set alias 'smf' to represent 'start myfile.wav 96.9 false "Hello" "world!"'
+
+botwave › smf
+[OK] Started broadcasting /opt/BotWave/uploads/myfile.wav on 96.9MHz
+```
+
+Aliases can be partial commands. Any arguments provided to an alias are directly appended to the command.
+```bash
+botwave › alias setme "set me"
+[OK] Set alias 'setme' to represent 'set me'
+
+botwave › alias list
+setme: set
+  Command: set me
+  Missing: <value> [immutable]
+
+
+botwave › setme douxx@douxx.tech
+[ENV] (ME) douxx@douxx.tech
+```
+
+> [!NOTE]
+> `alias` has been added to the default `REMOTE_BLOCKED_CMD` to avoid remote attackers bypassing the limits using aliases. 
+
+- **`help` commands order**: The commands shown by `help` are now in alphabetical order.
+- **Misc**: `dlogger` was bumped to `1.0.6`
+
+=--- END ---=
+
 =--- v1.2.11-bixa ---=
 ### What Changed
 - **`bw-local` `start` command security fix**: Provided file paths in the `start` local command are now validated against a list of allowed paths instead of allowing any path in the whole host filesystem. Existing setups using default upload/temp/home paths are unaffected. The list can be expanded using the `EXTRA_ALLOWED_DIRS` variable (see [`Advanced/Using environment variables`](https://github.com/dpipstudio/botwave/wiki/using-environment-variables#local-client-bw-local)).
