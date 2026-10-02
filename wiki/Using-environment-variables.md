@@ -167,8 +167,8 @@ Here is a full list of every supported variable, organized by component.
 | `HTTP_MAX_UPLOAD_SIZE` | int | `1073741824` | no | Maximum upload size in bytes (default 1 GB). |
 | `HTTP_CHUNK_SIZE` | int | `65536` | no | Chunk size in bytes for file transfers. |
 | **Remote Command Handler** | | | | |
-| `REMOTE_CMD_PORT` | int | *(none)* | yes | Port the remote command handler listens on. Disabled if not set. *(formerly `WS_CMD_PORT`)* |
-| `REMOTE_BLOCKED_CMD` | str | `get,set,<,\|` | no | Comma-separated list of commands blocked over remote connection. *(formerly `WS_BLOCKED_CMD`)* |
+| `REMOTE_CMD_PORT` | int | *(none)* | yes | Port the remote command handler listens on. Disabled if not set. |
+| `REMOTE_BLOCKED_CMD` | str | `alias,get,set,<,\|` | no | Comma-separated list of commands blocked over remote connection. |
 | `ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` | bool | `false` | no | Bypasses the blocked command list. Grants full remote shell access. Use only in isolated/trusted environments. |
 | `INTERPOLATE_REMOTE` | bool | `false` | no | Allow environment variables interpolation in remote commands. |
 | `REMOTE_CMD_WELCOME` | str | *(none)* | no | Message displayed to clients upon connecting to the remote command handler. |
@@ -228,8 +228,8 @@ Here is a full list of every supported variable, organized by component.
 | `HISTORY_PATH` | str | `/opt/BotWave/.history` | no | Path to the CLI command history file. |
 | `DOTENV_PATH` | str | `.env` | no | Path to the `.env` file. Must be set before launch to take effect. |
 | **Remote Command Handler** | | | | |
-| `REMOTE_CMD_PORT` | int | *(none)* | yes | Port the remote command handler listens on. Disabled if not set. *(formerly `WS_CMD_PORT`)* |
-| `REMOTE_BLOCKED_CMD` | str | `get,set,<,\|` | no | Comma-separated list of commands blocked over remote connection. *(formerly `WS_BLOCKED_CMD`)* |
+| `REMOTE_CMD_PORT` | int | *(none)* | yes | Port the remote command handler listens on. Disabled if not set. |
+| `REMOTE_BLOCKED_CMD` | str | `alias,get,set,<,\|` | no | Comma-separated list of commands blocked over remote connection. |
 | `ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` | bool | `false` | no | Bypasses the blocked command list. Grants full remote shell access. Use only in isolated/trusted environments. |
 | `INTERPOLATE_REMOTE` | bool | `false` | no | Allow environment variables interpolation in remote commands. |
 | `REMOTE_CMD_WELCOME` | str | *(none)* | no | Message displayed to clients upon connecting to the remote command handler. |
