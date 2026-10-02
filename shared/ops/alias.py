@@ -21,7 +21,7 @@ class AliasCmdOp(CliOp):
     ]
     env_vars = {}
 
-    async def handle(self, name: str, value: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
+    async def handle(self, name: str = "", value: str = "", is_cmd: bool = False, cmd_parts: list[str] = []):
         if is_cmd:
             name, value = self.parse(cmd_parts)
 
