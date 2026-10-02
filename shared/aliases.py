@@ -25,6 +25,7 @@ class Aliases:
             registry.register(alias)
 
     def load(self) -> list[type[AliasOp]]:
+        self.aliases.clear()
         aliases: list[type[AliasOp]] = []
 
         try:
