@@ -39,7 +39,7 @@ class Registry:
             Log.error(f"{dir} is not a directory")
             return
 
-        for path in dir.glob("*.py"):
+        for path in dir.glob("**/*.py"):
             Log.debug(f"Processing op {path.name}")
 
             spec = importlib.util.spec_from_file_location(path.stem, path)
