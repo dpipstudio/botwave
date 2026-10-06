@@ -1,0 +1,1 @@
+This directory (scripts/) contains the bash scripts used to install, update, or uninstall botwave. Other scripts that are installed along botwave are located in bin/.

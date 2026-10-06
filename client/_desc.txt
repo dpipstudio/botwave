@@ -1,0 +1,1 @@
+This directory (client/) contains the code for the botwave client component. Files in client/ops/ are automatically loaded by the registry (shared/registry.py).

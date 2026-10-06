@@ -1,0 +1,1 @@
+Even if it originally had more content such as documentation, this directory now only holds the cloud install install scripts, documentation, and plugins.

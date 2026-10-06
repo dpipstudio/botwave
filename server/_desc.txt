@@ -1,0 +1,1 @@
+This directory (server/) contains the code for the botwave server component. Files in server/ops/ are automatically loaded by the registry (shared/registry.py).

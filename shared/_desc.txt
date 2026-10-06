@@ -1,0 +1,3 @@
+This directory (shared/) contains shared modules that expose utility functions for one or multiple botwave components. Not all files are necessarily installed by scripts/install.sh. Some files might only be required by some installations.
+
+The subdirectory shared/ops/ contains operations that behave the same regardless of if they're run on the client, local, or server component. Files in this subdirectory are automatically loaded by the registry (shared/registry.py).

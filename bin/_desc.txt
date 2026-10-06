@@ -1,0 +1,1 @@
+Files in this directory (bin/) are files that get symlinked to /usr/bin on install. That includes startup scripts (such as bw-local) alongside utilities (such as bw-nandl or bw-update).
