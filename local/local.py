@@ -76,8 +76,11 @@ class BotWaveLocal:
             if tx_match:
                 Log.set_transaction_id(tx_match.group(1))
                 command = re.sub(r'\s*transaction_id=[^\s]+', '', command)
+
             else:
                 Log.clear_transaction_id()
+
+            Log.debug(f"Current transaction ID is: {Log.transaction_id.get()}")
 
             if "#" in command:
                 command = command.split("#", 1)[0]
@@ -92,7 +95,6 @@ class BotWaveLocal:
                 )
 
             if not command:
-                Log.end()
                 return
 
             try:
@@ -100,10 +102,11 @@ class BotWaveLocal:
 
             except ValueError as e:
                 Log.error(f"Invalid command syntax: {e}")
-                Log.end()
                 return
 
             self.last_argv = cmd_parts.copy()
+
+            Log.debug(f"Parsed command parts: {self.last_argv}")
 
             cmd = cmd_parts[0].lower()
             cmd_parts.pop(0)
