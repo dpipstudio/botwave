@@ -39,6 +39,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.socket import BWWebSocketServer
 from shared.tips import TipEngine
+from shared.utils import crashout, set_prio
 from shared.version import print_version, warn_new_ver
 from shared.ws_cmd import WSCMDH
 
@@ -222,12 +223,6 @@ class BotWaveServer:
 
 
 # startup helpers
-def set_prio(key: str, cli_value: Any | None, default: Any | None, immutable: bool = False):
-    if cli_value is not None:
-        Env.set(key, str(cli_value), immutable=immutable)
-
-    elif not Env.get(key, False) and default is not None:
-        Env.set(key, str(default), immutable=immutable)
 
 def fail_banner():
     style = "bold rgb(200,0,0)"
@@ -392,4 +387,8 @@ async def main():
                 Log.error(f"Error: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+
+    except BaseException as e:
+        crashout("server", e)

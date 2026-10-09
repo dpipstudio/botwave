@@ -36,6 +36,7 @@ from shared.queue import Queue
 from shared.registry import Registry, UpperException
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
+from shared.utils import crashout, set_prio
 from shared.version import print_version, warn_new_ver
 from shared.ws_cmd import WSCMDH
 
@@ -126,14 +127,6 @@ class BotWaveLocal:
             Log.end()
             Log.clear_transaction_id()
 
-# startup helpers
-def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
-    if cli_value is not None:
-        Env.set(key, str(cli_value), immutable=immutable)
-
-    elif not Env.get(key, False) and default is not None:
-        Env.set(key, str(default), immutable=immutable)
-
 # Entry point
 async def main():
     check() # from shared.cat
@@ -151,7 +144,7 @@ async def main():
     args = parser.parse_args()
 
     if args.version:
-        print_version("local")
+        print_version("local client")
         return
 
     Log.header("BotWave Local Client")
@@ -252,5 +245,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    
+    try:
+        asyncio.run(main())
+
+    except BaseException as e:
+        crashout("local client", e)

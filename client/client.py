@@ -30,6 +30,7 @@ from shared.registry import Registry, UpperException
 from shared.socket import BWWebSocketClient
 from shared.syscheck import check_requirements
 from shared.tips import TipEngine
+from shared.utils import crashout, set_prio
 from shared.version import print_version, warn_new_ver
 
 class BotWaveClient:
@@ -84,14 +85,6 @@ class BotWaveClient:
             Log.warning(f"Unknown command: {cmd}")
             await self.proto.reply(parsed, Commands.ERROR, message=f"Unknown command: {cmd}. Perhaps a protocol mismatch?")
 
-
-# startup helpers
-def set_prio(key: str, cli_value: Any, default: Any, immutable: bool = False):
-    if cli_value is not None:
-        Env.set(key, str(cli_value), immutable=immutable)
-
-    elif not Env.get(key, False) and default is not None:
-        Env.set(key, str(default), immutable=immutable)
 
 # entry point
 async def main():
@@ -169,4 +162,8 @@ async def main():
         await client.registry.dispatch("client_stop")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+
+    except BaseException as e:
+        crashout("client", e)
