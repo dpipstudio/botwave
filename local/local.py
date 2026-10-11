@@ -72,6 +72,10 @@ class BotWaveLocal:
         self.running: bool = False
 
     async def cmd_exec(self, command: str, interpolate: bool = True):
+        # dont execute if the command comes from a stopped handler
+        if self.handlers_executor.stopped:
+            return
+
         try:
             tx_match = re.search(r'transaction_id=([^\s]+)', command)
             if tx_match:

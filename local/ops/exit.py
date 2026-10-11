@@ -22,6 +22,10 @@ Cleanly shuts down and exits the local client.
     env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
+        # dont stop the local client if the exit came from an handler; instead, stop the handler
+        if self.owner.handlers_executor.stop_handler():
+            return
+
         self.owner.running = False
         if self.owner.broadcasting:
             await self.registry.dispatch("stop")
