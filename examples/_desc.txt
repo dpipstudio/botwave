@@ -1,0 +1,1 @@
+This directory (examples/) holds simple examples for BotWave automation. See README.md for more details.
