@@ -81,6 +81,7 @@ BotWave injects context as environment variables when a handler runs. These are 
 | `BW_WS_PORT` | WebSocket port (`0` if unset) |
 | `BW_PASSKEY_SET` | `true` or `false` |
 | `BW_TRANSACTION_ID` | User-provided transaction ID or empty |
+| `BW_REMOTE_CLIENT_IP` | The IP address of the remote client executing the handler or empty |
 | `BW_ARGV0`, `BW_ARGV1`, ... | Arguments from the last executed BotWave command (0-indexed) |
 
 **Always available (Server Only)**
