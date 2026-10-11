@@ -140,6 +140,7 @@ Here is a full list of every supported variable, organized by component.
 | Variable | Type | Default | Immutable | Notes |
 |---|---|---|---|---|
 | **General** | | | | |
+| `COMPONENT` | str | `server` | no | The component name. In this case, `server`. |
 | `HOST` | str | `0.0.0.0` | yes | Address the WebSocket server binds to. |
 | `PORT` | int | `9938` | yes | Main WebSocket server port. |
 | `FPORT` | int | `9921` | yes | HTTP file transfer server port. |
@@ -208,6 +209,7 @@ Here is a full list of every supported variable, organized by component.
 | Variable | Type | Default | Immutable | Notes |
 |---|---|---|---|---|
 | **General** | | | | |
+| `COMPONENT` | str | `local client` | no | The component name. In this case, `local client`. |
 | `HOST` | str | `0.0.0.0` | yes | Bound host address (used when running locally with remote command handler). |
 | `PASSKEY` | str | *(none)* | yes | Passkey for the local remote command handler. |
 | `DAEMON` | bool | `false` | yes | Run the process in daemon mode. |
@@ -272,6 +274,7 @@ Here is a full list of every supported variable, organized by component.
 | Variable | Type | Default | Immutable | Notes |
 |---|---|---|---|---|
 | **General** | | | | |
+| `COMPONENT` | str | `client` | no | The component name. In this case, `client`. |
 | `SERVER_HOST` | str | *(prompted)* | yes | Remote server hostname or IP. User is prompted at startup if not set. |
 | `SERVER_PORT` | int | `9938` | yes | Remote server port. |
 | `FHOST` | str | `SERVER_HOST` | yes | File server host for transfers. Defaults to `SERVER_HOST` if not set. |
