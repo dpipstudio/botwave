@@ -122,6 +122,7 @@ async def main():
         except Exception:
             return
 
+    set_prio("COMPONENT", None, 'client')
     set_prio("SERVER_PORT", args.port, 9938, immutable=True)
     set_prio("FHOST", args.fhost, Env.get("SERVER_HOST"), immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
