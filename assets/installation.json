@@ -274,6 +274,7 @@
       "shared/sstv.py",
       "shared/syscheck.py",
       "shared/tips.py",
+      "shared/utils.py",
       "shared/version.py",
       "shared/ws_cmd.py",
       "shared/ops/alias.py",
