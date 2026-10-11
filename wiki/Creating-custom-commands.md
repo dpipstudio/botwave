@@ -133,6 +133,44 @@ You can also use it for something as simple as feeding a command list from a fil
 | cat commands.txt
 ```
 
+### Stopping A Custom Command Early
+
+Running `exit` inside a custom command stops that command right there: the remaining lines are skipped, and BotWave keeps running. It does **not** shut down the server or local client.
+
+This is handy for guard checks. For example, `BW_REMOTE_CLIENT_IP` is empty when a command is typed in the BotWave prompt, and set to the sender's IP when it comes from the remote shell. A script can use that to refuse to run remotely:
+
+`/opt/BotWave/scripts/localonly.sh`:
+```bash
+#!/bin/sh
+
+if [ -n "$BW_REMOTE_CLIENT_IP" ]; then
+    echo "< echo \"This command can only be used locally\""
+    echo "exit"
+fi
+```
+
+`/opt/BotWave/handlers/kickall.cmd`:
+```bash
+#!/server/kickall
+# kickall
+#   Kicks every client, local use only
+
+| sh /opt/BotWave/scripts/localonly.sh
+kick all "Kicked by the host"
+```
+
+```bash
+# typed in the BotWave prompt
+botwave › kickall
+(every client gets kicked)
+
+# sent through the remote shell
+botwave › kickall
+This command can only be used locally
+```
+
+When `kickall` is run remotely, the script prints the `echo` and `exit` lines. The `echo` line runs, then `exit` stops the command, so `kick all` never runs. When it's run locally, the script prints nothing and the command carries on.
+
 ### Help Documentation: v0 vs v2
 Two formats are supported for the `#` block that follows the shebang.
 
