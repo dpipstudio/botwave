@@ -328,6 +328,7 @@ Your station will now start automatically on boot, sync music, and broadcast con
 
 > [!TIP]
 > Start small: get a simple handler working first, then add autorun, then combine them. Building up gradually is much easier than trying to configure everything at once.
+> For additional examples, see the [`examples/`](https://github.com/dpipstudio/botwave/tree/main/examples) directory.
 
 > [!NOTE]
 > Want to see a real-world automation example? Check out the [WebSocket To TCP](https://github.com/douxxtech/bw_wtt) project and its BotWave implementation.
