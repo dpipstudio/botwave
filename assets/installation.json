@@ -1,6 +1,10 @@
 {
   "releases": [
     {
+      "codename": "v1.2.13-ostodes",
+      "commit": "94916aa3e763676e675e1a4cafc225a76d2db9f0"
+    },
+    {
       "codename": "v1.2.12-styrax",
       "commit": "f9d1c2d622eadc7be41c47fa2164d53ee76b6c41"
     },
