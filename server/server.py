@@ -273,6 +273,7 @@ async def main():
     if args.config:
         Env.load(args.config) # will silently drop if file doesn't exist
 
+    set_prio("COMPONENT", None, 'server')
     set_prio("HOST", args.host, '0.0.0.0', immutable=True)
     set_prio("PORT", args.port, 9938, immutable=True)
     set_prio("FPORT", args.fport, 9921, immutable=True)
