@@ -1,5 +1,5 @@
 import os
-
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -8,7 +8,17 @@ from shared.logger import Log
 from shared.ops import GeneralOp
 from shared.registry import Registry
 
+class HandlerRun:
+    """
+    Tracks a running handler, so ops that dispatch commands
+    on their own (like '|') can tell it to stop.
+    """
+    stopped: bool = False
+    finished: bool = False
+
 class HandlerExecutor:
+
+    current_run: ContextVar[HandlerRun | None] = ContextVar("current_run", default=None)
     
     def __init__(self, command_executor: Callable[..., Awaitable[None]]):
         self.command_executor = command_executor
@@ -16,6 +26,14 @@ class HandlerExecutor:
     @property
     def handlers_dir(self) -> str:
         return Env.get("HANDLERS_DIR", "/opt/BotWave/handlers/")
+
+    @property
+    def stopped(self) -> bool:
+        """
+        True if the handler running in this context already ran 'exit'.
+        """
+        run = self.current_run.get()
+        return bool(run and run.stopped and not run.finished)
 
     def register(self, registry: Registry):
         handlers_dir = Path(self.handlers_dir)
@@ -49,6 +67,8 @@ class HandlerExecutor:
 
     async def execute_handler(self, file_path: str, ctx: dict[str, str] = {}, silent: bool = False, lines: list[str] = []):
         old_env = {k: os.environ.get(k) for k in ctx}
+        run = HandlerRun()
+        token = self.current_run.set(run)
 
         try:
             os.environ.update(ctx)
@@ -58,45 +78,52 @@ class HandlerExecutor:
 
             if lines:
                 for line in lines:
-                    if not await self.exec_line(line, silent):
-                        break
+                    await self.exec_line(line, silent)
 
             else:
                 with open(file_path, "r", encoding="utf-8") as f:
                     for line in f:
-                        if not await self.exec_line(line, silent):
-                            break
+                        await self.exec_line(line, silent)
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
 
         finally:
+            run.finished = True
+            self.current_run.reset(token)
+
             for k, v in old_env.items():
                 if v is None:
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
 
-    async def exec_line(self, line: str, silent: bool = False) -> bool:
+    async def exec_line(self, line: str, silent: bool = False):
         """
         Executes a line with the command_executor.
-        Returns false if the command was "exit" (stop handler execution).
         """
 
         line = line.strip()
-        parts = line.split()
 
         if line and line[0] != "#":
             if not silent:
                 Log.handler(f"Executing command: {line}")
 
-            if parts[0] == "exit":
-                Log.debug("Handler ran 'exit', stopping execution")
-                return False
-
             await self.command_executor(line)
 
-        return True
+    def stop_handler(self) -> bool:
+        """
+        To be called by the 'exit' ops. If a handler is currently running, flags
+        it as stopped and returns True (the op must NOT shut anything down).
+        """
+        run = self.current_run.get()
+
+        if run and not run.finished:
+            Log.debug("Handler ran 'exit', stopping execution")
+            run.stopped = True
+            return True
+
+        return False
     
     def list_handlers(self, dir_path: str = ""):
         if not dir_path:
