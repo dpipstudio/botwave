@@ -78,6 +78,11 @@ class HandlersEventsOp(GeneralOp):
                 "BW_WS_PORT": str(Env.get_int("REMOTE_CMD_PORT")) if Env.get_int("REMOTE_CMD_PORT") else "0",
                 "BW_PASSKEY_SET": "true" if Env.get("PASSKEY") else "false",
                 "BW_TRANSACTION_ID": Log.transaction_id.get() or "",
+                "BW_REMOTE_CLIENT_IP": (
+                    Log.remote_cmd_socket.get().remote_address[0]
+                    if Log.remote_cmd_socket.get() is not None
+                    else ""
+                ),
             }
 
         except:
