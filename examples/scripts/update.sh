@@ -1,13 +1,13 @@
 #!/bin/bash
 # runs bw-update and restarts the component
 
-SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
-SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
-
 echo '< echo "Updating botwave..."'
 
 # run the update
-bw-update > /dev/null 2>&1
+if ! bw-update > /dev/null 2>&1; then
+    echo '< echo "Update failed, not restarting"'
+    exit 1
+fi
 
 echo '< echo "Update successful, restarting soon via systemctl"'
 
