@@ -95,6 +95,11 @@ class HandlersEventsOp(GeneralOp):
                         client.machine_info.get("hostname", "unknown") 
                         for client in self.owner.clients.values()
                     ),
+                "BW_REMOTE_CLIENT_IP": (
+                    Log.remote_cmd_socket.get().remote_address[0]
+                    if Log.remote_cmd_socket.get() is not None
+                    else ""
+                ),
             }
         except:
             ...
