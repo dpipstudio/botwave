@@ -1,8 +1,8 @@
 *
-!/.github/
-!/.github/**
 !/.devcontainer/
 !/.devcontainer/**
+!/.github/
+!/.github/**
 !/assets/
 !/assets/**
 !/autorun/
@@ -11,6 +11,8 @@
 !/bin/**
 !/client/
 !/client/**
+!/examples/
+!/examples/**
 !/local/
 !/local/**
 !/misc/

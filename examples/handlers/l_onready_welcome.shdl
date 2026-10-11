@@ -1,0 +1,3 @@
+# displays a welcome banner on the local client startup
+
+< bash /opt/BotWave/scripts/bw_examples/welcome-local.sh
