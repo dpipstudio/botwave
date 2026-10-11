@@ -113,7 +113,7 @@ WS_CMD_PORT=9939
 
 # this is dangerous, gaining ws remote shell access -> gaining system access
 # (unblocks '<', '|', 'get', 'set', [...] commands)
-ALLOW_WS_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING=true
+ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING=true
 
 upload_dir="immutable(/home/server/bw_upl/)"
 prompt_text="immutable(BwServer $ )"
