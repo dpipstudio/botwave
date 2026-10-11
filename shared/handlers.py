@@ -58,12 +58,14 @@ class HandlerExecutor:
 
             if lines:
                 for line in lines:
-                    await self.exec_line(line, silent)
+                    if not await self.exec_line(line, silent):
+                        break
 
             else:
                 with open(file_path, "r", encoding="utf-8") as f:
                     for line in f:
-                        await self.exec_line(line, silent)
+                        if not await self.exec_line(line, silent):
+                            break
 
         except Exception as e:
             Log.error(f"Error executing command from {file_path}: {e}")
@@ -75,14 +77,26 @@ class HandlerExecutor:
                 else:
                     os.environ[k] = v
 
-    async def exec_line(self, line: str, silent: bool = False):
+    async def exec_line(self, line: str, silent: bool = False) -> bool:
+        """
+        Executes a line with the command_executor.
+        Returns false if the command was "exit" (stop handler execution).
+        """
+
         line = line.strip()
+        parts = line.split()
 
         if line and line[0] != "#":
             if not silent:
                 Log.handler(f"Executing command: {line}")
 
+            if parts[0] == "exit":
+                Log.debug("Handler ran 'exit', stopping execution")
+                return False
+
             await self.command_executor(line)
+
+        return True
     
     def list_handlers(self, dir_path: str = ""):
         if not dir_path:
