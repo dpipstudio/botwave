@@ -156,6 +156,7 @@ async def main():
     if args.config:
         Env.load(args.config)
 
+    set_prio("COMPONENT", None, 'local client')
     set_prio("UPLOAD_DIR", args.upload_dir, str(Path(BW_PATH) / "uploads"))
     set_prio("HANDLERS_DIR", args.handlers_dir, str(Path(BW_PATH) / "handlers"))
     set_prio("SKIP_CHECKS", args.skip_checks, False)
