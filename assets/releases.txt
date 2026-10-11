@@ -14,6 +14,32 @@
 # - Release description: detailed information about the release
 # - =--- END ---=: marks the end of the release 
 
+=--- v1.2.13-ostodes ---=
+### What Changed
+- **`exit` in handlers and custom commands**: Running `exit` inside a handler or a custom command now stops only that handler or command. The remaining lines are skipped and BotWave keeps running. Typing `exit` in the prompt or through the remote shell still shuts BotWave down. See [`Main/Automate your setup`](https://github.com/dpipstudio/botwave/wiki/Automate-your-setup).
+
+- **`BW_REMOTE_CLIENT_IP` variable**: Handlers and custom commands can now tell whether they were triggered locally (empty) or by a remote shell client (the client's IP). This makes "local only" commands possible.
+
+- **`COMPONENT` variable**: A new `COMPONENT` environment variable tells scripts which part of BotWave they run on (`server`, `local client` or `client`).
+
+- **New `examples/` directory**: A small ready-to-install set of automations:
+  - `update-botwave` updates BotWave and restarts its service.
+  - `set-prompt` changes the prompt, temporarily or permanently.
+  - Welcome banners on startup and on remote client joins and leaves.
+  - An SSH-like "Last login on" message.
+
+  Install it with `sudo bash install.sh` from that directory.
+
+- **Clearer crash screen**: If a component crashes, you now get a banner asking you to open a GitHub issue, plus the error. Run with `--talk` to get the full trace.
+
+- **Misc**: `bw-local --version` now reports `local client`, and there are more debug logs for transaction IDs, parsed commands and target resolution. Commands that exit early no longer send a duplicate `END` marker on `bw-local`. The wiki now uses the correct `ALLOW_REMOTE_BLOCKED_COMMANDS_I_KNOW_WHAT_IM_DOING` name.
+
+### Behavior Change
+> [!WARNING]
+> If one of your handlers used `exit` to shut BotWave down (for example in an `onready` handler), it will now only stop that handler. Use the `exit` command from the prompt or `systemctl stop bw-$COMPONENT` / `killall bw-$COMPONENT` instead.
+
+=--- END ---=
+
 =--- v1.2.12-styrax ---=
 ### What Changed
 
