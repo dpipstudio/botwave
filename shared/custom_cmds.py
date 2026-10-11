@@ -1,4 +1,3 @@
-import os
 import shlex
 from pathlib import Path
 from typing import Any
@@ -64,16 +63,12 @@ class CCMD:
         handlers_path = Path(self.handlers_dir)
         for file in handlers_path.rglob("*.cmd"):
 
-            full_path = handlers_path / file
-            if not os.path.isfile(full_path):
-                continue
-
             cmd_name = file.stem
             shebang = f"#!/{'server' if self.is_server else 'local'}/{cmd_name}"
             wildcard = f"#!/*/{cmd_name}"
 
             try:
-                with open(full_path, "r") as f:
+                with open(file, "r") as f:
                     lines = f.readlines()
                     if not lines:
                         continue
@@ -83,7 +78,7 @@ class CCMD:
                         continue
 
                     ccmd = CustomCommand()
-                    ccmd.path = full_path
+                    ccmd.path = file
                     ccmd.name = cmd_name
 
                     # consider commands with #> and #? as v2
