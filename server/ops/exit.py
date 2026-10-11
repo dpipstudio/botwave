@@ -23,6 +23,10 @@ transfer servers, then cleanly shuts down and exits.
     env_vars = {}
 
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
+        # dont stop the local client if the exit came from an handler; instead, stop the handler
+        if self.owner.handlers_executor.stop_handler():
+            return
+
         if not self.owner.running:
             return
 
