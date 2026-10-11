@@ -55,6 +55,21 @@ list
 < echo "BotWave Server is ready!"
 ```
 
+### Stopping a handler early
+
+Running `exit` inside a handler stops that handler right there: the remaining lines are skipped, and BotWave keeps running. It does **not** shut down the server or local client.
+
+```plaintext
+# Only continue if the file exists
+| test -f /opt/BotWave/ready || echo "exit"
+list
+```
+
+This also works when `exit` comes from a command that runs other commands, like a [custom command](https://github.com/dpipstudio/botwave/wiki/Creating-custom-commands). In that case, the rest of that script's output is ignored, and the handler (or custom command) that ran it is stopped.
+
+> [!NOTE]
+> `exit` only behaves like this when it runs from a handler or a custom command. Typed in the BotWave prompt or sent through the remote shell, it still shuts BotWave down.
+
 ### Variable interpolation
 
 Handlers support `{VAR}` syntax to inject environment variables directly into BotWave commands:
