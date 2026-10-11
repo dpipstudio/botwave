@@ -1,0 +1,3 @@
+< bash /opt/BotWave/scripts/bw_examples/welcome-local.sh
+
+< echo "{REMOTE_CLIENT_IP}" > /tmp/botwave/REMOTE_CLIENT_IP
