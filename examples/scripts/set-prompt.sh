@@ -8,5 +8,6 @@ DEFAULT_PROMPT="botwave ›"
 echo "set PROMPT_TEXT '$PROMPT '"
 
 if [ "$PERMANENT" = true ]; then
+    sed -i '/^PROMPT_TEXT=/Id' /opt/BotWave/.env
     echo "PROMPT_TEXT='$PROMPT '" >> /opt/BotWave/.env
 fi
