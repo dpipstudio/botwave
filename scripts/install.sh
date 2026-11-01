@@ -554,10 +554,10 @@ install_system_dependencies() {
     case "$PKG_MANAGER" in
         apt)
             silent apt-get update
-            silent apt-get install -y \
+            silent apt-get install -y --no-install-recommends \
                 python3 python3-pip python3-venv python3-dev \
                 libsndfile1-dev libasound2-dev libffi-dev libssl-dev \
-                build-essential make ffmpeg git curl jq
+                make ffmpeg git curl jq
             ;;
         dnf)
             silent dnf install -y \
