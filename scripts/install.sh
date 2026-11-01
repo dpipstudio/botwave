@@ -537,7 +537,7 @@ fetch_source_tarball() {
 
 # system setup
 install_system_dependencies() {
-    log INFO "Installing system dependencies..."
+    log INFO "Installing system dependencies. This may take some time..."
 
     case "$PKG_MANAGER" in
         apt)
