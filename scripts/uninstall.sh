@@ -47,10 +47,15 @@ readonly BINARIES=(
 # UTILITY FUNCTIONS
 # ============================================================================
 
+# set by log(), used by silent() to draw the spinner on the log line
+LAST_LOG_COLS=0
+LAST_LOG_START=0
+
 log() {
     local level="$1"
     shift
     local color=""
+    local msg="$*"
 
     case "$level" in
         INFO)  color="$GRN" ;;
@@ -59,11 +64,52 @@ log() {
         *)     color="$NC" ;;
     esac
 
-    printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$*" | tee -a "$LOG_FILE" >&2 || true
+    printf "[%s] ${color}%-5s${NC} %s\n" "$(date +%T)" "$level" "$msg" | tee -a "$LOG_FILE" >&2 || true
+
+    LAST_LOG_COLS=$((17 + ${#msg}))
+    LAST_LOG_START=$SECONDS
+}
+
+format_elapsed() {
+    local secs="$1"
+
+    if (( secs >= 60 )); then
+        printf "%dm %02ds" $((secs / 60)) $((secs % 60))
+    else
+        printf "%ds" "$secs"
+    fi
 }
 
 silent() {
-    "$@" >> "$LOG_FILE" 2>&1
+    # just run it if not a terminal
+    if [[ ! -t 2 ]]; then
+        "$@" >> "$LOG_FILE" 2>&1
+        return
+    fi
+
+    local spin='|/-\'
+    local start=$LAST_LOG_START
+    local goto="\r\033[${LAST_LOG_COLS}C\033[K"
+    local i=0
+    local rc=0
+
+    "$@" >> "$LOG_FILE" 2>&1 &
+    local pid=$!
+
+    printf "\033[1A" >&2
+    while kill -0 "$pid" 2>/dev/null; do
+        printf "${goto} %s %s" "${spin:i%4:1}" "$(format_elapsed $((SECONDS - start)))" >&2
+        i=$((i + 1))
+        sleep 0.1
+    done
+    wait "$pid" || rc=$?
+
+    if [[ $rc -eq 0 ]]; then
+        printf "${goto} ${GRN}done${NC} in %s\n" "$(format_elapsed $((SECONDS - start)))" >&2
+    else
+        printf "${goto} ${RED}failed${NC} after %s\n" "$(format_elapsed $((SECONDS - start)))" >&2
+    fi
+    return $rc
 }
 
 # ============================================================================
