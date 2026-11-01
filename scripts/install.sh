@@ -78,22 +78,33 @@ format_elapsed() {
 }
 
 silent() {
-    # just run it if not a terminal
+    # not a terminal (piped, CI...): no spinner, just run it
     if [[ ! -t 2 ]]; then
         "$@" >> "$LOG_FILE" 2>&1
         return
     fi
 
     local spin='|/-\'
-    local start=$LAST_LOG_START
-    local goto="\r\033[${LAST_LOG_COLS}C\033[K"
+    local start=$LAST_LOG_START # counts from the log line, so back to back silent calls add up
     local i=0
     local rc=0
+
+    # the log line may have wrapped, so find where its last row ends
+    local width=$(stty size <&2 2>/dev/null | cut -d' ' -f2)
+    [[ "$width" =~ ^[0-9]+$ ]] && (( width > 0 )) || width=80
+    local col=$((LAST_LOG_COLS % width))
+    local up="\033[1A"
+
+    if (( col == 0 || width - col < 21 )); then
+        up=""
+        col=2
+    fi
+    local goto="\r\033[${col}C\033[K"
 
     "$@" >> "$LOG_FILE" 2>&1 &
     local pid=$!
 
-    printf "\033[1A" >&2 # back up onto the log line
+    printf "$up" >&2
     while kill -0 "$pid" 2>/dev/null; do
         printf "${goto} %s %s" "${spin:i%4:1}" "$(format_elapsed $((SECONDS - start)))" >&2
         i=$((i + 1))
