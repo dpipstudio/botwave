@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.2.0"
+readonly SCRIPT_VERSION="1.4.1"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
