@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.4.1"
+readonly SCRIPT_VERSION="1.4.2"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -87,7 +87,7 @@ silent() {
         return
     fi
 
-    local spin='|/-\'
+    local spin=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
     local start=$LAST_LOG_START # counts from the log line, so back to back silent calls add up
     local i=0
     local rc=0
@@ -109,7 +109,7 @@ silent() {
 
     printf "$up" >&2
     while kill -0 "$pid" 2>/dev/null; do
-        printf "${goto} %s %s" "${spin:i%4:1}" "$(format_elapsed $((SECONDS - start)))" >&2
+        printf "${goto} %s %s" "${spin:i%10}" "$(format_elapsed $((SECONDS - start)))" >&2
         i=$((i + 1))
         sleep 0.1
     done
