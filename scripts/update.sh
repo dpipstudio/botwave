@@ -102,9 +102,9 @@ silent() {
 
     printf "$up" >&2
     while kill -0 "$pid" 2>/dev/null; do
-        printf "${goto} %s %s" "${spin:i%10}" "$(format_elapsed $((SECONDS - start)))" >&2
+        printf "${goto} %s %s" "${spin[i%10]}" "$(format_elapsed $((SECONDS - start)))" >&2
         i=$((i + 1))
-        sleep 0.1
+        sleep 0.07
     done
     wait "$pid" || rc=$?
 
