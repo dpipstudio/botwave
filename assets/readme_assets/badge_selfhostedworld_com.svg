@@ -1,0 +1,19 @@
+<svg width="150" height="45" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="rounded">
+      <rect x="1" y="1" width="148" height="43" rx="6"/>
+    </clipPath>
+  </defs>
+  
+  <rect x="1" y="1" width="148" height="43" rx="6" fill="#000000" stroke="#ffffff" stroke-width="2"/>
+  
+  <g clip-path="url(#rounded)">
+    <image x="10" y="7.5" width="30" height="30" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAEN0lEQVRIx5XV72vdZxnH8df3nPSXSdaTNM1JU9N0sWmSpumPMXWlDC1a6SbroN2cgkMGilSYIiL+AYJYwQcDH4joJoKOsaGMLnYdbp00iXXYX0sTkzXtlpk2bcfSNG5J05x8Lx/k5JikDub16P7e9837vj/X97qvD0KITfGT6Iup+DhxK/rjcLSEgBCZ9KH0XKTx/0Qa5+NAZIIQ+9Nr6Ucc1R2/j0sfxX4vDoYkmj0f20ksjtvO6DStyts6PGTDHTvQ59EyT9i2dD6c8SezvmiXlUYcddhWj6hdurHdN5M4r50o8lODXpV6BU/aYzm46jde0GqHPXZathAxlMSUlYFEashL3rXTZX+Tl8rbZ6O/Ouq6nPvl9aiy3/b/QgpJxNz51z1jxOftUS11yZ+9YZXlCi5Y7mEP2iAx4YROq33bxiIhM4/qdMRym9yFjLxGiUE3kKhW7S4JVqlV4e+eK2komx+M22ylX2iw15jjZlQZU2vCjCpduuy23uuuqLXZB3cCVphwt40m/E4i631NfmybaV3+aFSDHgVVGtwyorEEKEnY5aYjLijX6JYu9Q65R5lyX/IdlbqFDTLedEylB0qAJIoF/bQ+O7zosiajGqw1ZZcvmNJpQLVeE2oMa/aIQeWeXCxh1mljan3XsGOyQo3b3tAjUaFeakaVnK/I6XbBWrOyCwGJZapNelar73vN067psE6K1LB+txyyxQn/Um+1TKmwixJ43q+t9UmMGZKzxes+od2kXjkPO2lCnbxpl6S+4cGlf2G1+4TzKtVZIavFXn/xqkqPa3PKiJyct0z7tMri9RfcIPUD1+1W56w+V3zWMrfdr0nBab3qDLgir0Ort5zT6KdFEQtysN4NQzbb5UVvalPthOOoUmvYZXvdY1C3jdYveE2ZeUCzM0Y1+dAxU9aZdN6sGvVGnTVlu6uOK9PglHO2l5KYmasCdmr3gaPe1qwgsc9+0874hzW+pl2vRINzXlHuAe2LcxBSPzLtq0a8bNiYvbKytklkjem3Tp9/Ktfiyyo9q9LPZIRkLgchNSvrOU2+5d+O6PMZef0mZazxKQMu+roOGT2uqZCa6yHFJCaylrlii3F/UO+GCaetsFWr0G9AhbwBY8atU+Os1tIjKhVSr996xxr1ypy0yUE9uhUU1Nin0a9UaHXbgJt2eNzdJcCUlXPDSd06vavcsBY598k7pVKbswaNuGmtaW0O6FjU0vq1zevhQyed0KPJJtdwr3F9aqzSZY1mn3NvsdEW2/DFJA7HDyULfSG85hkzGlQZl7PKkFFNvmfDkuaf8FQSLfFCujWzyDbCZS/pMqPOjKvq7bdb+Z3GMuBRqfRA+l4a6RIDS+Od+GU8EYfiSEwsWSnGWDw2542ZOJj2p//DAWfj/bh5x3zxeyAei+y8PyfRGj+PoSh8LGcuxMV4KtojCfwHyZSWZcFufXYAAAAASUVORK5CYII="/>
+    
+    <text x="45.6" y="26.7" 
+          font-family="Segoe UI, Arial, sans-serif" 
+          font-size="12" font-weight="600" fill="#ffffff">
+      selfhostedworld
+    </text>
+  </g>
+</svg>
