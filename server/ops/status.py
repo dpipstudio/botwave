@@ -28,7 +28,7 @@ those clients.
         "PORT": ("9939", "The server port"),
         "FPORT": ("9921", "The file transfer port"),
         "PASSKEY": ("", "The authentication passkey"),
-        "REMOTE_CLI_PORT": ("", "The remote CLI port")
+        "REMOTE_CMD_PORT": ("", "The remote CLI port")
     }
 
     async def handle(
