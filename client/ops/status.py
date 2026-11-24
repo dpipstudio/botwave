@@ -18,7 +18,7 @@ class StatusOp(GeneralOp):
         if self.owner.broadcasting and self.owner.current_file:
             status = "onair"
             file = Path(self.owner.current_file).name
-            freq = self.owner.piwave.get_status()["frequency"]
+            pw = self.owner.piwave.get_status()
             uptime = "??:??:??"
             
             if self.owner.broadcast_start_time:
@@ -31,8 +31,13 @@ class StatusOp(GeneralOp):
                 Commands.OK,
                 status=status,
                 file=file,
-                frequency=freq,
-                uptime=uptime
+                frequency=pw["frequency"],
+                uptime=uptime,
+                ps=pw["ps"],
+                rt=pw["rt"],
+                pi=pw["pi"],
+                backend=pw["current_backend"],
+                loop="yes" if pw["loop"] else "no"
             )
 
         else:
