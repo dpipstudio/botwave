@@ -35,3 +35,18 @@ def crashout(component: str, exeption: BaseException):
 
     else:
         Log.print(f"{type(exeption).__name__}: {exeption}", "red")
+
+def parse_freq(raw: str) -> float | None:
+    """
+    Parses a frequency arg. returns None (and logs) if it isn't a valid fm freq.
+    Currently just converts to float
+    """
+
+    try:
+        freq = float(raw)
+
+    except ValueError:
+        Log.error(f"Invalid frequency '{raw}'")
+        return None
+
+    return freq
