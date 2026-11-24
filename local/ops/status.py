@@ -42,10 +42,15 @@ If the remote CLI is enabled, also show information about it."""
         else:
             Log.print("Idle", "orange")
 
+        q = self.owner.queue
+        if q.queue:
+            state = "paused" if q.paused else "playing"
+            Log.print(f"Queue        : {state} [{q.current_index + 1}/{len(q.queue)}]", "white")
+
         if Env.get("REMOTE_CMD_PORT"):
-            Log.print(f"RC Port    : {Env.get('REMOTE_CMD_PORT')}", "white")
-            Log.print(f"RC Clients : {self.owner.rc_clients}", "white")
-            Log.print(f"Passkey    : {'yes' if Env.get('PASSKEY') else 'no'}", "white")
+            Log.print(f"RC Port      : {Env.get('REMOTE_CMD_PORT')}", "white")
+            Log.print(f"RC Clients   : {self.owner.rc_clients}", "white")
+            Log.print(f"Passkey      : {'yes' if Env.get('PASSKEY') else 'no'}", "white")
 
 
 def setup(reg: Any):

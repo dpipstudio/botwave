@@ -74,12 +74,17 @@ those clients.
                         Log.print(f"  On Air", "bright_green")
                         Log.print(f"  File         : {kwargs.get('file', '?')}", "white")
                         Log.print(f"  Frequency    : {kwargs.get('frequency', '?')} MHz", "white")
-                        Log.print(f"  Uptime       : {kwargs.get('uptime', '?')}", "white")
                         Log.print(f"  PS / RT / PI : {kwargs.get('ps', '?')} / {kwargs.get('rt', '?')} / {kwargs.get('pi', '?')}", "white")
-                        Log.print(f"  Loop         : {kwargs.get('loop', '?')}")
+                        Log.print(f"  Loop         : {kwargs.get('loop', '?')}", "white")
+                        Log.print(f"  Backend      : {kwargs.get('backend', '?')}", "white")
+                        Log.print(f"  Uptime       : {kwargs.get('uptime', '?')}", "white")
 
                     else:
                         Log.print(f"  Idle", "orange")
+
+                    idx = self.owner.queue.client_indices.get(client_id)
+                    if idx is not None and self.owner.queue.queue:
+                        Log.print(f"  Queue        : [{idx + 1}/{len(self.owner.queue.queue)}]", "white")
 
                     results['success'].append(client_id)
 
