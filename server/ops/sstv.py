@@ -8,6 +8,7 @@ from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.sstv import make_sstv_wav
+from shared.utils import parse_freq
 
 class SSTVOp(CliOp):
     """
@@ -125,11 +126,19 @@ Other positional arguments:
         targets = cmd_parts[0]
         img_path = cmd_parts[1]
         mode = cmd_parts[2] if len(cmd_parts) > 2 else None
-        frequency = float(cmd_parts[3]) if len(cmd_parts) > 3 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[4].lower() == 'true' if len(cmd_parts) > 4 else False
         ps = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_RT", Path(img_path).name)
         pi = cmd_parts[7] if len(cmd_parts) > 7 else Env.get("DEFAULT_PI", "FFFF")
+
+        if len(cmd_parts) > 3:
+            frequency = parse_freq(cmd_parts[3])
+
+            if frequency is None:
+                return (None, None, None, None, None, None, None, None)
+
+        else:
+            frequency = Env.get_float("DEFAULT_FREQ", 90)
 
         return (targets, img_path, mode, frequency, loop, ps, rt, pi)
 

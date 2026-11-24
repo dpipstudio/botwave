@@ -8,6 +8,7 @@ from shared.bw_custom import BWCustom
 from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
+from shared.utils import parse_freq
 
 class LiveOp(CliOp):
     """
@@ -62,6 +63,9 @@ Other positional arguments:
     ):
         if is_cmd:
             frequency, ps, rt, pi = self.parse(cmd_parts)
+
+            if not frequency:
+                return
 
         if not self.owner.alsa.is_supported():
             Log.alsa("Live broadcast is not supported on this installation.")
@@ -141,10 +145,18 @@ Other positional arguments:
             return
 
     def parse(self, cmd_parts: list[str]) -> tuple[Any, ...]:
-        frequency = float(cmd_parts[0]) if len(cmd_parts) > 0 else Env.get_float("DEFAULT_FREQ", 90)
         ps = cmd_parts[1] if len(cmd_parts) > 1 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_RT", "Live")  # Fixed index and fallback
         pi = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_PI", "FFFF")  # Fixed index
+
+        if len(cmd_parts) > 0:
+            frequency = parse_freq(cmd_parts[0])
+
+            if frequency is None:
+                return (None, None, None, None)
+
+        else:
+            frequency = Env.get_float("DEFAULT_FREQ", 90)
 
         return (frequency, ps, rt, pi)
 

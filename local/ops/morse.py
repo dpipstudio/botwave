@@ -7,6 +7,7 @@ from shared.env import Env
 from shared.logger import Log
 from shared.morser import text_to_morse
 from shared.ops import CliOp
+from shared.utils import parse_freq
 
 class MorseOp(CliOp):
     """
@@ -130,12 +131,20 @@ Other positional arguments:
 
         text_src = cmd_parts[0]
         wpm = int(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_int("DEFAULT_MORSE_WPM", 20)
-        frequency = float(cmd_parts[2]) if len(cmd_parts) > 2 else Env.get_float("DEFAULT_FREQ", 90)
         loop = cmd_parts[3].lower() == 'true' if len(cmd_parts) > 3 else False
         ps = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[5] if len(cmd_parts) > 5 else Env.get("DEFAULT_RT", "Morse")
         pi = cmd_parts[6] if len(cmd_parts) > 6 else Env.get("DEFAULT_PI", "FFFF")
-                
+
+        if len(cmd_parts) > 2:
+            frequency = parse_freq(cmd_parts[2])
+
+            if frequency is None:
+                return (None, None, None, None, None, None, None)
+
+        else:
+            frequency = Env.get_float("DEFAULT_FREQ", 90)
+
         return (text_src, wpm, frequency, loop, ps, rt, pi)
 
 

@@ -4,6 +4,7 @@ from shared.env import Env
 from shared.logger import Log
 from shared.ops import CliOp
 from shared.protocol import Commands
+from shared.utils import parse_freq
 
 class LiveOp(CliOp):
     """
@@ -133,10 +134,18 @@ Other positional arguments:
             return (None, None, None, None, None)
 
         targets = cmd_parts[0]
-        frequency = float(cmd_parts[1]) if len(cmd_parts) > 1 else Env.get_float("DEFAULT_FREQ", 90)
         ps = cmd_parts[2] if len(cmd_parts) > 2 else Env.get("DEFAULT_PS", "BotWave")
         rt = cmd_parts[3] if len(cmd_parts) > 3 else Env.get("DEFAULT_RT", "Broadcasting")
         pi = cmd_parts[4] if len(cmd_parts) > 4 else Env.get("DEFAULT_PI", "FFFF")
+
+        if len(cmd_parts) > 1:
+            frequency = parse_freq(cmd_parts[1])
+
+            if frequency is None:
+                return (None, None, None, None, None)
+
+        else:
+            frequency = Env.get_float("DEFAULT_FREQ", 90)
 
         return (targets, frequency, ps, rt, pi)
 
