@@ -72,9 +72,12 @@ those clients.
 
                     if status == 'onair':
                         Log.print(f"  On Air", "bright_green")
-                        Log.print(f"  File      : {kwargs.get('file', '?')}", "white")
-                        Log.print(f"  Frequency : {kwargs.get('frequency', '?')} MHz", "white")
-                        Log.print(f"  Uptime    : {kwargs.get('uptime', '?')}", "white")
+                        Log.print(f"  File         : {kwargs.get('file', '?')}", "white")
+                        Log.print(f"  Frequency    : {kwargs.get('frequency', '?')} MHz", "white")
+                        Log.print(f"  Uptime       : {kwargs.get('uptime', '?')}", "white")
+                        Log.print(f"  PS / RT / PI : {kwargs.get('ps', '?')} / {kwargs.get('rt', '?')} / {kwargs.get('pi', '?')}", "white")
+                        Log.print(f"  Loop         : {kwargs.get('loop', '?')}")
+
                     else:
                         Log.print(f"  Idle", "orange")
 
