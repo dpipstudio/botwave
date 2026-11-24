@@ -26,14 +26,19 @@ If the remote CLI is enabled, also show information about it."""
     async def handle(self, is_cmd: bool = False, cmd_parts: list[str] = []):
         if self.owner.broadcasting and self.owner.current_file:
             Log.print("On Air", "bright_green")
-            Log.print(f"File       : {Path(self.owner.current_file).name}", "white")
+            Log.print(f"File         : {Path(self.owner.current_file).name}", "white")
+
             if self.owner.piwave:
-                Log.print(f"Frequency  : {self.owner.piwave.get_status()['frequency']} MHz", "white")
+                pw = self.owner.piwave.get_status()
+                Log.print(f"Frequency    : {pw['frequency']} MHz", "white")
+                Log.print(f"PS / RT / PI : {pw['ps']} / {pw['rt']} / {pw['pi']}", "white")
+                Log.print(f"Loop         : {'yes' if pw['loop'] else 'no'}", "white")
+                Log.print(f"Backend      : {pw['current_backend']}", "white")
 
             if self.owner.broadcast_start_time:
                 elapsed = int(time.time() - self.owner.broadcast_start_time)
                 h, m, s = elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
-                Log.print(f"Uptime     : {h:02d}:{m:02d}:{s:02d}", "white")
+                Log.print(f"Uptime       : {h:02d}:{m:02d}:{s:02d}", "white")
         else:
             Log.print("Idle", "orange")
 
