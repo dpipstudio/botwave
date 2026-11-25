@@ -149,6 +149,7 @@ Options:
   -b, --branch <name> Install from a specific branch (default: main)
   --[no-]alsa         Setup ALSA loopback card
   --ok-nopi           Skip the Raspberry Pi hardware check
+  --log               Show the full output of every command
   -h, --help          Show this help message
 ```
 
