@@ -148,6 +148,7 @@ Options:
   -t, --to <version>  Install a specific release version
   -b, --branch <name> Install from a specific branch (default: main)
   --[no-]alsa         Setup ALSA loopback card
+  --ok-nopi           Skip the Raspberry Pi hardware check
   -h, --help          Show this help message
 ```
 
