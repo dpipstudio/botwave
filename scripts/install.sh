@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.4.3"
+readonly SCRIPT_VERSION="1.4.4"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -78,6 +78,11 @@ format_elapsed() {
 }
 
 silent() {
+    if [[ "$SHOW_LOGS" == true ]]; then
+        "$@" 2>&1 | tee -a "$LOG_FILE" >&2
+        return "${PIPESTATUS[0]}"
+    fi
+
     # not a terminal (piped, CI...): no spinner, just run it
     if [[ ! -t 2 ]]; then
         "$@" >> "$LOG_FILE" 2>&1
@@ -129,6 +134,7 @@ parse_arguments() {
     SETUP_ALSA=""
     TARGET_BRANCH="main"
     SKIP_HW_CHECK=false
+    SHOW_LOGS=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -161,6 +167,10 @@ parse_arguments() {
                 SETUP_ALSA=false
                 shift
                 ;;
+            --log)
+                SHOW_LOGS=true
+                shift
+                ;;
             --ok-nopi)
                 SKIP_HW_CHECK=true
                 shift
@@ -183,6 +193,7 @@ parse_arguments() {
                 log INFO "  -t, --to <version>  Install specific release version"
                 log INFO "  -b, --branch <name> Install from a specific branch (default: main)"
                 log INFO "  --[no-]alsa         Setup ALSA loopback card"
+                log INFO "  --log               Show the full output of every command"
                 log INFO "  --ok-nopi           Skip the Raspberry Pi hardware check"
                 log INFO "  -h, --help          Show help message"
                 exit 1
@@ -207,6 +218,7 @@ Options:
   -t, --to <version>  Install a specific release version
   -b, --branch <name> Install from a specific branch (default: main)
   --[no-]alsa         Setup ALSA loopback card
+  --log               Show the full output of every command
   --ok-nopi           Skip the Raspberry Pi hardware check
   -h, --help          Show this help message
 
