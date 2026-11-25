@@ -580,19 +580,19 @@ install_system_dependencies() {
             silent apt-get update
             silent apt-get install -y --no-install-recommends \
                 python3 python3-pip python3-venv python3-dev \
-                libsndfile1-dev libasound2-dev libffi-dev libssl-dev \
+                libsndfile1-dev gcc libasound2-dev libffi-dev libssl-dev \
                 make ffmpeg git curl jq
             ;;
         dnf)
             silent dnf install -y \
                 python3 python3-pip python3-devel \
-                libsndfile-devel alsa-lib-devel libffi-devel openssl-devel \
+                libsndfile-devel gcc alsa-lib-devel libffi-devel openssl-devel \
                 gcc make ffmpeg git curl jq
             ;;
         pacman)
             silent pacman -Sy --noconfirm \
                 python python-pip \
-                libsndfile alsa-lib libffi openssl \
+                libsndfile gcc alsa-lib libffi openssl \
                 base-devel ffmpeg git curl jq
             ;;
         unknown)
