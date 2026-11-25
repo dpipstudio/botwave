@@ -12,7 +12,7 @@ set -e
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-readonly SCRIPT_VERSION="1.4.2"
+readonly SCRIPT_VERSION="1.4.3"
 readonly START_PWD=$(pwd)
 readonly BANNER=$(cat <<EOF
    ___       __ _      __
@@ -128,6 +128,7 @@ parse_arguments() {
     INSTALL_MODE=""
     SETUP_ALSA=""
     TARGET_BRANCH="main"
+    SKIP_HW_CHECK=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -160,6 +161,10 @@ parse_arguments() {
                 SETUP_ALSA=false
                 shift
                 ;;
+            --ok-nopi)
+                SKIP_HW_CHECK=true
+                shift
+                ;;
             -h|--help)
                 show_help
                 exit 0
@@ -178,6 +183,7 @@ parse_arguments() {
                 log INFO "  -t, --to <version>  Install specific release version"
                 log INFO "  -b, --branch <name> Install from a specific branch (default: main)"
                 log INFO "  --[no-]alsa         Setup ALSA loopback card"
+                log INFO "  --ok-nopi           Skip the Raspberry Pi hardware check"
                 log INFO "  -h, --help          Show help message"
                 exit 1
                 ;;
@@ -201,6 +207,7 @@ Options:
   -t, --to <version>  Install a specific release version
   -b, --branch <name> Install from a specific branch (default: main)
   --[no-]alsa         Setup ALSA loopback card
+  --ok-nopi           Skip the Raspberry Pi hardware check
   -h, --help          Show this help message
 
 Examples:
@@ -371,6 +378,11 @@ validate_hardware() {
     fi
 
     if [[ "$supported" == false ]]; then
+        if [[ "$SKIP_HW_CHECK" == true ]]; then
+            log WARN "Unsupported device detected, continuing anyway (--ok-nopi)"
+            return 0
+        fi
+
         log ERROR "Unsupported device detected."
         log WARN "This program requires a Raspberry Pi (models 1-4, Zero) but not Pi 5 or newer."
         log WARN "Continue anyway?"
